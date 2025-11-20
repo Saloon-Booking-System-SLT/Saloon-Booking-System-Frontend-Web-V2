@@ -1,0 +1,138 @@
+
+/* Wrapper Container */
+.owner-login-container {
+  display: flex;
+  height: 100vh;
+  background-color: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Left Panel: Form */
+.owner-login-left {
+  flex: 1;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.owner-logo-bar {
+  margin-bottom: 20px;
+}
+
+.owner-brand-logo {
+  width: 140px;
+}
+
+.owner-login-title {
+  font-size: 28px;
+  color: #00AEEF;
+  margin-bottom: 10px;
+}
+
+.owner-login-subtitle {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* Form Styles */
+.owner-login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-login-input {
+  padding: 14px;
+  margin-bottom: 15px;
+  border: 2px solid #1FAF38;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  background-color: #f9f9f9;
+  transition: border 0.3s ease;
+}
+
+.owner-login-input:focus {
+  border-color: #00AEEF;
+}
+
+.owner-login-button {
+  padding: 14px;
+  background: linear-gradient(to right, #1FAF38, #00AEEF);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 5px;
+}
+
+.owner-login-button:hover {
+  background: linear-gradient(to right, #00AEEF, #1FAF38);
+}
+
+/* Footer Links */
+.owner-redirect-text {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 14px;
+  color: #333;
+}
+
+.owner-redirect-link {
+  color: #00AEEF;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.owner-redirect-link:hover {
+  text-decoration: underline;
+}
+
+/* Right Panel: Image */
+.owner-login-right {
+  flex: 1;
+  background-color: #f0f9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-login-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .owner-login-container {
+    flex-direction: column;
+    margin: 20px;
+  }
+
+  .owner-login-left,
+  .owner-login-right {
+    width: 100%;
+    padding: 30px 20px;
+  }
+
+  .owner-login-right {
+    order: -1;
+  }
+
+  .owner-login-image {
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .owner-login-title,
+  .owner-login-subtitle,
+  .owner-redirect-text {
+    text-align: center;
+  }
+}

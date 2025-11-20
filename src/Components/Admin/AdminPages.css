@@ -1,0 +1,91 @@
+/* ===== GLOBAL ADMIN PAGES FIX ===== */
+/* This file fixes z-index and pointer-events issues across all admin pages */
+
+/* Ensure all page containers have proper layering */
+.calendar-page-container,
+.promotions-container,
+.loyalty-container,
+.financial-container,
+.customers-container,
+.feedback-container {
+  position: relative;
+  isolation: isolate; /* Creates new stacking context */
+}
+
+/* Disable pointer events on ALL decorative backgrounds */
+.calendar-page-container::before,
+.calendar-page-container::after,
+.promotions-container::before,
+.promotions-container::after,
+.loyalty-container::before,
+.loyalty-container::after,
+.financial-container::before,
+.financial-container::after,
+.customers-container::before,
+.customers-container::after,
+.feedback-container::before,
+.feedback-container::after,
+[class*="-container"]::before,
+[class*="-container"]::after {
+  content: '';
+  position: absolute;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Ensure all interactive content is clickable */
+.calendar-header,
+.calendar-layout,
+.calendar-sidebar,
+.calendar-widget,
+.appointments-section,
+.promotions-header,
+.overview-cards,
+.tabs-container,
+.search-section,
+.table-container,
+button,
+input,
+select,
+a,
+.action-button,
+.action-btn,
+.tab {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto !important;
+}
+
+/* Fix for Tailwind-styled components */
+[class*="ml-64"],
+[class*="p-6"],
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure sidebar is always clickable and on top */
+aside,
+nav,
+.sidebar,
+[class*="sidebar"] {
+  position: fixed;
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure header is clickable */
+header,
+[class*="header"] {
+  position: relative;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix any circular decorative elements */
+[style*="circular"],
+[class*="decoration"],
+[class*="bg-shape"] {
+  pointer-events: none !important;
+  z-index: -1 !important;
+}

@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+}
+
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(to right, #f0f4f8, #fff);
+}
+
+.login-left {
+  flex: 1;
+  padding: 60px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  background: #ffffff;
+}
+
+.back-button {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #333;
+}
+
+.login-title {
+  font-size: 34px;
+  font-family: 'Playfair Display', serif;
+  color: #0069B4;
+  margin-bottom: 12px;
+}
+
+.login-subtext {
+  font-size: 16px;
+  color: #777;
+  margin-bottom: 40px;
+  
+}
+
+.login-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  background: #f9f9f9;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.login-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.login-card p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #666;
+}
+
+.arrow {
+  font-size: 24px;
+  color: #0069B4;
+  transition: transform 0.3s ease;
+}
+
+.login-card:hover {
+  background: #fff;
+  border-color: #0069B4;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 105, 180, 0.1);
+}
+
+.login-card:hover .arrow {
+  transform: translateX(6px);
+}
+
+.login-right {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+.login-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+}

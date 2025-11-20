@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+.calendar-container {
+  display: flex;
+  height: 100vh;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.modern-sidebar {
+  width: 100px;
+  background: #003e7e;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  color: white;
+  position: relative;
+}
+
+.modern-logo {
+  width: 100px;
+  height: auto;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.modern-sidebar i {
+  font-size: 20px;
+  margin: 20px 0;
+  cursor: pointer;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.modern-sidebar i:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.2);
+}
+
+/* Active Sidebar Button */
+.modern-sidebar i.active {
+  background-color: #ffffff22;
+  border-left: 4px solid #00e0ff;
+  color: #00e0ff;
+  font-weight: bold;
+  box-shadow: inset 0 0 8px #00e0ff88;
+}
+
+/* Header */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  background-color: #f8f8f8;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #222;
+}
+
+/* 💡 Enhanced date & select */
+.header div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  background-color: #f3e9fc;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d4c1f2;
+  color: #5b2cb0;
+  transition: 0.2s ease;
+}
+
+.input-label:hover {
+  background-color: #eadcfb;
+}
+
+.input-label input[type="date"],
+.input-label select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #3d2c61;
+  padding: 4px 6px;
+  width: auto;
+}
+
+.input-label select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg%20fill%3D%226B2DC5%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20d%3D%22M5.5%207L10%2011.5%2014.5%207z%22/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+  padding-right: 22px;
+}
+
+/* Content */
+.calendar-content {
+  flex: 1;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.date-info {
+  text-align: center;
+  color: #6B2DC5;
+  font-weight: 600;
+}
+
+.date-number {
+  font-size: 28px;
+}
+
+.date-month {
+  font-size: 14px;
+}
+
+.salon-name {
+  font-weight: 500;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Grid */
+.calendar-grid {
+  display: flex;
+  height: calc(100vh - 220px);
+  overflow-y: auto; /* ✅ Only this scrolls */
+  border-top: 1px solid #eee;
+  background-color: #fff;
+}
+
+.calendar-grid::-webkit-scrollbar {
+  width: 6px;
+}
+.calendar-grid::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+.calendar-grid::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+
+/* Time column */
+.time-column {
+  width: 60px;
+  padding-top: 5px;
+}
+
+.time-slot {
+  height: 80px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 5px;
+  font-size: 12px;
+  color: #999;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Appointments column */
+.appointments-column {
+  flex: 1;
+  position: relative;
+  background-color: #f9f9f9;
+  border-left: 1px solid #eee;
+  /* ❌ Removed overflow-y to avoid double scroll */
+}
+
+
+.appointments-container {
+  position: relative;
+  height: calc(10 * 80px); /* for 9am - 6pm */
+}
+
+/* Appointment block style */
+.appointment-block {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 2;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  position: absolute;
+}
+.appointment-block:hover {
+  background-color: #5423a0;
+}
+
+.appointment-time {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.appointment-client {
+  font-weight: 600;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.appointment-service {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Scrollbar styles */
+.appointments-column::-webkit-scrollbar {
+  width: 6px;
+}
+.appointments-column::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+.appointments-column::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+/* New: Appointment Status Label */
+.appointment-status-label {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background-color: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}

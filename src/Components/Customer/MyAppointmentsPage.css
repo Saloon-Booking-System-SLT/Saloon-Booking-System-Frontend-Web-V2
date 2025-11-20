@@ -1,0 +1,439 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f8fb;
+}
+
+/* Layout */
+.appointment-page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background-color: #fff;
+  padding: 24px;
+  border-right: 1px solid #ddd;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #0069B4;
+  margin-bottom: 20px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.sidebar .nav-btn {
+  background: none;
+  border: none;
+  color: #555;
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.sidebar .nav-btn:hover {
+  background-color: #e8f2fb;
+}
+
+.sidebar .nav-btn.active {
+  background-color: #d4eafc;
+  color: #0069B4;
+  font-weight: bold;
+}
+
+.sidebar .logout {
+  color: #dc3545;
+}
+
+/* Content Area */
+.appointment-content {
+  flex: 1;
+  padding: 40px;
+  background: #f4f8fb;
+}
+
+.appointment-content h2 {
+  font-size: 26px;
+  margin-bottom: 30px;
+  color: #003366;
+}
+
+.no-data {
+  font-size: 16px;
+  color: #777;
+}
+
+/* Appointment Card */
+.appointment-card {
+  background-color: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 25px;
+  transition: transform 0.2s ease;
+}
+
+.appointment-card:hover {
+  transform: translateY(-2px);
+}
+
+.appointment-top {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.appointment-top img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+
+.salon-info h4 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #333;
+}
+
+.salon-info p {
+  margin: 3px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.appt-status {
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.appt-status-confirmed {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.appt-status-pending {
+  color: #ffa500;
+  font-weight: bold;
+}
+
+.appt-status-pending {
+  color: #ffa500;
+  font-weight: bold;
+}
+
+
+/* Services Section */
+.service-info {
+  padding: 20px;
+  background: #fcfcfc;
+}
+
+.service-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: bold;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+  margin-top: 10px;
+}
+
+/* Action Buttons */
+.appointment-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 15px 20px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.appointment-reschedule-btn,
+.appointment-cancel-btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.appointment-reschedule-btn {
+  background-color: #0069B4;
+  color: white;
+}
+
+.appointment-reschedule-btn:hover {
+  background-color: #00518e;
+}
+
+.appointment-cancel-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.appointment-cancel-btn:hover {
+  background-color: #b92d39;
+}
+
+/* ⭐ Rate Button */
+.rate-btn {
+  background: linear-gradient(135deg, #00a859, #0033a0);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.rate-btn:hover {
+  background: linear-gradient(135deg, #00774f, #00296b);
+  transform: scale(1.05);
+}
+
+/* 🔲 Popup Overlay */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* 🗳️ Popup Box */
+.popup {
+  background: #ffffff;
+  padding: 30px 25px;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 430px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  animation: popupShow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes popupShow {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popup h3 {
+  margin: 0;
+  color: #0033a0;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 📝 Textarea */
+.popup textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  transition: 0.3s;
+}
+.popup textarea:focus {
+  border-color: #00a859;
+}
+
+/* ⭐ Star Rating */
+.popup .star-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.popup .star-container span {
+  font-size: 28px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  color: #ccc;
+}
+.popup .star-container span:hover,
+.popup .star-container span.active {
+  color: #ff9800;
+  transform: scale(1.2);
+}
+
+/* ✅ Action Buttons */
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 8px 18px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-cancel {
+  background: #eee;
+  color: #555;
+}
+
+.btn-save {
+  background: #00a859;
+  color: white;
+}
+.btn-save:hover {
+  background: #007b4a;
+}
+
+.back-btn {
+  background-color: #004cff;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: 0.3s;
+}
+
+.back-btn:hover {
+  background-color: #405ee2;
+}
+
+/* Review Button Styles */
+.appointment-add-review-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.appointment-add-review-btn:hover {
+  background-color: #218838;
+}
+
+/* Star Rating Styles */
+.rating-section {
+  margin: 15px 0;
+}
+
+.rating-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.star-rating {
+  display: flex;
+  gap: 5px;
+}
+
+.star {
+  font-size: 28px;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ff9800;
+}
+
+.star:hover {
+  color: #ff9800;
+}
+
+.review-textarea {
+  margin: 15px 0;
+}
+
+.review-textarea textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Action buttons layout */
+.appointment-action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.appointment-add-review-btn {
+  background-color: #27ae60;
+  color: white;
+}
+
+.appointment-add-review-btn:hover:not(.review-btn-disabled) {
+  background-color: #219a52;
+  transform: translateY(-2px);
+}
+
+.review-btn-disabled {
+  background-color: #95a5a6 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  transform: none !important;
+}

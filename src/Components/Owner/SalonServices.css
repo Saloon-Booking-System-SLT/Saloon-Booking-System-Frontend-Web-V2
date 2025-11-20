@@ -1,0 +1,275 @@
+/* SalonServices.css - Fixed Service Card Layout */
+
+/* Layout */
+.calendar-container {
+  display: flex;
+  height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5faff;
+}
+
+.modern-sidebar {
+  width: 120px;
+  background: #072a63;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  gap: 30px;
+  border-right: 1px solid #c9e3f7;
+}
+
+.modern-logo {
+  width: 100px;
+  height: auto;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.modern-sidebar i {
+  font-size: 20px;
+  cursor: pointer;
+  color: #1c75bc;
+}
+
+.modern-sidebar i.active {
+  background: #1c75bc;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;  /* <-- allow vertical scroll */
+  height: 100vh;     /* match viewport height */
+}
+
+.services-body {
+  display: flex;
+  margin-top: 20px;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #c9e3f7;
+  padding-bottom: 10px;
+}
+
+.header-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #004e8a;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.add-btn {
+  background: #1c75bc;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background: #155a96;
+}
+
+/* Services Layout */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;  /* <-- allow vertical scroll */
+  height: 100vh;     /* match viewport height */
+}
+
+.services-body {
+  display: flex;
+  margin-top: 20px;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+
+.category-panel {
+  width: 200px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: #004e8a;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.category-link {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #1c75bc;
+  cursor: pointer;
+}
+
+.service-panel {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.service-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Service Grid & Cards */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  
+}
+
+.service-card {
+  background: #fefefe;
+  border: 1px solid #cfe5f5;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: auto;
+
+}
+
+.service-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.service-info {
+  padding: 15px;
+  color: #004e8a;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.service-price {
+  padding: 10px 15px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  color: #007f3f;
+  width: 100%;
+  border-top: 1px solid #cfe5f5;
+}
+
+.edit-icon,
+.delete-icon {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.edit-icon {
+  color: #1c75bc;
+}
+
+.delete-icon {
+  color: #d63031;
+}
+
+/* Popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 420px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.popup input,
+.popup select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-save {
+  background-color: #1c75bc;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-save:hover {
+  background-color: #155a96;
+}
+
+.btn-cancel {
+  background-color: #ccc;
+  color: black;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}

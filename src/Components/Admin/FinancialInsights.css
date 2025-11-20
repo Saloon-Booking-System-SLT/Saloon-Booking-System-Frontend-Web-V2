@@ -1,0 +1,580 @@
+/* ===== Financial Insights Styles ===== */
+
+/* Container */
+.financial-container {
+    padding: 24px;
+    background: #f5f7fa;
+    min-height: 100vh;
+  }
+  
+  /* Header */
+  .financial-header {
+    margin-bottom: 32px;
+  }
+  
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .page-title svg {
+    color: #6366f1;
+  }
+  
+  .page-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+  }
+  
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  
+  .summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+  }
+  
+  .summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .card-info h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .card-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  
+  .card-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  
+  .card-change.positive {
+    background: #d1fae5;
+    color: #059669;
+  }
+  
+  .card-change.negative {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ede9fe;
+    color: #6366f1;
+  }
+  
+  /* Mini Chart */
+  .mini-chart {
+    margin-top: 20px;
+    height: 60px;
+  }
+  
+  .mini-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 100%;
+    gap: 6px;
+  }
+  
+  .mini-bar {
+    flex: 1;
+    background: linear-gradient(to top, #6366f1, #8b5cf6);
+    border-radius: 4px 4px 0 0;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+  }
+  
+  .mini-bar:hover {
+    opacity: 1;
+  }
+  
+  /* Payment Logs Section */
+  .payment-logs-section {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .section-title svg {
+    color: #6366f1;
+  }
+  
+  .export-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .export-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+  }
+  
+  .export-btn.csv {
+    color: #059669;
+    border-color: #d1fae5;
+  }
+  
+  .export-btn.csv:hover {
+    background: #d1fae5;
+  }
+  
+  .export-btn.pdf {
+    color: #dc2626;
+    border-color: #fee2e2;
+  }
+  
+  .export-btn.pdf:hover {
+    background: #fee2e2;
+  }
+  
+  /* Search Bar */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .search-bar svg {
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  
+  .search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 14px;
+    color: #1e293b;
+  }
+  
+  .search-bar input::placeholder {
+    color: #94a3b8;
+  }
+  
+  /* Payment Table */
+  .payment-table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+  
+  .payment-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .payment-table thead {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .payment-table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .payment-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+  }
+  
+  .payment-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  
+  .payment-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  
+  .payment-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: #334155;
+  }
+  
+  .salon-name {
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .amount-cell {
+    font-weight: 700;
+    color: #059669;
+    font-size: 15px;
+  }
+  
+  .date-cell {
+    color: #64748b;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+  }
+  
+  .method-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  
+  .status-success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  .status-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  
+  /* Failed Payments Alert */
+  .failed-payments-section {
+    background: #fef2f2;
+    border: 2px solid #fee2e2;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .alert-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #991b1b;
+    margin: 0;
+  }
+  
+  .alert-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .alert-item {
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .alert-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .alert-item-info {
+    flex: 1;
+  }
+  
+  .alert-salon {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+  
+  .alert-reason {
+    font-size: 13px;
+    color: #64748b;
+  }
+  
+  .alert-amount {
+    font-weight: 700;
+    color: #dc2626;
+    font-size: 16px;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0;
+  }
+  
+  .pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pagination-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+  
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-numbers {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .pagination-number {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .pagination-number:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  
+  .pagination-number.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: white;
+  }
+  
+  /* No Data */
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+  }
+  
+  .no-data svg {
+    margin: 0 auto 16px;
+    color: #cbd5e1;
+  }
+  
+  .no-data p {
+    margin: 0;
+    font-size: 14px;
+    font-style: italic;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .financial-container {
+      padding: 16px;
+    }
+  
+    .page-title {
+      font-size: 22px;
+    }
+  
+    .summary-card {
+      padding: 20px;
+    }
+  
+    .card-value {
+      font-size: 28px;
+    }
+  
+    .payment-logs-section,
+    .failed-payments-section {
+      padding: 20px;
+    }
+  
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .export-buttons {
+      width: 100%;
+    }
+  
+    .export-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  
+    .payment-table-container {
+      overflow-x: auto;
+    }
+  
+    .payment-table {
+      min-width: 700px;
+    }
+  
+    .payment-table th,
+    .payment-table td {
+      padding: 12px 10px;
+      font-size: 13px;
+    }
+  
+    .pagination {
+      flex-direction: column;
+      gap: 16px;
+    }
+  
+    .pagination-numbers {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }

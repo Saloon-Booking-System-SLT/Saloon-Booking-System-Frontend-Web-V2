@@ -1,0 +1,317 @@
+/* Mobitel-inspired modern UI styling */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+  --primary-color: #005BAA;
+  --accent-color: #E3F2FD;
+  --hover-color: #D0E7FF;
+  --light-gray: #f7f9fb;
+  --border-color: #ddd;
+  --text-gray: #555;
+  --highlight-color: #28a745;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--light-gray);
+}
+
+.select-services-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.left-column {
+  flex: 2;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-right: 1px solid var(--border-color);
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.select-services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* ✅ Updated service card for horizontal list layout */
+.select-services-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.select-services-card.selected {
+  background-color: var(--accent-color);
+  border-color: var(--primary-color);
+}
+
+.select-services-card:hover {
+  background-color: var(--hover-color);
+}
+
+/* ✅ Smaller service image for list view */
+.select-services-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ✅ Service content wrapper (image + details) */
+.select-services-content-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.select-services-details {
+  flex-grow: 1;
+}
+
+.select-services-details h4 {
+  font-size: 16px;
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.select-services-details p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: var(--text-gray);
+}
+
+/* ✅ Checkbox on the right side */
+.checkbox-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-left: auto;
+}
+
+.right-column {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #fefefe;
+}
+
+.summary-box {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 10px rgba(0, 91, 170, 0.05);
+}
+
+.salon-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.salon-info h4 {
+  font-size: 18px;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.salon-info p {
+  font-size: 14px;
+  color: #777;
+  margin: 4px 0;
+}
+
+.no-selection {
+  color: #999;
+  font-style: italic;
+  margin-top: 12px;
+}
+
+.selected-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.selected-list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.service-price {
+  font-weight: 600;
+  color: #222;
+}
+
+.total-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.continue-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.continue-button:hover {
+  background-color: #003a70;
+}
+
+.continue-button:disabled {
+  background-color: #bbb;
+  cursor: not-allowed;
+}
+
+/* Modal styling */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.modal h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: var(--primary-color);
+}
+
+.cancel-button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  background-color: #bbb;
+}
+
+.assign-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.assign-btn:hover {
+  background-color: #004382;
+}
+
+/* Professional card inside modal */
+.professional-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.professional-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.professional-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.heading-with-search {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  color: var(--primary-color);
+}
+
+.service-search-input {
+  width: 240px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.gender-switch {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.gender-switch button {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--primary-color);
+  transition: 0.2s;
+}
+
+.gender-switch button.active {
+  background-color: var(--primary-color);
+  color: white;
+}

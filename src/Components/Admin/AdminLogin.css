@@ -1,0 +1,142 @@
+/* Wrapper Container */
+.admin-login-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Left Panel: Form */
+.admin-login-left {
+  flex: 1;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.admin-logo-bar {
+  margin-bottom: 20px;
+}
+
+.admin-brand-logo {
+  width: 140px;
+}
+
+.admin-login-title {
+  font-size: 28px;
+  color: #00AEEF;
+  margin-bottom: 10px;
+}
+
+.admin-login-subtitle {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* Form Styles */
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-login-input {
+  padding: 14px;
+  margin-bottom: 15px;
+  border: 2px solid #1FAF38;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  background-color: #f9f9f9;
+  transition: border 0.3s ease;
+}
+
+.admin-login-input:focus {
+  border-color: #00AEEF;
+}
+
+.admin-login-button {
+  padding: 14px;
+  background: linear-gradient(to right, #1FAF38, #00AEEF);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 5px;
+}
+
+.admin-login-button:hover:not(:disabled) {
+  background: linear-gradient(to right, #00AEEF, #1FAF38);
+}
+
+.admin-login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Footer Links */
+.admin-redirect-text {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 14px;
+  color: #333;
+}
+
+.admin-redirect-link {
+  color: #00AEEF;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.admin-redirect-link:hover {
+  text-decoration: underline;
+}
+
+/* Right Panel: Image */
+.admin-login-right {
+  flex: 1;
+  background-color: #f0f9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-login-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-login-container {
+    flex-direction: column;
+    margin: 20px;
+  }
+
+  .admin-login-left,
+  .admin-login-right {
+    width: 100%;
+    padding: 30px 20px;
+  }
+
+  .admin-login-right {
+    order: -1;
+  }
+
+  .admin-login-image {
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .admin-login-title,
+  .admin-login-subtitle,
+  .admin-redirect-text {
+    text-align: center;
+  }
+}

@@ -1,0 +1,496 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body, html {
+  height: 100%;
+  background-color: #fff;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.search-wrapper {
+  padding: 2rem 4rem;
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+/* Header */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 60px;
+  background: rgb(255, 255, 255);
+  backdrop-filter: blur(18px);
+  
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #0069B4;
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+.logo-lowered {
+  margin-top: 6px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nav-link {
+  padding: 10px 22px;
+  border: 1px solid #0069B4;
+  color: #0069B4;
+  border-radius: 999px;
+  font-size: 15px;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: rgba(0,105,180,0.1);
+}
+
+.nav-btn-light {
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: rgba(0,105,180,0.1);
+  color: #0069B4;
+  font-weight: 600;
+  font-size: 15px;
+  transition: transform 0.2s ease;
+}
+
+.nav-btn-light:hover {
+  transform: scale(1.05);
+  background: #0069B4;
+  color: #fff;
+}
+
+.nav-menu-btn {
+  font-size: 18px;
+  background: rgba(0,105,180,0.1);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.nav-menu-btn:hover {
+  background: #0069B4;
+  color: white;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.profile-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0069B4;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  padding: 8px 0;
+  font-size: 14px;
+  color: #333;
+  width: 220px;
+  animation: fadeInScale 0.2s ease;
+}
+
+.dropdown-menu ul {
+  list-style: none;
+}
+
+.dropdown-menu li {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.dropdown-menu li:hover {
+  background: #f1f1f1;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #ddd;
+  margin: 4px 0;
+}
+
+.user-name {
+  padding: 12px 20px;
+  font-weight: 600;
+  background: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Search Input */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  background-color: #f7f9fb;
+  padding: 1rem 1.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 6px 16px rgba(0, 105, 180, 0.08);
+}
+
+.location-search {
+  position: relative;
+  flex: 1;
+}
+
+.location-input {
+  width: 100%;
+  padding: 0.75rem 1.2rem;
+  border: none;
+  outline: none;
+  border-radius: 2rem;
+  background-color: white;
+  font-weight: 500;
+  font-size: 15px;
+  box-shadow: inset 0 0 0 1px #ccc;
+  transition: box-shadow 0.2s ease;
+}
+
+.location-input:focus {
+  box-shadow: inset 0 0 0 2px #0069B4;
+}
+
+.suggestion-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.suggestion-list li {
+  padding: 12px 18px;
+  font-size: 15px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.suggestion-list li:hover {
+  background-color: #f0f4f8;
+  color: #000;
+}
+
+.result-count {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.gender-switch-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.switch-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f1f1f1;
+  border-radius: 20px;
+  font-weight: 500;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+
+.switch-option:hover {
+  background: #ddd;
+
+}
+
+.switch-option.active {
+  background-color: #0069B4;
+  color: #fff;
+  border-color: #0069B4;
+}
+
+.salon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding-bottom: 40px;
+}
+
+.salon-card {
+  width: 300px;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(50px);
+  opacity: 0;
+  animation: slideUp 0.6s ease forwards;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.salon-card:hover {
+  transform: translateY(0) scale(1.03);
+  box-shadow: 0 10px 25px rgba(0, 105, 180, 0.2);
+}
+
+@keyframes slideUp {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.salon-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.salon-info {
+  padding: 1rem;
+}
+
+.salon-info h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.salon-info p {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.select-btn {
+  background-color: #0069B4;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.select-btn:hover {
+  background-color: #005a9e;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal box */
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  width: 400px;
+  max-width: 90vw;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00000055;
+}
+
+/* Buttons inside modal */
+.btn {
+  padding: 8px 12px;
+  margin-right: 8px;
+  border: none;
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+.btn-confirm {
+  background: #28a745;
+}
+
+.btn-confirm:hover {
+  background: #1e7e34;
+}
+
+.btn-cancel {
+  background: #dc3545;
+}
+
+.btn-cancel:hover {
+  background: #a71d2a;
+}
+
+/* Map container */
+.map-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Button for Find Nearest Salon */
+.btn-nearby {
+  margin-left: 15px;
+  padding: 8px 14px;
+  background-color: #28a745;
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-nearby:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+}
+
+.btn-reset {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background-color: #dc3545;
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.icon-label {
+  margin-right: 6px;
+  font-size: 1.1rem;
+  vertical-align: middle;
+}
+/* Section Titles */
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0 10px 0;
+  color: #0056a3;
+  border-left: 4px solid #007bff;
+  padding-left: 10px;
+}
+/* Star rating style */
+.salon-info .rating-stars {
+  color: #f5b50a; /* Yellow for filled stars */
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.salon-info .rating-stars .empty-star {
+  color: #ccc; /* Gray for empty stars */
+}
+
+.salon-info .rating-stars span {
+  margin-right: 2px;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+/* Spinner animation */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #eee;
+  border-top-color: #ff4081;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Loading text */
+.loading-overlay p {
+  font-size: 1.2rem;
+  color: #555;
+}
