@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './Components/ProtectedRoute';
 import CustomerRoute from './Components/CustomerRoute';
 import OwnerRoute from './Components/OwnerRoute';
 import AdminRoute from './Components/AdminRoute';

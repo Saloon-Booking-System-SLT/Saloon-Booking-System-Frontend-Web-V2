@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import './FinancialInsights.css';
 
 const FinancialInsights = () => {
-  const navigate = useNavigate();
+  // const [selectedPeriod, setSelectedPeriod] = useState('month'); // Commented out unused variable
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const paymentsPerPage = 10;

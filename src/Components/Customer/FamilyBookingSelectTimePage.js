@@ -19,7 +19,9 @@ const SelectTimePage = () => {
   const isReschedule = !!rescheduleAppointment;
 
   const isGroupBooking = location.state?.isGroupBooking || JSON.parse(localStorage.getItem("isGroupBooking")) || false;
-  const groupMembers = location.state?.groupMembers || JSON.parse(localStorage.getItem("groupMembers")) || [];
+  const groupMembers = useMemo(() => {
+    return location.state?.groupMembers || JSON.parse(localStorage.getItem("groupMembers")) || [];
+  }, [location.state?.groupMembers]);
 
   // Get existing booked appointments from previous bookings in this session
   const initialBookedAppointments = useMemo(() => {
@@ -48,9 +50,9 @@ const SelectTimePage = () => {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const [selectedServices, setSelectedServices] = useState(passedServices);
-  const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
-  const [phone, setPhone] = useState(user?.phone || "");
+  const [selectedServices] = useState(passedServices);
+  const [selectedProfessional] = useState(passedProfessional);
+  // const [phone, setPhone] = useState(user?.phone || ""); // Commented out unused variable
   const currentServiceIndex = useRef(0);
   const [renderKey, setRenderKey] = useState(0);
   const [selectedDates, setSelectedDates] = useState({});
@@ -140,7 +142,10 @@ const SelectTimePage = () => {
     }
   }, [selectedProfessional, selectedServices, dates, fetchTimeSlots]);
 
-  const currentService = selectedServices[currentServiceIndex.current] || {};
+  const currentService = useMemo(() => {
+    return selectedServices[currentServiceIndex.current] || {};
+  }, [selectedServices, currentServiceIndex.current]);
+  
   const serviceKey = currentService.name || "service";
   const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);
   const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;

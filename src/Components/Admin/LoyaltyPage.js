@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import './LoyaltyPage.css';
 
 const LoyaltyPage = () => {
-  const navigate = useNavigate();
 
   // Global configuration state
   const [globalConfig, setGlobalConfig] = useState({

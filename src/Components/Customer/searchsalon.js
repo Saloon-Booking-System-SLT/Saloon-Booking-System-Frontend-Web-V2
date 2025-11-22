@@ -222,15 +222,6 @@ const getCityFromLocation = (location) => {
     applyFilters(allSalons, query, genderFilter);
   };
 
-  const renderStars = (rating) => {
-    const numericRating = parseFloat(rating);
-    return (
-      <>
-        {"★".repeat(Math.round(numericRating))}{"☆".repeat(5 - Math.round(numericRating))}
-      </>
-    );
-  };
-
   return (
     <div className="search-wrapper">
       <header className="navbar">

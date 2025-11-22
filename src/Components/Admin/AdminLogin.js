@@ -58,18 +58,6 @@ const AdminLogin = () => {
     }
   };
 
-  // Demo login for testing
-  const handleDemoLogin = () => {
-    const demoAdmin = {
-      id: 'admin',
-      username: 'admin',
-      role: 'admin'
-    };
-    const demoToken = `demo-admin-token-${Date.now()}`;
-    login(demoToken, demoAdmin);
-    navigate('/admin-dashboard');
-  };
-
   return (
     <div className="admin-login-container">
       <div className="admin-login-left">

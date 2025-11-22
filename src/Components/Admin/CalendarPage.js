@@ -68,7 +68,7 @@ const CalendarPage = () => {
   // ✅ NEW: Fetch appointments when date changes
   useEffect(() => {
     fetchAppointments();
-  }, [selectedDate]); // Re-fetch when selected date changes
+  }, [selectedDate, fetchAppointments]); // Re-fetch when selected date changes
 
   // Get calendar data
   const getDaysInMonth = (date) => {
