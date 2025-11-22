@@ -1,4 +1,4 @@
-// firebase.js
+// firebase.js - Updated for saloon-booking-system-7ee3f project
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
