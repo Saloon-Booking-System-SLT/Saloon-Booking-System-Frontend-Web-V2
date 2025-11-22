@@ -4,6 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const SelectTimePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,7 +94,7 @@ const SelectTimePage = () => {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/timeslots?professionalId=${professionalId}&date=${date}`);
+      const res = await fetch(`${API_BASE_URL}/api/timeslots?professionalId=${professionalId}&date=${date}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const key = `${professionalId}-${date}`;
@@ -235,7 +239,7 @@ const SelectTimePage = () => {
         data: rescheduleData
       });
 
-      const response = await fetch(`http://localhost:5000/api/appointments/${rescheduleAppointment._id}/reschedule`, {
+      const response = await fetch(`${API_BASE_URL}/api/appointments/${rescheduleAppointment._id}/reschedule`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -479,7 +483,7 @@ const SelectTimePage = () => {
       <div className="right-column">
         <div className="summary-box">
           <img
-            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `http://localhost:5000/uploads/${salon.image}`) : "https://via.placeholder.com/150"}
+            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://via.placeholder.com/150"}
             alt="Salon"
             className="salon-image"
           />

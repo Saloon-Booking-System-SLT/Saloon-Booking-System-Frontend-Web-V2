@@ -4,6 +4,10 @@ import "./searchsaloon.css";
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import LocationPickerModal from "./LocationPickerModal";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const districtSuggestions = [
   "Colombo", "Kandy", "Galle", "Jaffna", "Matara",
   "Kurunegala", "Anuradhapura", "Negombo", "Ratnapura",
@@ -38,20 +42,20 @@ const SearchSalon = () => {
 
 const fetchSalons = useCallback(async () => {
   try {
-    const res = await fetch("http://localhost:5000/api/salons");
+    const res = await fetch(`${API_BASE_URL}/api/salons`);
     let salons = await res.json();
 
     const salonsWithRatings = await Promise.all(
       salons.map(async (salon) => {
         try {
           // Fetch all professionals in this salon
-          const profRes = await fetch(`http://localhost:5000/api/professionals/${salon._id}`);
+          const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
           const professionals = await profRes.json();
 
           // Fetch feedbacks for each professional
           const allFeedbacks = await Promise.all(
             professionals.map(async (pro) => {
-              const fbRes = await fetch(`http://localhost:5000/api/feedback/professionals/${pro._id}`);
+              const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
               const data = await fbRes.json();
               return data.feedbacks || []; // get only feedback array
             })
@@ -115,19 +119,19 @@ const fetchSalons = useCallback(async () => {
 
 const fetchNearbySalons = async (lat, lng, manual = false) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/salons/nearby?lat=${lat}&lng=${lng}`);
+    const res = await fetch(`${API_BASE_URL}/api/salons/nearby?lat=${lat}&lng=${lng}`);
     if (!res.ok) throw new Error("Failed to load nearby salons");
     let data = await res.json();
 
     const nearbyWithRatings = await Promise.all(
       data.map(async (salon) => {
         try {
-          const profRes = await fetch(`http://localhost:5000/api/professionals/${salon._id}`);
+          const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
           const professionals = await profRes.json();
 
           const allFeedbacks = await Promise.all(
             professionals.map(async (pro) => {
-              const fbRes = await fetch(`http://localhost:5000/api/feedback/professionals/${pro._id}`);
+              const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
               const fbData = await fbRes.json();
               return fbData.feedbacks || [];
             })
