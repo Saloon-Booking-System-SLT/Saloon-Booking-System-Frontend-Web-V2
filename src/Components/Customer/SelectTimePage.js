@@ -4,6 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectTimePage.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const SelectTimePage = () => {
   const location = useLocation();
   const navigate = useNavigate();

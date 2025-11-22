@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import "./MyAppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -28,7 +32,7 @@ const MyAppointmentsPage = () => {
         const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
         
         const res = await fetch(
-          `http://localhost:5000/api/appointments${queryString}`
+          `${API_BASE_URL}/api/appointments${queryString}`
         );
         const data = await res.json();
         
@@ -55,7 +59,7 @@ const MyAppointmentsPage = () => {
     if (!confirm) return;
 
     try {
-      await fetch(`http://localhost:5000/api/appointments/${id}`, {
+      await fetch(`${API_BASE_URL}/api/appointments/${id}`, {
         method: "DELETE",
       });
       setAppointments((prev) => prev.filter((a) => a._id !== id));
@@ -112,7 +116,7 @@ const MyAppointmentsPage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/feedback", {
+      const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
