@@ -1,7 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../Assets/logo.png';
 import './SalonServices.css';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+  const salon = JSON.parse(localStorage.getItem("salonUser"));
+  const [services, setServices] = useState([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    duration: '15min',
+    gender: 'Unisex',
+    image: '',
+  });
+  const [showPopup, setShowPopup] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [file, setFile] = useState(null);
+
+  // Updated Sidebar Component
+  const Sidebar = () => {
+    const navigate = useNavigate();
+
+    return (
+      <aside className="modern-sidebar">
+        <img src={logo} alt="Brand Logo" className="modern-logo" />
+        <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
+        <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate('/calendar')}></i>
+        <i className="fas fa-smile active" title="Services" onClick={() => navigate('/services')}></i>
+        <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate('/feedbacks')}></i>
+        <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
+        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
+      </aside>
+    );
+  };
 
 const SalonServices = () => {
   const navigate = useNavigate();
@@ -35,20 +67,20 @@ const SalonServices = () => {
     );
   };
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/services/${salon.id}`);
       const data = await res.json();
       setServices(data);
     } catch (err) {
       console.error("Failed to fetch services", err);
     }
-  };
+  }, [salon?.id]);
 
   useEffect(() => {
     fetchServices();
-  }, [salon?.id]);
+  }, [fetchServices]);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -87,8 +119,8 @@ const SalonServices = () => {
     try {
       const method = editingService ? 'PUT' : 'POST';
       const url = editingService
-        ? `http://localhost:5000/api/services/${editingService._id}`
-        : `http://localhost:5000/api/services`;
+        ? `${API_BASE_URL}/services/${editingService._id}`
+        : `${API_BASE_URL}/services`;
 
       const res = await fetch(url, { method, body: data });
       if (res.ok) {
@@ -122,7 +154,7 @@ const SalonServices = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete?")) return;
     try {
-      await fetch(`http://localhost:5000/api/services/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/services/${id}`, { method: 'DELETE' });
       fetchServices();
     } catch (err) {
       console.error("Delete failed", err);
@@ -171,7 +203,7 @@ const SalonServices = () => {
                       service.image
                         ? service.image.startsWith("http")
                           ? service.image
-                          : `http://localhost:5000/uploads/${service.image}`
+                          : `${UPLOADS_URL}/${service.image}`
                         : "https://via.placeholder.com/150"
                     }
                     alt={service.name}

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();
   const salon = JSON.parse(localStorage.getItem("salonUser"));
@@ -34,7 +37,7 @@ const SalonProfessionalsV2 = () => {
       const params = new URLSearchParams();
       if (filterGender !== 'both') params.append('gender', filterGender);
 
-      const res = await fetch(`http://localhost:5000/api/professionals/${salon.id}?${params}`);
+      const res = await fetch(`${API_BASE_URL}/professionals/${salon.id}?${params}`);
       const data = await res.json();
       
       let filtered = data;
@@ -150,7 +153,7 @@ const SalonProfessionalsV2 = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this staff member?")) return;
     try {
-      await fetch(`http://localhost:5000/api/professionals/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/professionals/${id}`, { method: "DELETE" });
       fetchProfessionals();
       alert("Staff member deleted successfully!");
     } catch (err) {
@@ -191,8 +194,8 @@ const handleAddOrUpdateProfessional = async () => {
     }
 
     const url = editingProfessional
-      ? `http://localhost:5000/api/professionals/${editingProfessional._id}`
-      : "http://localhost:5000/api/professionals";
+      ? `${API_BASE_URL}/professionals/${editingProfessional._id}`
+      : `${API_BASE_URL}/professionals`;
 
     const method = editingProfessional ? "PUT" : "POST";
 
@@ -209,7 +212,7 @@ const handleAddOrUpdateProfessional = async () => {
       throw new Error(`Failed: ${res.status} - ${errorText}`);
     }
 
-    const result = await res.json();
+    await res.json();
     
     await fetchProfessionals();
     setShowPopup(false);
@@ -261,7 +264,7 @@ const handleAddOrUpdateProfessional = async () => {
       if (professional.image.startsWith('http')) {
         return professional.image;
       }
-      return `http://localhost:5000/uploads/professionals/${professional.image}`;
+      return `${UPLOADS_URL}/professionals/${professional.image}`;
     }
     return null;
   };

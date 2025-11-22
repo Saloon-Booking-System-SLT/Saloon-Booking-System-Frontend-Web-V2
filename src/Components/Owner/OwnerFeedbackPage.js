@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./OwnerFeedbackPage.css";
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const OwnerFeedbackPage = () => {
   const navigate = useNavigate();
@@ -23,9 +25,9 @@ const OwnerFeedbackPage = () => {
     );
   };
 
-  const fetchProfessionalsWithFeedbacks = async () => {
+  const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/feedback/with-feedbacks/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/feedback/with-feedbacks/${salon.id}`);
       const data = await res.json();
       setProfessionals(data);
       setLoading(false);
@@ -33,11 +35,11 @@ const OwnerFeedbackPage = () => {
       console.error("Failed to fetch professionals with feedbacks", err);
       setLoading(false);
     }
-  };
+  }, [salon.id]);
 
   useEffect(() => {
     if (salon?.id) fetchProfessionalsWithFeedbacks();
-  }, [salon?.id]);
+  }, [salon?.id, fetchProfessionalsWithFeedbacks]);
 
   const getAverageRating = (feedbacks) => {
     if (!feedbacks || feedbacks.length === 0) return 0;
