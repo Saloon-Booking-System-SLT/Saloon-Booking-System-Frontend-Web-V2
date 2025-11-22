@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import "./MyAppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -28,7 +32,7 @@ const MyAppointmentsPage = () => {
         const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
         
         const res = await fetch(
-          `http://localhost:5000/api/appointments${queryString}`
+          `${API_BASE_URL}/api/appointments${queryString}`
         );
         const data = await res.json();
         
@@ -55,7 +59,7 @@ const MyAppointmentsPage = () => {
     if (!confirm) return;
 
     try {
-      await fetch(`http://localhost:5000/api/appointments/${id}`, {
+      await fetch(`${API_BASE_URL}/api/appointments/${id}`, {
         method: "DELETE",
       });
       setAppointments((prev) => prev.filter((a) => a._id !== id));
@@ -112,7 +116,7 @@ const MyAppointmentsPage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/feedback", {
+      const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -207,8 +211,8 @@ const MyAppointmentsPage = () => {
                     a.salonId?.image
                       ? a.salonId.image.startsWith("http")
                         ? a.salonId.image
-                        : `http://localhost:5000/uploads/${a.salonId.image}`
-                      : "https://via.placeholder.com/100"
+                        : `${API_BASE_URL}/uploads/${a.salonId.image}`
+                      : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E"
                   }
                   alt={a.salonId?.name || "Salon"}
                 />

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../../Assets/logo.png';
 import './SalonTimeSlots.css';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const SalonTimeSlots = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const SalonTimeSlots = () => {
   useEffect(() => {
     const fetchProfessionals = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/professionals/${salon.id}`);
+        const res = await axios.get(`${API_BASE_URL}/professionals/${salon.id}`);
         setProfessionals(res.data);
         if (res.data.length > 0) {
           setSelectedProfessionalId(res.data[0]._id);
@@ -35,22 +37,22 @@ const SalonTimeSlots = () => {
     fetchProfessionals();
   }, [salon.id]);
 
-  // Fetch time slots when professional or date changes
-  useEffect(() => {
-    if (!selectedProfessionalId || !selectedDate) return;
-    fetchTimeSlots();
-  }, [selectedProfessionalId, selectedDate]);
-
-  const fetchTimeSlots = async () => {
+  const fetchTimeSlots = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/timeslots', {
+      const res = await axios.get(`${API_BASE_URL}/timeslots`, {
         params: { professionalId: selectedProfessionalId, date: selectedDate }
       });
       setTimeSlots(res.data);
     } catch (err) {
       console.error("Error fetching time slots:", err);
     }
-  };
+  }, [selectedProfessionalId, selectedDate]);
+
+  // Fetch time slots when professional or date changes
+  useEffect(() => {
+    if (!selectedProfessionalId || !selectedDate) return;
+    fetchTimeSlots();
+  }, [selectedProfessionalId, selectedDate, fetchTimeSlots]);
 
   const handleAddTimeSlot = async () => {
     if (!newSlot.startTime || !newSlot.endTime) {
@@ -59,7 +61,7 @@ const SalonTimeSlots = () => {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/timeslots', {
+      await axios.post(`${API_BASE_URL}/timeslots`, {
         salonId: salon.id,
         professionalId: selectedProfessionalId,
         date: selectedDate,
@@ -92,7 +94,7 @@ const SalonTimeSlots = () => {
     }
 
     try {
-      await Promise.all(slots.map(slot => axios.post('http://localhost:5000/api/timeslots', slot)));
+      await Promise.all(slots.map(slot => axios.post(`${API_BASE_URL}/timeslots`, slot)));
       fetchTimeSlots();
       alert("Time slots generated successfully!");
     } catch (err) {
@@ -105,7 +107,7 @@ const SalonTimeSlots = () => {
     if (!window.confirm("Delete this time slot?")) return;
     
     try {
-      await axios.delete(`http://localhost:5000/api/timeslots/${slotId}`);
+      await axios.delete(`${API_BASE_URL}/timeslots/${slotId}`);
       fetchTimeSlots();
       alert("Time slot deleted successfully!");
     } catch (err) {

@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const SelectProfessionalPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,7 +17,7 @@ const SelectProfessionalPage = () => {
 
   useEffect(() => {
     if (!salon?._id) return;
-    fetch(`http://localhost:5000/api/professionals/${salon._id}`)
+    fetch(`${API_BASE_URL}/api/professionals/${salon._id}`)
       .then((res) => res.json())
       .then((data) => setProfessionals(data))
       .catch((err) => console.error("Failed to fetch professionals", err));
@@ -103,7 +107,7 @@ const SelectProfessionalPage = () => {
                       pro.image
                         ? pro.image.startsWith("http")
                           ? pro.image
-                          : `http://localhost:5000/uploads/professionals/${pro.image}`
+                          : `${API_BASE_URL}/uploads/professionals/${pro.image}`
                         : "https://via.placeholder.com/150"
                     }
                     alt={pro.name}
@@ -152,7 +156,7 @@ const SelectProfessionalPage = () => {
     salon?.image
       ? salon.image.startsWith("http")
         ? salon.image // already a full URL
-        : `http://localhost:5000/uploads/${salon.image}` // uploaded file
+        : `${API_BASE_URL}/uploads/${salon.image}` // uploaded file
       : "https://via.placeholder.com/150"
   }
   alt="Salon"

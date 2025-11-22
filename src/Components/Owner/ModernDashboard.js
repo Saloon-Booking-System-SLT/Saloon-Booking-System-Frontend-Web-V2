@@ -275,7 +275,7 @@ const ModernDashboard = () => {
                         ? salon.image.startsWith("http")
                           ? salon.image
                           : `http://localhost:5000/uploads/${salon.image}`
-                        : "https://via.placeholder.com/40"
+                        : "https://ui-avatars.com/api/?name=User&background=random&size=40"
                     }
                     alt="Profile"
                     className="modern-profile"

@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./ConfirmationPage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const ConfirmationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,7 +103,7 @@ const ConfirmationPage = () => {
 
         console.log("💾 Saving GROUP appointments to backend:", appointmentData);
 
-        const response = await fetch("http://localhost:5000/api/appointments", {
+        const response = await fetch(`${API_BASE_URL}/api/appointments`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

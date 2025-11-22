@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const SelectServicesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,7 +22,7 @@ const SelectServicesPage = () => {
 
   useEffect(() => {
     if (!salon) return;
-    fetch(`http://localhost:5000/api/services/${salon._id}`)
+    fetch(`${API_BASE_URL}/api/services/${salon._id}`)
       .then((res) => res.json())
       .then((data) => {
         setServices(data);
@@ -118,7 +122,7 @@ const SelectServicesPage = () => {
     service.image
       ? service.image.startsWith("http")
         ? service.image // already a full URL
-        : `http://localhost:5000/uploads/${service.image}` // uploaded file
+        : `${API_BASE_URL}/uploads/${service.image}` // uploaded file
       : "https://via.placeholder.com/100"
   }
   alt={service.name}
@@ -145,7 +149,7 @@ const SelectServicesPage = () => {
     salon?.image
       ? salon.image.startsWith("http")
         ? salon.image // already a full URL
-        : `http://localhost:5000/uploads/${salon.image}` // uploaded file
+        : `${API_BASE_URL}/uploads/${salon.image}` // uploaded file
       : "https://via.placeholder.com/150"
   }
   alt="Salon"

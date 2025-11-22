@@ -114,7 +114,7 @@ const SalonProfile = () => {
       ? salon.image.startsWith("http")
         ? salon.image // external URL
         : `http://localhost:5000/uploads/${salon.image}` // uploaded image
-      : "https://via.placeholder.com/120" // default placeholder
+      : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='100%25' height='100%25' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E" // default placeholder
   }
   alt="Salon"
   className="salon-avatar"

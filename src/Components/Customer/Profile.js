@@ -86,7 +86,7 @@ const Profile = () => {
             <div className="profile-info">
               <div className="animated-border"></div>
               <img
-                src={user.photoURL || "https://via.placeholder.com/100"}
+                src={user.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3EUser%3C/text%3E%3C/svg%3E"}
                 alt="User"
                 className="profile-pic"
               />

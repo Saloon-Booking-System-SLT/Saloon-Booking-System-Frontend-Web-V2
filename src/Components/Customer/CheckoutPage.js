@@ -3,6 +3,10 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckoutPage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,7 +45,7 @@ const CheckoutPage = () => {
     try {
       // For rescheduling
       if (appointmentData.isReschedule) {
-        const res = await fetch(`http://localhost:5000/api/appointments/${appointmentData.appointmentId}/reschedule`, {
+        const res = await fetch(`${API_BASE_URL}/api/appointments/${appointmentData.appointmentId}/reschedule`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -69,7 +73,7 @@ const CheckoutPage = () => {
         appointments: [appointmentData.appointmentDetails],
       };
 
-      const res = await fetch("http://localhost:5000/api/appointments", {
+      const res = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(appointment),

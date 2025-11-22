@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../Assets/logo.png';
 import './SalonServices.css';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
 
 const SalonServices = () => {
   const navigate = useNavigate();
@@ -35,20 +38,20 @@ const SalonServices = () => {
     );
   };
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/services/${salon.id}`);
       const data = await res.json();
       setServices(data);
     } catch (err) {
       console.error("Failed to fetch services", err);
     }
-  };
+  }, [salon?.id]);
 
   useEffect(() => {
     fetchServices();
-  }, [salon?.id]);
+  }, [fetchServices]);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -87,8 +90,8 @@ const SalonServices = () => {
     try {
       const method = editingService ? 'PUT' : 'POST';
       const url = editingService
-        ? `http://localhost:5000/api/services/${editingService._id}`
-        : `http://localhost:5000/api/services`;
+        ? `${API_BASE_URL}/services/${editingService._id}`
+        : `${API_BASE_URL}/services`;
 
       const res = await fetch(url, { method, body: data });
       if (res.ok) {
@@ -122,7 +125,7 @@ const SalonServices = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete?")) return;
     try {
-      await fetch(`http://localhost:5000/api/services/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/services/${id}`, { method: 'DELETE' });
       fetchServices();
     } catch (err) {
       console.error("Delete failed", err);
@@ -171,8 +174,8 @@ const SalonServices = () => {
                       service.image
                         ? service.image.startsWith("http")
                           ? service.image
-                          : `http://localhost:5000/uploads/${service.image}`
-                        : "https://via.placeholder.com/150"
+                          : `${UPLOADS_URL}/${service.image}`
+                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='100%25' height='100%25' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E"
                     }
                     alt={service.name}
                     className="service-image"
