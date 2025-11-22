@@ -11,13 +11,13 @@ import {
 
 // ✅ Your Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCDXwghNQOji0TBgq0HwU9C5pkmtITF3Fo",
-  authDomain: "salon-fcbfb.firebaseapp.com",
-  projectId: "salon-fcbfb",
-  storageBucket: "salon-fcbfb.appspot.com", // ✅ Corrected bucket URL
-  messagingSenderId: "398504432118",
-  appId: "1:398504432118:web:40cd9e591d08e2ed91b7d7",
-  measurementId: "G-VPGYBS57H4",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyBmuXSVsyUdtyJN8ze3Euii0H6Yeae6_bU",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "saloon-booking-system-7ee3f.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "saloon-booking-system-7ee3f",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "saloon-booking-system-7ee3f.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "194406605053",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:194406605053:web:7dbe58c13b680227d19e94",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-2XKJWVXY0Z",
 };
 
 // ✅ Initialize Firebase
