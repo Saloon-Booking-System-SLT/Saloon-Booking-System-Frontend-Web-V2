@@ -32,12 +32,15 @@ const OwnerLogin = () => {
       // Assuming your backend returns token and salon data
       const { token, salon } = res.data;
       
-      // Use the auth context login function with owner role
-      login(token, { 
-        ...salon, 
+      const salonUserData = {
+        ...salon,
         role: 'owner',
         id: salon._id || salon.id // Ensure id is set
-      });
+      };
+      
+      // Store in both auth context and localStorage for compatibility
+      login(token, salonUserData);
+      localStorage.setItem('salonUser', JSON.stringify(salonUserData));
       
       navigate("/dashboard");
     } catch (err) {
