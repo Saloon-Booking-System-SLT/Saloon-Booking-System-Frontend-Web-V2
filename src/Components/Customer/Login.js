@@ -10,6 +10,8 @@ import {
 import haircutImage from "../../Assets/hairdresser.jpg";
 import "./Login.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 export default function CustomerLogin() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -25,7 +27,7 @@ export default function CustomerLogin() {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      const res = await fetch("http://localhost:5000/api/users/google-login", {
+      const res = await fetch(`${API_BASE_URL}/users/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +114,7 @@ export default function CustomerLogin() {
       const user = result.user;
       
       // Send phone login data to your backend
-      const res = await fetch("http://localhost:5000/api/users/phone-login", {
+      const res = await fetch(`${API_BASE_URL}/users/phone-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
