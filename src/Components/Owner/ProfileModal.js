@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './ProfileModal.css';
+import { API_BASE_URL } from '../../config/api';
 
 const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
   const [selectedAction, setSelectedAction] = useState('Actions');
@@ -51,7 +52,7 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await fetch(`http://localhost:5000/api/appointments/${id}/status`, {
+      await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

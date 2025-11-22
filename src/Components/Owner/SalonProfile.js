@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Profile.css";
+import { API_BASE_URL, UPLOADS_URL } from "../../config/api";
 
 const SalonProfile = () => {
   const { id } = useParams();
@@ -14,7 +15,7 @@ const SalonProfile = () => {
   useEffect(() => {
     const fetchSalon = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/salons/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/salons/${id}`);
         setSalon(res.data);
         setFormData(res.data);
         setLoading(false);
@@ -34,7 +35,7 @@ const SalonProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/salons/${id}`, formData);
+      await axios.put(`${API_BASE_URL}/salons/${id}`, formData);
       alert("Profile updated successfully!");
       setSalon(formData);
       setEditing(false);
@@ -113,7 +114,7 @@ const SalonProfile = () => {
     salon.image
       ? salon.image.startsWith("http")
         ? salon.image // external URL
-        : `http://localhost:5000/uploads/${salon.image}` // uploaded image
+        : `${UPLOADS_URL}/${salon.image}` // uploaded image
       : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='100%25' height='100%25' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E" // default placeholder
   }
   alt="Salon"

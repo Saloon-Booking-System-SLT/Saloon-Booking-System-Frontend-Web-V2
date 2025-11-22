@@ -339,7 +339,7 @@ const ModernDashboard = () => {
                       salon.image
                         ? salon.image.startsWith("http")
                           ? salon.image
-                          : `http://localhost:5000/uploads/${salon.image}`
+                          : `${API_BASE_URL}/uploads/${salon.image}`
                         : "https://ui-avatars.com/api/?name=User&background=random&size=40"
                     }
                     alt="Profile"
