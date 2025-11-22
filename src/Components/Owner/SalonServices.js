@@ -175,7 +175,7 @@ const SalonServices = () => {
                         ? service.image.startsWith("http")
                           ? service.image
                           : `${UPLOADS_URL}/${service.image}`
-                        : "https://via.placeholder.com/150"
+                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='100%25' height='100%25' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E"
                     }
                     alt={service.name}
                     className="service-image"

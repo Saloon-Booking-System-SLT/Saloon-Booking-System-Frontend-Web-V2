@@ -256,7 +256,7 @@ const getCityFromLocation = (location) => {
           ) : (
             <div className="menu-container profile-warp">
               <img
-                src={user.photoURL || "https://via.placeholder.com/40"}
+                src={user.photoURL || "https://ui-avatars.com/api/?name=User&background=random&size=40"}
                 alt="Profile"
                 className="profile-icon"
                 onClick={toggleMenu}
