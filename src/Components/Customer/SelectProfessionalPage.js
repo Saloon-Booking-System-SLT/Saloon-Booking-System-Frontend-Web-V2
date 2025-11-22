@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
+
 const SelectProfessionalPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -15,7 +19,7 @@ const SelectProfessionalPage = () => {
   // Fetch professionals for this salon
   useEffect(() => {
     if (!salon?._id) return;
-    fetch(`http://localhost:5000/api/professionals/${salon._id}`)
+    fetch(`${API_BASE_URL}/api/professionals/${salon._id}`)
       .then((res) => res.json())
       .then((data) => setProfessionals(data))
       .catch((err) => console.error("Failed to fetch professionals", err));
@@ -27,7 +31,7 @@ const SelectProfessionalPage = () => {
 
     Promise.all(
       professionals.map((pro) =>
-        fetch(`http://localhost:5000/api/feedback/professionals/${pro._id}`)
+        fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`)
           .then((res) => res.json())
           .then((data) => {
             console.log("Reviews for", pro.name, ":", data.feedbacks);
@@ -161,7 +165,7 @@ const SelectProfessionalPage = () => {
                           pro.image
                             ? pro.image.startsWith("http")
                               ? pro.image
-                              : `http://localhost:5000/uploads/professionals/${pro.image}`
+                              : `${API_BASE_URL}/uploads/professionals/${pro.image}`
                             : "https://via.placeholder.com/150"
                         }
                         alt={pro.name}
