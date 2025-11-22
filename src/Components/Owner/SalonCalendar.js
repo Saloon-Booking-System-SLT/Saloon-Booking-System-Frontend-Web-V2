@@ -5,6 +5,7 @@ import ProfileModal from './ProfileModal';
 import logo from '../../Assets/logo.png';
 import dayjs from 'dayjs';
 import './SalonCalendar.css';
+import { API_BASE_URL } from '../../config/api';
 
 const SalonCalendar = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const SalonCalendar = () => {
   useEffect(() => {
     const fetchProfessionals = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/professionals/${salon.id}`);
+        const res = await axios.get(`${API_BASE_URL}/professionals/${salon.id}`);
         setProfessionals(res.data);
         setSelectedProfessionalId(res.data[0]?._id || '');
       } catch (err) {
@@ -37,7 +38,7 @@ const SalonCalendar = () => {
     const fetchAppointments = async () => {
       try {
         const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-        const res = await axios.get(`http://localhost:5000/api/appointments/salon/${salon.id}`, {
+        const res = await axios.get(`${API_BASE_URL}/appointments/salon/${salon.id}`, {
           params: { date: formattedDate, professionalId: selectedProfessionalId }
         });
 

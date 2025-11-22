@@ -96,14 +96,22 @@ const fetchSalons = useCallback(async () => {
 
   // Unified filter effect
   useEffect(() => {
-    if (isNearbyMode) {
+    // If "All" is selected, always show all salons from database, not just nearby
+    if (genderFilter === "All") {
+      let filtered = allSalons;
+      if (query) filtered = filtered.filter((s) => s.location.toLowerCase().includes(query.toLowerCase()));
+      setFilteredSalons(filtered);
+      // Reset nearby mode when "All" is selected
+      setIsNearbyMode(false);
+      setManualNearbyMode(false);
+    } else if (isNearbyMode) {
       let filtered = nearbySalons;
-      if (genderFilter !== "All") filtered = filtered.filter((s) => s.salonType === genderFilter);
+      filtered = filtered.filter((s) => s.salonType === genderFilter);
       setFilteredSalons(filtered);
     } else {
       let filtered = allSalons;
       if (query) filtered = filtered.filter((s) => s.location.toLowerCase().includes(query.toLowerCase()));
-      if (genderFilter !== "All") filtered = filtered.filter((s) => s.salonType === genderFilter);
+      filtered = filtered.filter((s) => s.salonType === genderFilter);
       setFilteredSalons(filtered);
     }
   }, [genderFilter, query, allSalons, nearbySalons, isNearbyMode]);
@@ -179,23 +187,20 @@ const getCityFromLocation = (location) => {
   return found || "Unknown";
 };
 
-
-
-
-  // Auto fetch nearest salons on page load
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          fetchNearbySalons(latitude, longitude, false);
-        },
-        (err) => {
-          console.warn("Geolocation denied or unavailable.", err);
-        }
-      );
-    }
-  }, []);
+  // Auto fetch nearest salons on page load (disabled to show all salons first)
+  // useEffect(() => {
+  //   if (navigator.geolocation) {
+  //     navigator.geolocation.getCurrentPosition(
+  //       (pos) => {
+  //         const { latitude, longitude } = pos.coords;
+  //         fetchNearbySalons(latitude, longitude, false);
+  //       },
+  //       (err) => {
+  //         console.warn("Geolocation denied or unavailable.", err);
+  //       }
+  //     );
+  //   }
+  // }, []);
 
   const handleLocationInputChange = (e) => {
     setQuery(e.target.value);
@@ -220,15 +225,6 @@ const getCityFromLocation = (location) => {
     setIsNearbyMode(false);
     setNearbySalons([]);
     applyFilters(allSalons, query, genderFilter);
-  };
-
-  const renderStars = (rating) => {
-    const numericRating = parseFloat(rating);
-    return (
-      <>
-        {"★".repeat(Math.round(numericRating))}{"☆".repeat(5 - Math.round(numericRating))}
-      </>
-    );
   };
 
   return (
@@ -338,14 +334,73 @@ const getCityFromLocation = (location) => {
           <label
             key={type}
             className={`switch-option ${genderFilter === type ? "active" : ""}`}
-            onClick={() => setGenderFilter(type)}
+            onClick={() => {
+              setGenderFilter(type);
+              // If "All" is selected, disable nearby mode to show all salons
+              if (type === "All") {
+                setIsNearbyMode(false);
+                setManualNearbyMode(false);
+              }
+            }}
           >
             <span className="icon-label">{icon}</span> {type}
           </label>
         ))}
       </div>
 
-      {isNearbyMode ? (
+      {genderFilter === "All" || !isNearbyMode ? (
+        <>
+          <h2 className="section-title">
+            {genderFilter === "All" ? "All Salons in Database" : `${genderFilter} Salons`}
+            {filteredSalons.length > 0 && (
+              <span className="salon-count"> ({filteredSalons.length} found)</span>
+            )}
+          </h2>
+          <div className="salon-grid">
+            {filteredSalons.length > 0 ? (
+              filteredSalons.map((salon) => (
+                <div className="salon-card" key={salon._id}>
+                  <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
+                  <div className="salon-info">
+                    <h4>{salon.name}</h4>
+                    <p>{getCityFromLocation(salon.location)}</p>
+                    <p><strong>{salon.salonType}</strong> salon</p>
+                    <p className="rating-stars">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span
+                          key={i}
+                          className={i < salon.avgRating ? "" : "empty-star"}
+                        >
+                          ★
+                        </span>
+                      ))}
+                      <span> ({salon.avgRating})</span>
+                    </p>
+                    <button
+                      className="select-btn"
+                      onClick={() => navigate("/BookSelectionPage", { state: { salon } })}
+                    >
+                      Select
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-salons-message">
+                <p>No {genderFilter === "All" ? "" : genderFilter.toLowerCase()} salons found {query && `in ${query}`}</p>
+                {genderFilter !== "All" && (
+                  <button 
+                    className="btn btn-reset"
+                    onClick={() => setGenderFilter("All")}
+                  >
+                    Show All Salons
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
         <>
           <h2 className="section-title">
             Recommended Salons Near You
@@ -390,59 +445,6 @@ const getCityFromLocation = (location) => {
                     onClick={() => setGenderFilter("All")}
                   >
                     Show All Nearby Salons
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <h2 className="section-title">
-            {genderFilter === "All" ? "All Salons" : `${genderFilter} Salons`}
-            {filteredSalons.length > 0 && (
-              <span className="salon-count"> ({filteredSalons.length} found)</span>
-            )}
-          </h2>
-          <div className="salon-grid">
-            {filteredSalons.length > 0 ? (
-              filteredSalons.map((salon) => (
-                <div className="salon-card" key={salon._id}>
-                  <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
-                  <div className="salon-info">
-                    <h4>{salon.name}</h4>
-                    <p>{getCityFromLocation(salon.location)}</p>
-                    <p><strong>{salon.salonType}</strong> salon</p>
-                    <p className="rating-stars">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span
-                          key={i}
-                          className={i < salon.avgRating ? "" : "empty-star"}
-                        >
-                          ★
-                        </span>
-                      ))}
-                      <span> ({salon.avgRating})</span>
-                    </p>
-                    <button
-  className="select-btn"
-  onClick={() => navigate("/BookSelectionPage", { state: { salon } })}
->
-  Select
-</button>
-
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-salons-message">
-                <p>No {genderFilter === "All" ? "" : genderFilter.toLowerCase()} salons found {query && `in ${query}`}</p>
-                {genderFilter !== "All" && (
-                  <button 
-                    className="btn btn-reset"
-                    onClick={() => setGenderFilter("All")}
-                  >
-                    Show All Salons
                   </button>
                 )}
               </div>

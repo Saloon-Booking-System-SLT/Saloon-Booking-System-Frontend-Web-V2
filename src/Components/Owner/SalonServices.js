@@ -23,7 +23,6 @@ const SalonServices = () => {
 
   // Updated Sidebar Component
   const Sidebar = () => {
-    const navigate = useNavigate();
 
     return (
       <aside className="modern-sidebar">

@@ -2,8 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import './Dashboard.css';
 import logo from '../../Assets/logo.png';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../Api/axios';
 import dayjs from 'dayjs';
+import { useAuth } from '../../contexts/AuthContext';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL ? 
+  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  'http://localhost:5000';
 
 // ✅ Calendar-style Sidebar component
 const Sidebar = () => {
@@ -75,15 +80,18 @@ const ModernDashboard = () => {
   const [salon, setSalon] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const notifRef = useRef();
   const navigate = useNavigate();
+  const { user, logout: authLogout } = useAuth();
 
   // ✅ Logout function
   const handleLogout = () => {
     const confirmLogout = window.confirm("Do you really want to logout?");
     if (confirmLogout) {
       localStorage.removeItem("salonUser");
-      navigate("/"); // redirect to login page
+      authLogout(); // Use auth context logout
+      navigate("/OwnerLogin"); // redirect to owner login page
     }
   };
 
@@ -112,18 +120,42 @@ const ModernDashboard = () => {
 
   // ✅ Fetch salon data and appointments
   useEffect(() => {
-    const salonData = JSON.parse(localStorage.getItem("salonUser"));
+    // Try to get salon data from auth context first, then localStorage
+    let salonData = null;
+    
+    if (user && user.role === 'owner') {
+      salonData = user;
+    } else {
+      const storedSalon = localStorage.getItem("salonUser");
+      if (storedSalon) {
+        try {
+          salonData = JSON.parse(storedSalon);
+        } catch (e) {
+          console.error('Failed to parse salon data from localStorage:', e);
+        }
+      }
+    }
+    
     if (!salonData?.id) {
+      setError('Salon data not found. Please log in again.');
       setLoading(false);
+      navigate('/OwnerLogin');
       return;
     }
+    
     setSalon(salonData);
 
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/appointments/salon/${salonData.id}`);
-        const all = res.data;
+        setError(null);
+        
+        console.log('🔍 Fetching appointments for salon:', salonData.id);
+        
+        const response = await axiosInstance.get(`/appointments/salon/${salonData.id}`);
+        const all = response.data;
+
+        console.log('✅ Fetched appointments:', all.length);
 
         const today = dayjs().format("YYYY-MM-DD");
 
@@ -134,15 +166,21 @@ const ModernDashboard = () => {
         setTodayAppointments(todayList);
         setUpcomingAppointments(upcomingList);
       } catch (err) {
-        console.error("Failed to fetch appointments", err);
-        alert("Failed to load appointments");
+        console.error("❌ Failed to fetch appointments:", err);
+        const errorMessage = err.response?.data?.message || 'Failed to load appointments';
+        setError(errorMessage);
+        
+        // If it's an auth error, redirect to login
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          navigate('/OwnerLogin');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchAppointments();
-  }, []);
+  }, [user, navigate]);
 
   const salonId = salon?.id;
 
@@ -163,6 +201,29 @@ const ModernDashboard = () => {
             <div className="loading-spinner">
               <i className="fas fa-spinner fa-spin"></i>
               <p>Loading dashboard...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="modern-full-page">
+        <div className="modern-layout">
+          <Sidebar />
+          <main className="modern-main-content">
+            <div className="error-state">
+              <i className="fas fa-exclamation-triangle"></i>
+              <h3>Error Loading Dashboard</h3>
+              <p>{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="retry-btn"
+              >
+                Retry
+              </button>
             </div>
           </main>
         </div>
@@ -240,13 +301,17 @@ const ModernDashboard = () => {
                               className="notif-read-btn"
                               onClick={async () => {
                                 try {
-                                  await axios.patch(`http://localhost:5000/api/appointments/${appt._id}/status`, { status: "confirmed" });
+                                  await axiosInstance.patch(`/appointments/${appt._id}/status`, { status: "confirmed" });
                                   setAppointments(prev =>
+                                    prev.map(a => a._id === appt._id ? { ...a, status: "confirmed" } : a)
+                                  );
+                                  // Update today appointments if it's today's appointment
+                                  setTodayAppointments(prev =>
                                     prev.map(a => a._id === appt._id ? { ...a, status: "confirmed" } : a)
                                   );
                                 } catch (err) {
                                   console.error("Failed to confirm appointment:", err);
-                                  alert("Error confirming appointment");
+                                  alert("Error confirming appointment: " + (err.response?.data?.message || 'Unknown error'));
                                 }
                               }}
                             >
@@ -274,7 +339,7 @@ const ModernDashboard = () => {
                       salon.image
                         ? salon.image.startsWith("http")
                           ? salon.image
-                          : `http://localhost:5000/uploads/${salon.image}`
+                          : `${API_BASE_URL}/uploads/${salon.image}`
                         : "https://ui-avatars.com/api/?name=User&background=random&size=40"
                     }
                     alt="Profile"

@@ -22,9 +22,9 @@ const SelectTimePage = () => {
 
   const [selectedServices, setSelectedServices] = useState(passedServices);
   const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
-  const [phone, setPhone] = useState(user?.phone || "");
+  // const [phone, setPhone] = useState(user?.phone || ""); // Commented out unused variable
   const currentServiceIndex = useRef(0);
-  const [renderKey, setRenderKey] = useState(0);
+  const [renderKey] = useState(0);
   const [selectedDates, setSelectedDates] = useState({});
   const [selectedTimes, setSelectedTimes] = useState({});
   const [availableSlots, setAvailableSlots] = useState({});

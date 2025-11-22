@@ -4,6 +4,7 @@ import './BusinessSetupWizard.css';
 import maleFemaleImage from '../../Assets/male-female.png';
 import manIcon from '../../Assets/man_icon.png';
 import womenIcon from '../../Assets/women_icon.png';
+import { API_BASE_URL } from '../../config/api';
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -87,7 +88,7 @@ const BusinessSetupWizard = () => {
       formData.append('coordinates', JSON.stringify(coordinates));
 
       try {
-        const res = await fetch('http://localhost:5000/api/salons/register', {
+        const res = await fetch(`${API_BASE_URL}/salons/register`, {
           method: 'POST',
           body: formData,
         });

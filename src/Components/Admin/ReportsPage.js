@@ -56,7 +56,7 @@ const ReportsPage = () => {
     }
 
     fetchReportData();
-  }, [dateRange, reportType]);
+  }, [dateRange, reportType, fetchReportData, navigate]);
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -69,11 +69,11 @@ const ReportsPage = () => {
       
       // Fetch services data
       const servicesRes = await axios.get(`http://localhost:5000/api/services/salon/${salonData.id}`);
-      const services = servicesRes.data;
+      // const services = servicesRes.data; // Commented out unused variable
       
       // Fetch professionals data
       const professionalsRes = await axios.get(`http://localhost:5000/api/professionals/salon/${salonData.id}`);
-      const professionals = professionalsRes.data;
+      // const professionals = professionalsRes.data; // Commented out unused variable
 
       // Filter data by date range
       const filteredAppointments = appointments.filter(apt => 

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { getFeedbacks, updateFeedbackStatus } from '../../services/api';
 import './FeedbackModeration.css';
 
 const FeedbackModerationPage = () => {
-  const navigate = useNavigate();
   const [feedbacks, setFeedbacks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);

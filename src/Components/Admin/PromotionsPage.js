@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import './PromotionsPage.css';
 
 const PromotionsPage = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
 

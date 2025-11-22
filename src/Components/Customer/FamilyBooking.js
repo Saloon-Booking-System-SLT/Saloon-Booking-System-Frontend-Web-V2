@@ -34,14 +34,6 @@ const FamilyBooking = () => {
     }
   }, [location.state]);
 
-  const addFamilyMember = () => {
-    setFamilyMembers([...familyMembers, {
-      id: Date.now(),
-      name: '',
-      relationship: ''
-    }]);
-  };
-
   const updateFamilyMember = (id, field, value) => {
     setFamilyMembers(familyMembers.map(member => 
       member.id === id ? { ...member, [field]: value } : member

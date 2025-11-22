@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { getCustomers } from '../../services/api';
 import './CustomersPage.css';
 
 const CustomersPage = () => {
-  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);

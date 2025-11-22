@@ -22,8 +22,8 @@ const ConfirmationPage = () => {
     isGroupBooking = false,
     salonLocation = "",
     professionalName = "Any Professional",
-    services = [],
-    groupMembers = [],
+    // services = [], // Commented out unused variable
+    // groupMembers = [], // Commented out unused variable
     salon,
     user = JSON.parse(localStorage.getItem("user")) || {},
     appointmentId, // This indicates individual booking was already saved
