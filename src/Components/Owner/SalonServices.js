@@ -5,35 +5,6 @@ import './SalonServices.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
-  const salon = JSON.parse(localStorage.getItem("salonUser"));
-  const [services, setServices] = useState([]);
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    duration: '15min',
-    gender: 'Unisex',
-    image: '',
-  });
-  const [showPopup, setShowPopup] = useState(false);
-  const [editingService, setEditingService] = useState(null);
-  const [file, setFile] = useState(null);
-
-  // Updated Sidebar Component
-  const Sidebar = () => {
-    const navigate = useNavigate();
-
-    return (
-      <aside className="modern-sidebar">
-        <img src={logo} alt="Brand Logo" className="modern-logo" />
-        <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
-        <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate('/calendar')}></i>
-        <i className="fas fa-smile active" title="Services" onClick={() => navigate('/services')}></i>
-        <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate('/feedbacks')}></i>
-        <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
-        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
-      </aside>
-    );
-  };
 
 const SalonServices = () => {
   const navigate = useNavigate();
