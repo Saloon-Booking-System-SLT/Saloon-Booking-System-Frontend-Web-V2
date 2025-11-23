@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import './AdminDashboard.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../Api/axios';
 import dayjs from 'dayjs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AdminLayout from './AdminLayout';
@@ -81,20 +81,6 @@ const AdminDashboard = () => {
     }
   }, [navigate]);
   
-  // API configuration
-  const API_BASE_URL = 'http://localhost:5000/api';
-  const getAxiosInstance = () => {
-    const token = localStorage.getItem('token');
-    return axios.create({
-      baseURL: API_BASE_URL,
-      timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token || ''}`
-      }
-    });
-  };
-
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -116,19 +102,38 @@ const AdminDashboard = () => {
     try {
       setError(null);
       
-      // Fetch real data from backend
-      const axiosInstance = getAxiosInstance(); // Get fresh instance with token
-      const response = await axiosInstance.get('/admin/dashboard/stats');
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication required. Please login again.');
+        navigate('/admin-login');
+        return;
+      }
+      
+      // Fetch real data from backend using configured axios instance
+      const response = await axios.get('/admin/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       setDashboardData(response.data);
       setLastUpdated(new Date());
       
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
-      setError('Failed to load dashboard data. Please try again.');
+      
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Session expired. Please login again.');
+        setTimeout(() => navigate('/admin-login'), 2000);
+      } else {
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []); // Remove axiosInstance from dependencies
+  }, [navigate]); // Add navigate to dependencies
   
   // Initial data fetch
   useEffect(() => {

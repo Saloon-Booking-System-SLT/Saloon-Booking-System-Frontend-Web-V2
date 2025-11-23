@@ -2,140 +2,69 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import './CustomersPage.css';
+import axios from '../../Api/axios';
 
 const CustomersPage = () => {
-  // Sample data for demonstration
-  const sampleCustomers = [
-    {
-      _id: '1',
-      name: 'Sophia Bennett',
-      email: 'sophia.bennett@email.com',
-      phone: '+1 (555) 123-4567',
-      photoURL: null,
-      bookings: 12,
-      totalSpent: 1800,
-      avgSpend: 150,
-      loyaltyScore: 95,
-      isBlacklisted: false,
-      smsOptIn: true,
-      isRegistered: true,
-      lastBooking: '2024-11-15'
-    },
-    {
-      _id: '2',
-      name: 'Ethan Carter',
-      email: 'ethan.carter@email.com',
-      phone: '+1 (555) 234-5678',
-      photoURL: null,
-      bookings: 8,
-      totalSpent: 1600,
-      avgSpend: 200,
-      loyaltyScore: 80,
-      isBlacklisted: false,
-      smsOptIn: true,
-      isRegistered: true,
-      lastBooking: '2024-11-20'
-    },
-    {
-      _id: '3',
-      name: 'Guest (No Account)',
-      email: 'guest1@email.com',
-      phone: '+1 (555) 345-6789',
-      photoURL: null,
-      bookings: 3,
-      totalSpent: 240,
-      avgSpend: 80,
-      loyaltyScore: null,
-      isBlacklisted: false,
-      smsOptIn: false,
-      isRegistered: false,
-      lastBooking: '2024-11-18'
-    },
-    {
-      _id: '4',
-      name: 'Guest (No Account)',
-      email: 'N/A',
-      phone: '+1 (555) 456-7890',
-      photoURL: null,
-      bookings: 1,
-      totalSpent: 75,
-      avgSpend: 75,
-      loyaltyScore: null,
-      isBlacklisted: false,
-      smsOptIn: false,
-      isRegistered: false,
-      lastBooking: '2024-11-22'
-    },
-    {
-      _id: '5',
-      name: 'Isabella Rodriguez',
-      email: 'isabella.r@email.com',
-      phone: '+1 (555) 567-8901',
-      photoURL: null,
-      bookings: 15,
-      totalSpent: 2250,
-      avgSpend: 150,
-      loyaltyScore: 98,
-      isBlacklisted: false,
-      smsOptIn: true,
-      isRegistered: true,
-      lastBooking: '2024-11-21'
-    },
-    {
-      _id: '6',
-      name: 'James Wilson',
-      email: 'james.wilson@email.com',
-      phone: '+1 (555) 678-9012',
-      photoURL: null,
-      bookings: 5,
-      totalSpent: 500,
-      avgSpend: 100,
-      loyaltyScore: 65,
-      isBlacklisted: false,
-      smsOptIn: false,
-      isRegistered: true,
-      lastBooking: '2024-11-10'
-    },
-    {
-      _id: '7',
-      name: 'Guest (No Account)',
-      email: 'N/A',
-      phone: 'N/A',
-      photoURL: null,
-      bookings: 2,
-      totalSpent: 150,
-      avgSpend: 75,
-      loyaltyScore: null,
-      isBlacklisted: false,
-      smsOptIn: false,
-      isRegistered: false,
-      lastBooking: '2024-11-19'
-    },
-    {
-      _id: '8',
-      name: 'Emma Thompson',
-      email: 'emma.t@email.com',
-      phone: '+1 (555) 789-0123',
-      photoURL: null,
-      bookings: 20,
-      totalSpent: 3000,
-      avgSpend: 150,
-      loyaltyScore: 100,
-      isBlacklisted: false,
-      smsOptIn: true,
-      isRegistered: true,
-      lastBooking: '2024-11-23'
-    }
-  ];
-
-  const [customers, setCustomers] = useState(sampleCustomers);
+  const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const customersPerPage = 10;
+
+  // Fetch customers from backend
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          setError('Authentication required');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch customers from backend
+        const response = await axios.get('/admin/customers', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Transform data to match component expectations
+        const transformedCustomers = response.data.map(customer => ({
+          _id: customer._id,
+          name: customer.name || 'Unknown',
+          email: customer.email || 'N/A',
+          phone: customer.phone || 'N/A',
+          photoURL: customer.photoURL || null,
+          bookings: customer.bookings || 0,
+          totalSpent: customer.totalSpent || 0,
+          avgSpend: Math.round(customer.avgSpend || 0),
+          loyaltyScore: customer.loyaltyScore || null,
+          isBlacklisted: customer.isBlacklisted || false,
+          smsOptIn: customer.smsOptIn || false,
+          isRegistered: customer.isRegistered !== undefined ? customer.isRegistered : true,
+          lastBooking: customer.lastBooking || null
+        }));
+
+        setCustomers(transformedCustomers);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching customers:', err);
+        setError(err.response?.data?.message || 'Failed to fetch customers');
+        setIsLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []); // Run once on component mount
 
   // Filter customers by search
   const filteredCustomers = customers.filter(customer =>
