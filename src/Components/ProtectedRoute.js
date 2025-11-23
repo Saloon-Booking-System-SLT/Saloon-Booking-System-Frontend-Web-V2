@@ -20,8 +20,11 @@ const ProtectedRoute = ({ children, requiredRole, requiredRoles }) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect to login page with return url
-    return <Navigate to="/login/customer" state={{ from: location }} replace />;
+    // Redirect to appropriate login based on the required role
+    const loginPath = requiredRole === 'admin' ? '/admin-login' 
+                    : requiredRole === 'owner' ? '/OwnerLogin'
+                    : '/login/customer';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   // Check for specific role
