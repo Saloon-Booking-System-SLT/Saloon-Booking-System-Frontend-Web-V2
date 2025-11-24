@@ -7,9 +7,9 @@ import axios from '../../Api/axios'; // Import axios
 const CalendarPage = () => {
   const navigate = useNavigate();
 
-  // Set to July 2024 as requested
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 6, 1)); // July 2024
-  const [selectedDate, setSelectedDate] = useState(new Date(2024, 6, 15)); // July 15, 2024
+  // Set to current date
+const [currentDate, setCurrentDate] = useState(new Date()); // Current month
+const [selectedDate, setSelectedDate] = useState(new Date()); // Today's date
   const [searchQuery, setSearchQuery] = useState('');
   
   // ✅ NEW: State for appointments from backend
