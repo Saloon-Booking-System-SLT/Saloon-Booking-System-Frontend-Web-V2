@@ -40,7 +40,7 @@ const SummaryChart = ({ data }) => {
             <Tooltip />
             <Legend />
             <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
-            <Bar dataKey="revenue" fill="#82ca9d" name="Revenue ($)" />
+            <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -83,11 +83,10 @@ const AdminDashboard = () => {
   
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
+    return `Rs ${amount.toLocaleString('en-LK', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
   };
   
   // Handle refresh
@@ -333,7 +332,7 @@ const AdminDashboard = () => {
                         <Tooltip />
                         <Legend />
                         <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
-                        <Bar dataKey="revenue" fill="#82ca9d" name="Revenue ($)" />
+                        <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

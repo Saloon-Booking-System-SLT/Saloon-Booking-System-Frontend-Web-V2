@@ -170,7 +170,7 @@ const LoyaltyPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Conversion Rate ($)</label>
+              <label className="form-label">Conversion Rate (Rs)</label>
                 <input
                   type="number"
                   className="form-input"
@@ -268,7 +268,7 @@ const LoyaltyPage = () => {
                     </div>
                   </td>
                   <td>{salon.pointsThreshold} points</td>
-                  <td>${salon.conversionRate}</td>
+                  <td>Rs {salon.conversionRate}</td>
                 </tr>
               ))}
             </tbody>
