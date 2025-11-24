@@ -124,13 +124,15 @@ const MyAppointmentsPage = () => {
           salonId: selectedAppointment.salonId._id,
           professionalId: selectedAppointment.professionalId,
           userEmail: user.email,
+          customerName: user.name || user.username || 'Anonymous', // ✅ Add customer name
           rating,
           comment: feedbackText,
         }),
       });
 
       if (!res.ok) {
-        alert("Failed to submit feedback");
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to submit feedback");
         return;
       }
 
@@ -138,7 +140,7 @@ const MyAppointmentsPage = () => {
       setFeedbackText("");
       setRating(0);
 
-      alert("Feedback submitted successfully!");
+      alert("✅ Feedback submitted successfully! It will appear after admin approval.");
 
       navigate("/", {
         state: {
@@ -147,7 +149,8 @@ const MyAppointmentsPage = () => {
         },
       });
     } catch (err) {
-      alert("Error occurred while submitting feedback");
+      console.error("Error submitting feedback:", err);
+      alert("❌ Error occurred while submitting feedback");
     }
   };
 

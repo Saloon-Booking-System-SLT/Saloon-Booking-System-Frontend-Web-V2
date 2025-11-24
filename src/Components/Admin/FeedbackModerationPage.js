@@ -19,14 +19,15 @@ const FeedbackModerationPage = () => {
         
         // Transform data to match UI format
         const transformedData = data.map(feedback => ({
-          _id: feedback._id || feedback.id,
+          _id: feedback._id,
           status: feedback.status || 'pending',
           rating: feedback.rating || 0,
-          comment: feedback.review || feedback.comment || '',
+          comment: feedback.comment || feedback.review || '',
           customer: feedback.customerName || feedback.user?.name || 'Anonymous',
           salon: feedback.salonId?.name || 'Unknown Salon',
           date: feedback.createdAt || new Date().toISOString(),
-          professional: feedback.professionalId?.name || 'N/A'
+          professional: feedback.professionalId?.name || 'N/A',
+          userEmail: feedback.userEmail
         }));
         
         setFeedbacks(transformedData);
