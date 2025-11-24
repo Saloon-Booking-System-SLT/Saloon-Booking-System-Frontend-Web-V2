@@ -116,6 +116,13 @@ const MyAppointmentsPage = () => {
     }
 
     try {
+      // ✅ Get customer name from appointment data first, then fallback to user object
+      const customerName = selectedAppointment.user?.name || 
+                          user?.name || 
+                          user?.username || 
+                          selectedAppointment.name ||
+                          'Anonymous';
+      
       const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,8 +130,8 @@ const MyAppointmentsPage = () => {
           appointmentId: selectedAppointment._id,
           salonId: selectedAppointment.salonId._id,
           professionalId: selectedAppointment.professionalId,
-          userEmail: user.email,
-          customerName: user.name || user.username || 'Anonymous', // ✅ Add customer name
+          userEmail: user?.email || selectedAppointment.user?.email || '',
+          customerName: customerName, // ✅ NEW - gets name from appointment
           rating,
           comment: feedbackText,
         }),

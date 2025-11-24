@@ -243,7 +243,7 @@ const AdminDashboard = () => {
                           <tr key={booking._id || index} className="hover:bg-gray-50 transition">
                             <td className="px-6 py-4 text-sm font-mono text-blue-600">#{booking._id?.slice(-6) || '12345'}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">{booking.user?.name || 'Unknown'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonName || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonId?.name || 'N/A'}</td>
                             <td className="px-6 py-4 text-sm text-blue-600">{booking.services?.[0]?.name || 'N/A'}</td>
                             <td className="px-6 py-4 text-sm text-blue-600">{dayjs(booking.date).format('MMM D, YYYY')}</td>
                             <td className="px-6 py-4">
@@ -291,7 +291,7 @@ const AdminDashboard = () => {
                           <tr key={`cancel-${booking._id || index}`} className="hover:bg-gray-50 transition">
                             <td className="px-6 py-4 text-sm font-mono text-blue-600">#{booking._id?.slice(-6) || '12350'}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">{booking.user?.name || 'Unknown'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonName || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonId?.name || 'N/A'}</td>
                             <td className="px-6 py-4 text-sm text-blue-600">{booking.services?.[0]?.name || 'N/A'}</td>
                             <td className="px-6 py-4 text-sm text-blue-600">{dayjs(booking.date).format('MMM D, YYYY')}</td>
                             <td className="px-6 py-4 text-sm text-gray-600">{booking.cancellationReason || 'No reason provided'}</td>
