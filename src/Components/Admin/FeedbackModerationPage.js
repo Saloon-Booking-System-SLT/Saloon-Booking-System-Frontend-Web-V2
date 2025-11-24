@@ -7,6 +7,7 @@ import './FeedbackModeration.css';
 const FeedbackModerationPage = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [starFilter, setStarFilter] = useState('All'); // NEW
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -42,12 +43,24 @@ const FeedbackModerationPage = () => {
     fetchFeedbacks();
   }, []);
 
-  // Filter feedbacks by search
-  const filteredFeedbacks = feedbacks.filter(feedback =>
-    feedback.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    feedback.salon?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    feedback.comment?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter feedbacks by search AND star rating
+  const filteredFeedbacks = feedbacks.filter(feedback => {
+    // Search filter
+    const matchesSearch = 
+      feedback.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      feedback.salon?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      feedback.comment?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Star rating filter
+    let matchesStarFilter = true;
+    if (starFilter !== 'All') {
+      const selectedRating = parseInt(starFilter);
+      matchesStarFilter = feedback.rating === selectedRating;
+    }
+
+    // Return true only if both conditions match
+    return matchesSearch && matchesStarFilter;
+  });
 
   // Calculate analytics
   const totalFeedbacks = feedbacks.length;
@@ -197,17 +210,37 @@ const FeedbackModerationPage = () => {
             <div className="feedback-count">{filteredFeedbacks.length} total reviews</div>
           </div>
 
-          {/* Search Bar */}
-          <div className="search-bar">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by customer, salon, or review..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          {/* Search and Filter Bar */}
+          <div className="filter-bar">
+            {/* Search Bar */}
+            <div className="search-bar">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search by customer, salon, or review..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Star Rating Filter */}
+            <div className="star-filter">
+              <label>Filter by Rating:</label>
+              <select 
+                value={starFilter} 
+                onChange={(e) => setStarFilter(e.target.value)}
+                className="star-filter-select"
+              >
+                <option value="All">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
           </div>
 
           {/* Table */}
