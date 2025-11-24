@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext"; // Import the auth context
 import "./OwnerLogin.css";
 import loginImage from "../../Assets/login-image.jpg";
-import axios from "axios";
+import axios from "../../Api/axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const OwnerLogin = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/salons/login`, formData);
+      const res = await axios.post('/salons/login', formData);
       
       // Assuming your backend returns token and salon data
       const { token, salon } = res.data;
