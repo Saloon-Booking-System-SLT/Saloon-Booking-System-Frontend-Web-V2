@@ -182,6 +182,134 @@ const ModernDashboard = () => {
     fetchAppointments();
   }, [user, navigate]);
 
+  // ✅ Check approval status - show pending screen if not approved
+  if (salon && salon.approvalStatus !== 'approved') {
+    return (
+      <div className="modern-full-page">
+        <div className="modern-layout">
+          <Sidebar />
+          <main className="modern-main-content">
+            <div className="approval-pending-container" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '80vh',
+              textAlign: 'center',
+              padding: '20px'
+            }}>
+              <div style={{
+                backgroundColor: '#fff',
+                borderRadius: '12px',
+                padding: '40px',
+                maxWidth: '600px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+                {salon.approvalStatus === 'pending' && (
+                  <>
+                    <i className="fas fa-clock" style={{
+                      fontSize: '80px',
+                      color: '#ffa500',
+                      marginBottom: '20px'
+                    }}></i>
+                    <h2 style={{
+                      fontSize: '28px',
+                      color: '#333',
+                      marginBottom: '15px'
+                    }}>Approval Pending</h2>
+                    <p style={{
+                      fontSize: '16px',
+                      color: '#666',
+                      marginBottom: '20px',
+                      lineHeight: '1.6'
+                    }}>
+                      Thank you for registering your salon with us!<br/>
+                      Your salon registration is currently under review by our admin team.<br/>
+                      You will be able to access all features once your salon is approved.
+                    </p>
+                    <div style={{
+                      backgroundColor: '#fff3cd',
+                      border: '1px solid #ffc107',
+                      borderRadius: '8px',
+                      padding: '15px',
+                      marginTop: '20px'
+                    }}>
+                      <i className="fas fa-info-circle" style={{ color: '#856404', marginRight: '8px' }}></i>
+                      <span style={{ color: '#856404', fontSize: '14px' }}>
+                        This usually takes 24-48 hours. We'll notify you via email once approved.
+                      </span>
+                    </div>
+                  </>
+                )}
+                
+                {salon.approvalStatus === 'rejected' && (
+                  <>
+                    <i className="fas fa-times-circle" style={{
+                      fontSize: '80px',
+                      color: '#dc3545',
+                      marginBottom: '20px'
+                    }}></i>
+                    <h2 style={{
+                      fontSize: '28px',
+                      color: '#333',
+                      marginBottom: '15px'
+                    }}>Registration Rejected</h2>
+                    <p style={{
+                      fontSize: '16px',
+                      color: '#666',
+                      marginBottom: '20px',
+                      lineHeight: '1.6'
+                    }}>
+                      We're sorry, but your salon registration has been rejected.
+                    </p>
+                    {salon.rejectionReason && (
+                      <div style={{
+                        backgroundColor: '#f8d7da',
+                        border: '1px solid #f5c6cb',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        marginTop: '20px',
+                        marginBottom: '20px'
+                      }}>
+                        <strong style={{ color: '#721c24' }}>Reason:</strong>
+                        <p style={{ color: '#721c24', marginTop: '8px', marginBottom: '0' }}>
+                          {salon.rejectionReason}
+                        </p>
+                      </div>
+                    )}
+                    <p style={{ fontSize: '14px', color: '#666' }}>
+                      Please contact support or register again with correct information.
+                    </p>
+                  </>
+                )}
+                
+                <button 
+                  onClick={handleLogout}
+                  style={{
+                    marginTop: '30px',
+                    padding: '12px 30px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#5a6268'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#6c757d'}
+                >
+                  <i className="fas fa-sign-out-alt" style={{ marginRight: '8px' }}></i>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   const salonId = salon?.id;
 
   // Quick Stats
