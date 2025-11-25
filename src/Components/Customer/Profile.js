@@ -37,7 +37,7 @@ const Profile = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/${user._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -153,7 +153,7 @@ const AddAddressPopup = ({ user, setUser, close }) => {
     const updated = { ...user, address: [...(user.address || []), { type, text }] };
 
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/${user._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),

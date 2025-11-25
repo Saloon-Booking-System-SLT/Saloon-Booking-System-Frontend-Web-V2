@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const instance = axios.create({
-  // It is likely defaulting to process.env.REACT_APP_API_URL which is set to the render.com URL
-  baseURL: "http://localhost:5000/api", 
+  // Replace localhost with your hosted backend URL
+  baseURL: "https://saloon-booking-system-backend-v2.onrender.com/api", 
   withCredentials: true,
 });
 

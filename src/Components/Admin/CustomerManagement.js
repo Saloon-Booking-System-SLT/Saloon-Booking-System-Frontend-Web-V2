@@ -44,7 +44,7 @@ const CustomerManagement = () => {
       const salonData = JSON.parse(localStorage.getItem("salonUser"));
       
       // Fetch appointments to get customer data
-      const appointmentsRes = await axios.get(`http://localhost:5000/api/appointments/salon/${salonData.id}`);
+      const appointmentsRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/appointments/salon/${salonData.id}`);
       const appointments = appointmentsRes.data;
 
       // Process customers from appointments
@@ -192,7 +192,7 @@ const CustomerManagement = () => {
     
     try {
       // Create new user in backend
-      const response = await axios.post('http://localhost:5000/api/users/register', newCustomerData);
+      const response = await axios.post('https://saloon-booking-system-backend-v2.onrender.com/api/users/register', newCustomerData);
       
       if (response.data) {
         alert('Customer added successfully!');
