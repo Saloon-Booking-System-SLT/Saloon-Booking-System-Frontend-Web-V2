@@ -15,6 +15,8 @@ const SelectProfessionalPage = () => {
   const [popupService, setPopupService] = useState(null);
   const [serviceProfessionals, setServiceProfessionals] = useState({});
   const [reviews, setReviews] = useState({});
+  const [viewReviewsPro, setViewReviewsPro] = useState(null);
+
 
   // Fetch professionals for this salon
   useEffect(() => {

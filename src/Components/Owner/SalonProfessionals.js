@@ -143,11 +143,7 @@ const SalonProfessionalsV2 = () => {
   return (
     <div className="pro-v2-container">
       {/* Sidebar */}
-      <aside className="modern-sidebar">
-        <img src={logo} alt="Logo" className="modern-logo" />
-        <i className="fas fa-home" onClick={() => navigate("/dashboard")}></i>
-        <i className="fas fa-users active"></i>
-      </aside>
+      <Sidebar />
 
       <div className="pro-v2-main">
         {/* Filters */}
