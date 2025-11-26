@@ -122,8 +122,9 @@ const SalonCalendar = () => {
         <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
         <i className="fas fa-calendar-alt active" title="Calendar" onClick={() => navigate('/calendar')}></i>
         <i className="fas fa-smile" title="Customers" onClick={() => navigate('/services')}></i>
-        <i className="fas fa-book" title="Bookings"></i>
-        <i className="fas fa-chart-bar" title="Reports"></i>
+        <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
+        <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
+        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
       </aside>
 
       <div className="main-content">

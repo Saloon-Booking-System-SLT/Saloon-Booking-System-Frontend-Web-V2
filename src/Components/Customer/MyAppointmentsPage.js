@@ -108,7 +108,7 @@ const MyAppointmentsPage = () => {
     setShowPopup(true);
   };
 
-  // Submit feedback
+  // Submit feedback - DEBUG VERSION
   const submitFeedback = async () => {
     if (!rating) {
       alert("Please provide a rating");
@@ -116,39 +116,46 @@ const MyAppointmentsPage = () => {
     }
 
     try {
-      // ✅ Get customer name from appointment data first, then fallback to user object
-      const customerName = selectedAppointment.user?.name || 
-                          user?.name || 
-                          user?.username || 
-                          selectedAppointment.name ||
-                          'Anonymous';
-      
+      // Combine logic: get customer name from appointment or user
+      const customerName = selectedAppointment.user?.name || user?.name || user?.username || selectedAppointment.name || 'Anonymous';
+      // Prepare feedback data
+      const feedbackData = {
+        appointmentId: selectedAppointment._id,
+        salonId: selectedAppointment.salonId._id,
+        professionalId: selectedAppointment.professionalId?._id || selectedAppointment.professionalId,
+        userEmail: user?.email || selectedAppointment.user?.email || '',
+        customerName,
+        rating,
+        comment: feedbackText,
+      };
+      // Debug log
+      console.log("=== FEEDBACK DEBUG START ===");
+      console.log("selectedAppointment:", selectedAppointment);
+      console.log("feedbackData:", feedbackData);
+      console.log("=== FEEDBACK DEBUG END ===");
+      // Send feedback
       const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appointmentId: selectedAppointment._id,
-          salonId: selectedAppointment.salonId._id,
-          professionalId: selectedAppointment.professionalId,
-          userEmail: user?.email || selectedAppointment.user?.email || '',
-          customerName: customerName, // ✅ NEW - gets name from appointment
-          rating,
-          comment: feedbackText,
-        }),
+        body: JSON.stringify(feedbackData),
       });
 
+      const responseText = await res.text();
+      console.log("📥 Server response status:", res.status);
+      console.log("📥 Server response text:", responseText);
       if (!res.ok) {
-        const errorData = await res.json();
-        alert(errorData.message || "Failed to submit feedback");
+        try {
+          const errorData = JSON.parse(responseText);
+          alert(`Failed to submit feedback: ${errorData.message || "Unknown error"}`);
+        } catch {
+          alert(`Failed to submit feedback: ${responseText}`);
+        }
         return;
       }
-
       setShowPopup(false);
       setFeedbackText("");
       setRating(0);
-
       alert("✅ Feedback submitted successfully! It will appear after admin approval.");
-
       navigate("/", {
         state: {
           salon: selectedAppointment.salonId,
@@ -156,8 +163,8 @@ const MyAppointmentsPage = () => {
         },
       });
     } catch (err) {
-      console.error("Error submitting feedback:", err);
-      alert("❌ Error occurred while submitting feedback");
+      console.error("❌ Error submitting feedback:", err);
+      alert(`Error occurred while submitting feedback: ${err.message}`);
     }
   };
 
