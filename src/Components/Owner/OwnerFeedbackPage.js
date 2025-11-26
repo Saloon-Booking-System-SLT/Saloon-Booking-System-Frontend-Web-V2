@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./OwnerFeedbackPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
 
 const OwnerFeedbackPage = () => {
   const navigate = useNavigate();

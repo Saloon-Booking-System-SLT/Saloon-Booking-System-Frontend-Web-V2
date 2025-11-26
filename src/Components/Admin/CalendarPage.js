@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import './CalendarPage.css';
@@ -7,9 +7,9 @@ import axios from '../../Api/axios'; // Import axios
 const CalendarPage = () => {
   const navigate = useNavigate();
 
-  // Set to July 2024 as requested
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 6, 1)); // July 2024
-  const [selectedDate, setSelectedDate] = useState(new Date(2024, 6, 15)); // July 15, 2024
+  // Set to current date
+const [currentDate, setCurrentDate] = useState(new Date()); // Current month
+const [selectedDate, setSelectedDate] = useState(new Date()); // Today's date
   const [searchQuery, setSearchQuery] = useState('');
   
   // ✅ NEW: State for appointments from backend
@@ -17,17 +17,40 @@ const CalendarPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ✅ NEW: Helper function to convert 24h time to 12h format (9:00 AM)
+  const formatTime = useCallback((time24) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  }, []);
+
   // ✅ NEW: Function to fetch appointments from backend
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError(null);
+    
     try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication required. Please login again.');
+        navigate('/admin-login');
+        return;
+      }
+      
       // Format the selected date as YYYY-MM-DD
       const formattedDate = selectedDate.toISOString().split('T')[0];
       
-      // Make API call to backend - FIXED ENDPOINT
+      // Make API call to backend with authentication
       const response = await axios.get('/admin/appointments', {
-        params: { date: formattedDate }
+        params: { date: formattedDate },
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       // Transform backend data to match our frontend format
@@ -49,21 +72,17 @@ const CalendarPage = () => {
       setAppointments(transformedAppointments);
     } catch (err) {
       console.error('Error fetching appointments:', err);
-      setError('Failed to load appointments. Please try again.');
+      
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Session expired. Please login again.');
+        setTimeout(() => navigate('/admin-login'), 2000);
+      } else {
+        setError('Failed to load appointments. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ NEW: Helper function to convert 24h time to 12h format (9:00 AM)
-  const formatTime = (time24) => {
-    if (!time24) return '';
-    const [hours, minutes] = time24.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
+  }, [selectedDate, navigate, formatTime]); // Dependencies
 
   // ✅ NEW: Fetch appointments when date changes
   useEffect(() => {

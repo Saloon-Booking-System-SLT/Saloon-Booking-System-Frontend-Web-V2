@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'http://localhost:5000';
+  'https://saloon-booking-system-backend-v2.onrender.com';
 
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
@@ -116,6 +116,13 @@ const MyAppointmentsPage = () => {
     }
 
     try {
+      // ✅ Get customer name from appointment data first, then fallback to user object
+      const customerName = selectedAppointment.user?.name || 
+                          user?.name || 
+                          user?.username || 
+                          selectedAppointment.name ||
+                          'Anonymous';
+      
       const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,14 +130,16 @@ const MyAppointmentsPage = () => {
           appointmentId: selectedAppointment._id,
           salonId: selectedAppointment.salonId._id,
           professionalId: selectedAppointment.professionalId,
-          userEmail: user.email,
+          userEmail: user?.email || selectedAppointment.user?.email || '',
+          customerName: customerName, // ✅ NEW - gets name from appointment
           rating,
           comment: feedbackText,
         }),
       });
 
       if (!res.ok) {
-        alert("Failed to submit feedback");
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to submit feedback");
         return;
       }
 
@@ -138,7 +147,7 @@ const MyAppointmentsPage = () => {
       setFeedbackText("");
       setRating(0);
 
-      alert("Feedback submitted successfully!");
+      alert("✅ Feedback submitted successfully! It will appear after admin approval.");
 
       navigate("/", {
         state: {
@@ -147,7 +156,8 @@ const MyAppointmentsPage = () => {
         },
       });
     } catch (err) {
-      alert("Error occurred while submitting feedback");
+      console.error("Error submitting feedback:", err);
+      alert("❌ Error occurred while submitting feedback");
     }
   };
 

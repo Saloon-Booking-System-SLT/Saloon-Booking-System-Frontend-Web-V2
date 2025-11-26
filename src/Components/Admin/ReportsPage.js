@@ -64,15 +64,15 @@ const ReportsPage = () => {
       const salonData = JSON.parse(localStorage.getItem("salonUser"));
       
       // Fetch appointments data
-      const appointmentsRes = await axios.get(`http://localhost:5000/api/appointments/salon/${salonData.id}`);
+      const appointmentsRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/appointments/salon/${salonData.id}`);
       const appointments = appointmentsRes.data;
       
       // Fetch services data
-      const servicesRes = await axios.get(`http://localhost:5000/api/services/salon/${salonData.id}`);
+      const servicesRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/services/salon/${salonData.id}`);
       // const services = servicesRes.data; // Commented out unused variable
       
       // Fetch professionals data
-      const professionalsRes = await axios.get(`http://localhost:5000/api/professionals/salon/${salonData.id}`);
+      const professionalsRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/professionals/salon/${salonData.id}`);
       // const professionals = professionalsRes.data; // Commented out unused variable
 
       // Filter data by date range

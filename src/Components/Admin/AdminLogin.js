@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../Api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import './AdminLogin.css';
 import loginImage from '../../Assets/login-image.jpg';
@@ -18,13 +18,13 @@ const AdminLogin = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/login', {
+      const response = await axios.post('/admin/login', {
         username,
         password
       });
-
+  
       if (response.data.success) {
         const { token, admin } = response.data;
         
@@ -39,19 +39,12 @@ const AdminLogin = () => {
       }
     } catch (err) {
       console.error('Admin login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
       
-      // For demo purposes - mock login if backend fails
-      if (err.response?.status >= 500) {
-        const mockAdmin = {
-          id: 'admin',
-          username: username,
-          role: 'admin'
-        };
-        const mockToken = `mock-admin-token-${Date.now()}`;
-        login(mockToken, mockAdmin);
-        navigate('/admin-dashboard');
-        return;
+      // Show proper error message
+      if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please make sure the backend is running on port 5000.');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
