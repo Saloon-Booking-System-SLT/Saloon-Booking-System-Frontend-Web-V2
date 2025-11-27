@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import './AdminDashboard.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../Api/axios';
 import dayjs from 'dayjs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AdminLayout from './AdminLayout';
@@ -40,7 +40,7 @@ const SummaryChart = ({ data }) => {
             <Tooltip />
             <Legend />
             <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
-            <Bar dataKey="revenue" fill="#82ca9d" name="Revenue ($)" />
+            <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -73,30 +73,20 @@ const AdminDashboard = () => {
   
   // Authentication check
   useEffect(() => {
-    const adminUser = localStorage.getItem('adminUser');
-    if (!adminUser) {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const token = localStorage.getItem('token');
+    
+    if (!user || !token || user.role !== 'admin') {
       navigate('/admin-login');
     }
   }, [navigate]);
   
-  // API configuration
-  const API_BASE_URL = 'http://localhost:5000/api';
-  const axiosInstance = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
-    }
-  });
-
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(amount);
+    return `Rs ${amount.toLocaleString('en-LK', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
   };
   
   // Handle refresh
@@ -111,18 +101,38 @@ const AdminDashboard = () => {
     try {
       setError(null);
       
-      // Fetch real data from backend
-      const response = await axiosInstance.get('/admin/dashboard/stats');
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication required. Please login again.');
+        navigate('/admin-login');
+        return;
+      }
+      
+      // Fetch real data from backend using configured axios instance
+      const response = await axios.get('/admin/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       setDashboardData(response.data);
       setLastUpdated(new Date());
       
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
-      setError('Failed to load dashboard data. Please try again.');
+      
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Session expired. Please login again.');
+        setTimeout(() => navigate('/admin-login'), 2000);
+      } else {
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [axiosInstance]);
+  }, [navigate]); // Add navigate to dependencies
   
   // Initial data fetch
   useEffect(() => {
@@ -145,199 +155,229 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="dashboard-content">
-        <div className="dashboard-header">
-          <h1 className="dashboard-title">Dashboard</h1>
-          <div className="dashboard-actions">
-            {lastUpdated && (
-              <div className="last-updated">
-                Last updated: {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
-            <button 
-              className="refresh-btn" 
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <i className={`fas fa-sync-alt ${isLoading ? 'fa-spin' : ''}`}></i>
-              {isLoading ? 'Refreshing...' : 'Refresh Data'}
-            </button>
+      <div className="w-full max-w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mb-8 flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <div className="flex items-center gap-4">
+              {lastUpdated && (
+                <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+                  Last updated: {lastUpdated.toLocaleTimeString()}
+                </div>
+              )}
+              <button 
+                className={`bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                <i className={`fas fa-sync-alt ${isLoading ? 'fa-spin' : ''}`}></i>
+                {isLoading ? 'Refreshing...' : 'Refresh Data'}
+              </button>
+            </div>
           </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
+              <i className="fas fa-exclamation-circle text-lg"></i>
+              <span>{error}</span>
+              <button 
+                className="ml-auto bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                onClick={handleRefresh}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          
+          {isLoading && !lastUpdated ? (
+            <LoadingSpinner size="large" text="Loading dashboard data..." />
+          ) : (
+            <>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                  <div className="text-sm font-medium text-gray-600 mb-2">Total Salons</div>
+                  <div className="text-3xl font-bold text-gray-900">{totalSalons}</div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                  <div className="text-sm font-medium text-gray-600 mb-2">Total Customers</div>
+                  <div className="text-3xl font-bold text-gray-900">{totalCustomers}</div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                  <div className="text-sm font-medium text-gray-600 mb-2">Total Employees</div>
+                  <div className="text-3xl font-bold text-gray-900">{totalEmployees}</div>
+                </div>
+              </div>
+
+              {/* Pending Approvals */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+                <div className="text-sm font-medium text-gray-600 mb-2">Pending Salon Approvals</div>
+                <div className="text-3xl font-bold text-gray-900">{pendingApprovals}</div>
+              </div>
+
+              {/* Latest Bookings Table */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">Latest Bookings</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Booking ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Salon</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Service</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {latestBookings.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-12 text-center text-gray-500">No bookings available</td>
+                        </tr>
+                      ) : (
+                        latestBookings.map((booking, index) => (
+                          <tr key={booking._id || index} className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 text-sm font-mono text-blue-600">#{booking._id?.slice(-6) || '12345'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.user?.name || 'Unknown'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonId?.name || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-blue-600">{booking.services?.[0]?.name || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-blue-600">{dayjs(booking.date).format('MMM D, YYYY')}</td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                                booking.status?.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
+                                booking.status?.toLowerCase() === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {booking.status || 'Pending'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Latest Cancellations Table */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">Latest Cancellations</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Booking ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Salon</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Service</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {latestCancellations.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-12 text-center text-gray-500">No cancellations</td>
+                        </tr>
+                      ) : (
+                        latestCancellations.map((booking, index) => (
+                          <tr key={`cancel-${booking._id || index}`} className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 text-sm font-mono text-blue-600">#{booking._id?.slice(-6) || '12350'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.user?.name || 'Unknown'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{booking.salonId?.name || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-blue-600">{booking.services?.[0]?.name || 'N/A'}</td>
+                            <td className="px-6 py-4 text-sm text-blue-600">{dayjs(booking.date).format('MMM D, YYYY')}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{booking.cancellationReason || 'No reason provided'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Financial Summary</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                    <div className="text-sm font-medium text-gray-600 mb-2">Total Revenue</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</div>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                    <div className="text-sm font-medium text-gray-600 mb-2">Pending Payments</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(pendingPayments)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Summary Chart */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Monthly Summary</h3>
+                {monthlyData.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">No data available for chart</div>
+                ) : (
+                  <div style={{ width: '100%', height: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={monthlyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
+                        <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Alerts Section */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">Alerts</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Details</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {alerts.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-12 text-center text-gray-500">No alerts</td>
+                        </tr>
+                      ) : (
+                        alerts.map((alert) => (
+                          <tr key={`alert-${alert.id || Math.random()}`} className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 text-sm font-medium text-blue-600">{alert.type || 'Info'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{alert.details || 'No details available'}</td>
+                            <td className="px-6 py-4">
+                              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                                {alert.action || 'View'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-        
-        {error && (
-          <div className="error-message slide-down">
-            <i className="fas fa-exclamation-circle"></i>
-            {error}
-            <button className="retry-btn" onClick={handleRefresh}>
-              Retry
-            </button>
-          </div>
-        )}
-        
-        {isLoading && !lastUpdated ? (
-          <LoadingSpinner size="large" text="Loading dashboard data..." />
-        ) : (
-          <>
-            {/* Stats Grid */}
-            <div className="stats-grid">
-              <StatCard title="Total Salons" value={totalSalons} />
-              <StatCard title="Total Customers" value={totalCustomers} />
-              <StatCard title="Total Employees" value={totalEmployees} />
-            </div>
-
-            {/* Pending Approvals */}
-            <div className="pending-approvals-card">
-              <div className="stat-title">Pending Salon Approvals</div>
-              <div className="stat-value">{pendingApprovals}</div>
-            </div>
-
-            {/* Latest Bookings Table */}
-            <div className="bookings-section">
-              <h2 className="section-title">Latest Bookings</h2>
-              <div className="bookings-table-wrapper">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>Booking ID</th>
-                      <th>Customer</th>
-                      <th>Salon</th>
-                      <th>Service</th>
-                      <th>Date</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestBookings.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="no-data">No bookings available</td>
-                      </tr>
-                    ) : (
-                      latestBookings.map((booking, index) => (
-                        <tr key={booking._id || index}>
-                          <td className="booking-id">#{booking._id || '12345'}</td>
-                          <td>{booking.user?.name || 'Unknown'}</td>
-                          <td>{booking.salonName || 'N/A'}</td>
-                          <td className="service-name">
-                            {booking.services?.[0]?.name || 'N/A'}
-                          </td>
-                          <td className="booking-date">
-                            {dayjs(booking.date).format('MMM D, YYYY')}
-                          </td>
-                          <td>
-                            <span className={`status-badge status-${booking.status?.toLowerCase() || 'pending'}`}>
-                              {booking.status || 'Pending'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Latest Cancellations Table */}
-            <div className="bookings-section">
-              <h2 className="section-title">Latest Cancellations</h2>
-              <div className="bookings-table-wrapper">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>Booking ID</th>
-                      <th>Customer</th>
-                      <th>Salon</th>
-                      <th>Service</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestCancellations.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="no-data">No cancellations</td>
-                      </tr>
-                    ) : (
-                      latestCancellations.map((booking, index) => (
-                        <tr key={`cancel-${booking._id || index}`}>
-                          <td className="booking-id">#{booking._id || '12350'}</td>
-                          <td>{booking.user?.name || 'Unknown'}</td>
-                          <td>{booking.salonName || 'N/A'}</td>
-                          <td className="service-name">
-                            {booking.services?.[0]?.name || 'N/A'}
-                          </td>
-                          <td className="booking-date">
-                            {dayjs(booking.date).format('MMM D, YYYY')}
-                          </td>
-                          <td className="reason-text">
-                            {booking.cancellationReason || 'No reason provided'}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Financial Summary */}
-            <div className="financial-summary">
-              <h2 className="section-title">Financial Summary</h2>
-              <div className="financial-grid">
-                <div className="financial-card">
-                  <div className="stat-title">Total Revenue</div>
-                  <div className="stat-value">{formatCurrency(totalRevenue)}</div>
-                </div>
-                <div className="financial-card">
-                  <div className="stat-title">Pending Payments</div>
-                  <div className="stat-value">{formatCurrency(pendingPayments)}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Monthly Summary Chart */}
-            <div className="summary-section">
-              <SummaryChart data={monthlyData} />
-            </div>
-
-            {/* Alerts Section */}
-            <div className="alerts-section">
-              <h2 className="section-title">Alerts</h2>
-              <div className="alerts-table-wrapper">
-                <table className="alerts-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Details</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alerts.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className="no-data">No alerts</td>
-                      </tr>
-                    ) : (
-                      alerts.map((alert) => (
-                        <tr key={`alert-${alert.id || Math.random()}`}>
-                          <td className="alert-type">{alert.type || 'Info'}</td>
-                          <td className="alert-details">
-                            {alert.details || 'No details available'}
-                          </td>
-                          <td>
-                            <button className="view-btn">
-                              {alert.action || 'View'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
       </div>
     </AdminLayout>
   );

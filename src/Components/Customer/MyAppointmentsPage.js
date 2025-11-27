@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'http://localhost:5000';
+  'https://saloon-booking-system-backend-v2.onrender.com';
 
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
@@ -116,30 +116,24 @@ const MyAppointmentsPage = () => {
     }
 
     try {
-      // 🔍 DEBUG: Log all the data we're about to send
-      console.log("=== FEEDBACK DEBUG START ===");
-      console.log("selectedAppointment:", selectedAppointment);
-      console.log("appointmentId:", selectedAppointment._id);
-      console.log("salonId:", selectedAppointment.salonId);
-      console.log("salonId._id:", selectedAppointment.salonId?._id);
-      console.log("professionalId:", selectedAppointment.professionalId);
-      console.log("user:", user);
-      console.log("user.email:", user?.email);
-      console.log("rating:", rating);
-      console.log("feedbackText:", feedbackText);
-      console.log("=== FEEDBACK DEBUG END ===");
-
+      // Combine logic: get customer name from appointment or user
+      const customerName = selectedAppointment.user?.name || user?.name || user?.username || selectedAppointment.name || 'Anonymous';
+      // Prepare feedback data
       const feedbackData = {
         appointmentId: selectedAppointment._id,
         salonId: selectedAppointment.salonId._id,
         professionalId: selectedAppointment.professionalId?._id || selectedAppointment.professionalId,
-        userEmail: user.email,
+        userEmail: user?.email || selectedAppointment.user?.email || '',
+        customerName,
         rating,
         comment: feedbackText,
       };
-
-      console.log("🔍 Sending feedback data:", feedbackData);
-
+      // Debug log
+      console.log("=== FEEDBACK DEBUG START ===");
+      console.log("selectedAppointment:", selectedAppointment);
+      console.log("feedbackData:", feedbackData);
+      console.log("=== FEEDBACK DEBUG END ===");
+      // Send feedback
       const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -149,7 +143,6 @@ const MyAppointmentsPage = () => {
       const responseText = await res.text();
       console.log("📥 Server response status:", res.status);
       console.log("📥 Server response text:", responseText);
-
       if (!res.ok) {
         try {
           const errorData = JSON.parse(responseText);
@@ -159,13 +152,10 @@ const MyAppointmentsPage = () => {
         }
         return;
       }
-
       setShowPopup(false);
       setFeedbackText("");
       setRating(0);
-
-      alert("Feedback submitted successfully!");
-
+      alert("✅ Feedback submitted successfully! It will appear after admin approval.");
       navigate("/", {
         state: {
           salon: selectedAppointment.salonId,

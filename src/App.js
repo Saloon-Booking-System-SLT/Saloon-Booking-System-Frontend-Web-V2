@@ -7,6 +7,7 @@ import OwnerRoute from './Components/OwnerRoute';
 import AdminRoute from './Components/AdminRoute';
 import Unauthorized from './Components/Unauthorized';
 import 'leaflet/dist/leaflet.css';
+import ApprovedOwnerRoute from './Components/ApprovedOwnerRoute';
 
 // Customer Components
 import Home from './Components/Customer/HomePage';
@@ -83,12 +84,12 @@ function App() {
           
           {/* Protected Owner Routes */}
           <Route path="/dashboard" element={<OwnerRoute><ModernDashboard /></OwnerRoute>} />
-          <Route path="/calendar" element={<OwnerRoute><SalonCalendar /></OwnerRoute>} />
-          <Route path="/services" element={<OwnerRoute><SalonServices /></OwnerRoute>} />
-          <Route path="/professionals" element={<OwnerRoute><SalonProfessionals /></OwnerRoute>} />
-          <Route path="/timeslots" element={<OwnerRoute><SalonTimeSlots /></OwnerRoute>} />
-          <Route path="/feedbacks" element={<OwnerRoute><OwnerFeedbackPage /></OwnerRoute>} />
-          <Route path="/profile/:id" element={<OwnerRoute><SalonProfile /></OwnerRoute>} />
+          <Route path="/calendar" element={<ApprovedOwnerRoute><SalonCalendar /></ApprovedOwnerRoute>} />
+          <Route path="/services" element={<ApprovedOwnerRoute><SalonServices /></ApprovedOwnerRoute>} />
+          <Route path="/professionals" element={<ApprovedOwnerRoute><SalonProfessionals /></ApprovedOwnerRoute>} />
+          <Route path="/timeslots" element={<ApprovedOwnerRoute><SalonTimeSlots /></ApprovedOwnerRoute>} />
+          <Route path="/feedbacks" element={<ApprovedOwnerRoute><OwnerFeedbackPage /></ApprovedOwnerRoute>} />
+          <Route path="/profile/:id" element={<ApprovedOwnerRoute><SalonProfile /></ApprovedOwnerRoute>} />
 
           {/* Admin Protected Routes */}
           <Route path="/AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -99,10 +100,10 @@ function App() {
           <Route path="/customers" element={<AdminRoute><CustomersPage /></AdminRoute>} />
           <Route path="/feedback" element={<AdminRoute><FeedbackModerationPage /></AdminRoute>} />
           <Route path="/promotions" element={<AdminRoute><PromotionsPage /></AdminRoute>} />
-
-<Route path="/loyalty" element={<AdminRoute><LoyaltyPage /></AdminRoute>} />
+          <Route path="/loyalty" element={<AdminRoute><LoyaltyPage /></AdminRoute>} />
           <Route path="/financial" element={<AdminRoute><FinancialInsights /></AdminRoute>} />
           <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+          
           {/* Admin Routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
 

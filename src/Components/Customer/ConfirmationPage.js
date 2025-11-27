@@ -5,7 +5,7 @@ import "./ConfirmationPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'http://localhost:5000';
+  'https://saloon-booking-system-backend-v2.onrender.com';
 
 const ConfirmationPage = () => {
   const location = useLocation();

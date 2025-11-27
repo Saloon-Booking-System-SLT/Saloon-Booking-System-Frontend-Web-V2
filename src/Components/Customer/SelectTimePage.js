@@ -1,4 +1,4 @@
-// Individual Booking SelectTimePage.jsx - Complete Fixed Version
+// Individual Booking SelectTimePage.jsx - Fixed Multi-Service Version
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectTimePage.css";
@@ -6,7 +6,7 @@ import { filterMatchingSlots } from "../../Utils/slotUtils";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'http://localhost:5000';
+  'https://saloon-booking-system-backend-v2.onrender.com';
 
 const SelectTimePage = () => {
   const location = useLocation();
@@ -22,13 +22,15 @@ const SelectTimePage = () => {
 
   const [selectedServices, setSelectedServices] = useState(passedServices);
   const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
-  // const [phone, setPhone] = useState(user?.phone || ""); // Commented out unused variable
   const currentServiceIndex = useRef(0);
-  const [renderKey] = useState(0);
+  const [renderKey, setRenderKey] = useState(0);
   const [selectedDates, setSelectedDates] = useState({});
   const [selectedTimes, setSelectedTimes] = useState({});
   const [availableSlots, setAvailableSlots] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Store all booked appointments for multi-service booking
+  const [bookedAppointments, setBookedAppointments] = useState([]);
 
   // Calculate total amount for all services
   const totalAmount = useMemo(() => {
@@ -37,7 +39,7 @@ const SelectTimePage = () => {
     }, 0);
   }, [selectedServices]);
 
-  // stable dates for next 7 days
+  // Stable dates for next 7 days
   const dates = useMemo(() => {
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -106,7 +108,7 @@ const SelectTimePage = () => {
     }
   }, [isReschedule, rescheduleAppointment]);
 
-  // Fetch default date slots
+  // Fetch default date slots for current service
   useEffect(() => {
     if (!selectedProfessional || selectedServices.length === 0) return;
     
@@ -141,10 +143,13 @@ const SelectTimePage = () => {
       setSelectedTimes(prev => ({ ...prev, [currentService.name]: null }));
       fetchTimeSlots(professionalId, defaultDate);
     }
-  }, [selectedProfessional, selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots]);
+  }, [selectedProfessional, selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, currentServiceIndex.current]);
 
-  // Build derived values
-  const currentService = selectedServices[currentServiceIndex.current] || {};
+  // Build derived values for current service
+  const currentService = useMemo(() => {
+    return selectedServices[currentServiceIndex.current] || {};
+  }, [selectedServices, currentServiceIndex.current]);
+
   const serviceKey = currentService.name || "service";
   const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);
   const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;
@@ -167,6 +172,7 @@ const SelectTimePage = () => {
 
   // Compute end time helper
   const computeEndFromStartAndDuration = (startTime, durationStr) => {
+    if (!startTime) return "";
     const parts = durationStr.split(" ");
     let minutes = 0;
     for (let i = 0; i < parts.length; i += 2) {
@@ -181,6 +187,33 @@ const SelectTimePage = () => {
     const endM = String(total % 60).padStart(2, "0");
     return `${endH}:${endM}`;
   };
+
+  // Get current appointment data
+  const getCurrentAppointmentData = useCallback(() => {
+    const slotId = selectedTimes[serviceKey];
+    const date = selectedDates[serviceKey];
+    const selectedSlot = filteredSlots.find(s => 
+      (s._id && s._id === slotId) || 
+      (s.id && s.id === slotId) || 
+      (s.startTime && s.startTime === slotId)
+    );
+
+    const startTime = selectedSlot?.startTime || selectedSlot?.start;
+    const endTime = computeEndFromStartAndDuration(startTime, currentService.duration);
+
+    return {
+      salonId: salon?._id,
+      professionalId: professionalId,
+      serviceName: currentService.name,
+      price: currentService.price,
+      duration: currentService.duration,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      professionalName: selectedProfessional?.name || "Any Professional",
+      memberName: user?.name || "Guest"
+    };
+  }, [selectedTimes, serviceKey, selectedDates, filteredSlots, currentService, professionalId, selectedProfessional, salon, user]);
 
   // ✅ Create appointment via API with CORRECT format
   const createAppointment = async (appointmentData) => {
@@ -208,10 +241,6 @@ const SelectTimePage = () => {
 
       const result = await response.json();
       console.log("📥 Server response:", result);
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response ok:", response.ok);
-      console.log("📥 Result success:", result.success);
-      console.log("📥 Result message:", result.message);
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to create appointment");
@@ -224,39 +253,6 @@ const SelectTimePage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Navigate to confirmation for regular booking
-  const navigateToConfirmation = (createdAppointment) => {
-    const confirmationData = {
-      salonName: salon?.name || "Our Salon",
-      appointmentDetails: [{
-        serviceName: createdAppointment.services[0].name,
-        price: createdAppointment.services[0].price,
-        duration: createdAppointment.services[0].duration,
-        date: createdAppointment.date,
-        startTime: createdAppointment.startTime,
-        endTime: createdAppointment.endTime,
-        professionalName: selectedProfessional?.name || "Any Professional",
-      }],
-      totalAmount: totalAmount,
-      bookingId: createdAppointment._id,
-      customerName: user?.name || "Guest",
-      isGroupBooking: false,
-      salonLocation: salon?.location,
-      professionalName: selectedProfessional?.name || "Any Professional",
-      services: selectedServices,
-      appointmentId: createdAppointment._id
-    };
-
-    console.log("✅ Navigating to confirmation with data:", confirmationData);
-
-    // Clear localStorage
-    localStorage.removeItem('selectedServices');
-    localStorage.removeItem('selectedProfessional');
-    localStorage.removeItem('selectedSalon');
-
-    navigate("/confirmationpage", { state: confirmationData });
   };
 
   // 🔥 FIXED: Handle reschedule for individual booking
@@ -273,24 +269,14 @@ const SelectTimePage = () => {
 
     setLoading(true);
     try {
-      const slotId = selectedTimes[serviceKey];
-      const date = selectedDates[serviceKey];
-      const selectedSlot = filteredSlots.find(s => 
-        (s._id && s._id === slotId) || 
-        (s.id && s.id === slotId) || 
-        (s.startTime && s.startTime === slotId)
-      );
-
-      if (!selectedSlot) {
-        throw new Error("Selected slot not available");
-      }
-
-      const startTime = selectedSlot.startTime || selectedSlot.start;
-      const endTime = computeEndFromStartAndDuration(startTime, currentService.duration);
-
+      const currentAppointment = getCurrentAppointmentData();
+      
       console.log("🔄 Sending reschedule request:", {
         appointmentId: rescheduleAppointment._id,
-        date, startTime, endTime, professionalId
+        date: currentAppointment.date,
+        startTime: currentAppointment.startTime,
+        endTime: currentAppointment.endTime,
+        professionalId: currentAppointment.professionalId
       });
 
       const response = await fetch(`${API_BASE_URL}/api/appointments/${rescheduleAppointment._id}/reschedule`, {
@@ -299,10 +285,10 @@ const SelectTimePage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          date: date,
-          startTime: startTime,
-          endTime: endTime,
-          professionalId: professionalId
+          date: currentAppointment.date,
+          startTime: currentAppointment.startTime,
+          endTime: currentAppointment.endTime,
+          professionalId: currentAppointment.professionalId
         }),
       });
 
@@ -311,8 +297,6 @@ const SelectTimePage = () => {
 
       if (result.success) {
         alert("✅ Appointment rescheduled successfully!");
-        
-        // Navigate to appointments page
         navigate("/appointments");
       } else {
         throw new Error(result.message || "Reschedule failed");
@@ -325,11 +309,9 @@ const SelectTimePage = () => {
     }
   };
 
-  // Handle continue for both regular booking and reschedule
+  // Handle continue for multi-service booking
   const handleContinue = async () => {
-    console.log("🔵 handleContinue called");
-    console.log("🔵 serviceKey:", serviceKey);
-    console.log("🔵 selectedTimes:", selectedTimes);
+    console.log("🔵 handleContinue called for service:", currentService.name);
     console.log("🔵 selectedTimes[serviceKey]:", selectedTimes[serviceKey]);
     
     if (!selectedTimes[serviceKey]) {
@@ -343,56 +325,125 @@ const SelectTimePage = () => {
       return;
     }
 
-    // ✅ REGULAR APPOINTMENT CREATION
-    const slotId = selectedTimes[serviceKey];
-    const date = selectedDates[serviceKey];
-    
-    console.log("🔵 Looking for slot with ID:", slotId);
-    console.log("🔵 Available filteredSlots:", filteredSlots);
-    
-    const selectedSlot = filteredSlots.find(s => 
-      (s._id && s._id === slotId) || 
-      (s.id && s.id === slotId) || 
-      (s.startTime && s.startTime === slotId)
-    );
-
-    console.log("🔵 Found selectedSlot:", selectedSlot);
-
-    if (!selectedSlot) {
-      alert("Selected slot not available. Please pick another time.");
-      return;
-    }
-
-    const startTime = selectedSlot.startTime || selectedSlot.start;
-    const endTime = computeEndFromStartAndDuration(startTime, currentService.duration);
-    
-    console.log("🔵 startTime:", startTime);
-    console.log("🔵 endTime:", endTime);
-
-    const appointmentData = {
-      salonId: salon?._id,
-      professionalId: professionalId,
-      serviceName: currentService.name,
-      price: currentService.price,
-      duration: currentService.duration,
-      date: date,
-      startTime: startTime
-    };
-
-    console.log("🔵 Final appointmentData:", appointmentData);
-
-    try {
-      console.log("📤 Creating appointment with data:", appointmentData);
+    // Check if there are more services to book
+    if (currentServiceIndex.current + 1 < selectedServices.length) {
+      // Add current appointment to booked list and move to next service
+      const currentAppointment = getCurrentAppointmentData();
+      const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
       
-      const createdAppointment = await createAppointment(appointmentData);
-      console.log("✅ Appointment created successfully:", createdAppointment);
-
-      navigateToConfirmation(createdAppointment);
-    } catch (error) {
-      console.error("❌ Appointment creation failed:", error);
-      alert("❌ Failed to create appointment: " + error.message);
+      console.log("💾 Saving appointment for:", currentAppointment.serviceName);
+      console.log("📊 Total booked after save:", updatedBookedAppointments.length);
+      
+      setBookedAppointments(updatedBookedAppointments);
+      
+      // Move to next service
+      currentServiceIndex.current += 1;
+      setRenderKey(k => k + 1);
+      
+      const nextService = selectedServices[currentServiceIndex.current];
+      if (nextService) {
+        setSelectedTimes(prev => ({ ...prev, [nextService.name]: null }));
+        
+        // Auto-fetch slots for next service
+        const nextProfessionalId = resolveProfessionalId(selectedProfessional, nextService.name);
+        const nextDefaultDate = dates[0]?.fullDate;
+        if (nextProfessionalId && nextDefaultDate) {
+          setSelectedDates(prev => ({ ...prev, [nextService.name]: nextDefaultDate }));
+          fetchTimeSlots(nextProfessionalId, nextDefaultDate);
+        }
+      }
+    } else {
+      // All services booked, add final appointment and create all appointments
+      const currentAppointment = getCurrentAppointmentData();
+      const finalAppointments = [...bookedAppointments, currentAppointment];
+      
+      console.log("💾 Final appointments to create:", finalAppointments.length);
+      
+      // Create all appointments
+      await createAllAppointments(finalAppointments);
     }
   };
+
+  // Create all appointments and navigate to confirmation
+  const createAllAppointments = async (appointments) => {
+    setLoading(true);
+    try {
+      const createdAppointments = [];
+      
+      // Create each appointment individually
+      for (const appointmentData of appointments) {
+        console.log("📤 Creating appointment:", appointmentData.serviceName);
+        
+        const createdAppointment = await createAppointment(appointmentData);
+        createdAppointments.push(createdAppointment);
+        
+        console.log("✅ Created appointment:", createdAppointment._id);
+      }
+      
+      console.log("🎉 All appointments created successfully:", createdAppointments.length);
+      
+      // Navigate to confirmation with all appointments
+      navigateToConfirmation(createdAppointments);
+      
+    } catch (error) {
+      console.error("❌ Failed to create appointments:", error);
+      alert("❌ Failed to create appointments: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Navigate to confirmation for multi-service booking
+  const navigateToConfirmation = (createdAppointments) => {
+    const confirmationData = {
+      salonName: salon?.name || "Our Salon",
+      appointmentDetails: createdAppointments.map(appointment => ({
+        serviceName: appointment.services[0].name,
+        price: appointment.services[0].price,
+        duration: appointment.services[0].duration,
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        professionalName: selectedProfessional?.name || "Any Professional",
+        memberName: user?.name || "Guest"
+      })),
+      totalAmount: totalAmount,
+      bookingId: createdAppointments[0]?._id || `booking-${Date.now()}`,
+      customerName: user?.name || "Guest",
+      isGroupBooking: false,
+      salonLocation: salon?.location,
+      professionalName: selectedProfessional?.name || "Any Professional",
+      services: selectedServices,
+      appointmentId: createdAppointments[0]?._id,
+      multipleAppointments: createdAppointments.length > 1
+    };
+
+    console.log("✅ Navigating to confirmation with data:", confirmationData);
+
+    // Clear localStorage
+    localStorage.removeItem('selectedServices');
+    localStorage.removeItem('selectedProfessional');
+    localStorage.removeItem('selectedSalon');
+
+    navigate("/confirmationpage", { state: confirmationData });
+  };
+
+  // Get all appointments for display (booked + current)
+  const getAllAppointmentsForDisplay = useCallback(() => {
+    const allAppointments = [...bookedAppointments];
+    
+    // If there's a current appointment selected, include it
+    if (selectedTimes[serviceKey]) {
+      allAppointments.push(getCurrentAppointmentData());
+    }
+    
+    return allAppointments;
+  }, [bookedAppointments, selectedTimes, serviceKey, getCurrentAppointmentData]);
+
+  const appointmentsToDisplay = getAllAppointmentsForDisplay();
+  const displayTotalAmount = appointmentsToDisplay.reduce((total, appointment) => {
+    return total + (Number(appointment.price) || 0);
+  }, 0);
 
   // No services selected
   if (selectedServices.length === 0) {
@@ -411,7 +462,9 @@ const SelectTimePage = () => {
     <div className="SelectTimePage-container" key={renderKey}>
       <div className="left-column">
         <p className="breadcrumb">Services &gt; Professional &gt; <b>Time</b> &gt; Confirmation</p>
-        <h2 className="heading-with-search">{isReschedule ? "Reschedule" : "Select Time for"} {currentService.name}</h2>
+        <h2 className="heading-with-search">
+          {isReschedule ? "Reschedule" : "Select Time for"} {currentService.name}
+        </h2>
 
         {isReschedule && (
           <div className="reschedule-notice">
@@ -422,6 +475,9 @@ const SelectTimePage = () => {
         {selectedServices.length > 1 && (
           <div className="service-progress">
             <p>Service {currentServiceIndex.current + 1} of {selectedServices.length}</p>
+            {bookedAppointments.length > 0 && (
+              <p>✅ {bookedAppointments.length} service(s) already scheduled</p>
+            )}
           </div>
         )}
 
@@ -488,24 +544,39 @@ const SelectTimePage = () => {
               <p>📅 {new Date(selectedDate).toDateString()} 🕒 {filteredSlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}</p>
             )}
             
-            {selectedServices.length > 1 && (
+            {/* Show all scheduled services */}
+            {appointmentsToDisplay.length > 0 && (
               <div className="services-breakdown">
-                <p><strong>Services:</strong></p>
-                {selectedServices.map((service, index) => (
-                  <p key={index} style={{ fontSize: '0.9em', margin: '2px 0' }}>
-                    {service.name}: LKR {service.price}
-                  </p>
+                <p><strong>Scheduled Services:</strong></p>
+                {appointmentsToDisplay.map((appointment, index) => (
+                  <div key={index} className="appointment-item">
+                    <p style={{ fontSize: '0.9em', margin: '2px 0' }}>
+                      <strong>{appointment.serviceName}</strong><br />
+                      📅 {new Date(appointment.date).toLocaleDateString()} 🕒 {appointment.startTime}<br />
+                      LKR {appointment.price}
+                    </p>
+                    {index < appointmentsToDisplay.length - 1 && <hr />}
+                  </div>
                 ))}
               </div>
             )}
             
             <div className="total-section">
               <p>Total Amount</p>
-              <p><strong>LKR {totalAmount}</strong></p>
+              <p><strong>LKR {displayTotalAmount}</strong></p>
             </div>
           </div>
-          <button className="continue-button" onClick={handleContinue} disabled={!selectedTimes[serviceKey] || loading}>
-            {loading ? "Processing..." : isReschedule ? "Reschedule Appointment" : "Confirm Booking"}
+          <button 
+            className="continue-button" 
+            onClick={handleContinue} 
+            disabled={!selectedTimes[serviceKey] || loading}
+          >
+            {loading ? "Processing..." : 
+             isReschedule ? "Reschedule Appointment" :
+             currentServiceIndex.current + 1 < selectedServices.length 
+               ? `Continue to Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
+               : `Confirm All Services (LKR ${displayTotalAmount})`
+            }
           </button>
         </div>
       </div>
@@ -514,7 +585,7 @@ const SelectTimePage = () => {
         <div className="loading-overlay">
           <div className="loader">
             <div className="loader-dots"><div></div><div></div><div></div></div>
-            <p>Processing your {isReschedule ? 'reschedule' : 'appointment'}...</p>
+            <p>Processing your {isReschedule ? 'reschedule' : 'appointments'}...</p>
           </div>
         </div>
       )}

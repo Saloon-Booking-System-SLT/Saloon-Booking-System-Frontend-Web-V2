@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext"; // Import the auth context
 import "./OwnerLogin.css";
 import loginImage from "../../Assets/login-image.jpg";
-import axios from "axios";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import axios from "../../Api/axios";
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
@@ -27,58 +25,32 @@ const OwnerLogin = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/salons/login`, formData);
+      const res = await axios.post('/salons/login', formData);
       
-      // Assuming your backend returns token and salon data
+      // Get token and salon data from response
       const { token, salon } = res.data;
       
       const salonUserData = {
         ...salon,
         role: 'owner',
-        id: salon._id || salon.id // Ensure id is set
+        id: salon._id || salon.id,
+        approvalStatus: salon.approvalStatus, // ✅ Save approval status
+        rejectionReason: salon.rejectionReason // ✅ Save rejection reason
       };
       
-      // Store in both auth context and localStorage for compatibility
+      // Store in both auth context and localStorage
       login(token, salonUserData);
       localStorage.setItem('salonUser', JSON.stringify(salonUserData));
       
+      // Always navigate to dashboard - it will show approval message if pending
       navigate("/dashboard");
     } catch (err) {
       console.error("Owner login error:", err);
       setError(err.response?.data?.message || "Login failed. Please try again.");
-      
-      // For demo purposes - mock login if backend fails
-      if (err.response?.status >= 500) {
-        const mockOwner = {
-          id: 'mock-owner-123',
-          name: 'Demo Salon Owner',
-          email: formData.email,
-          role: 'owner',
-          salonName: 'Demo Salon'
-        };
-        const mockToken = `mock-owner-token-${Date.now()}`;
-        login(mockToken, mockOwner);
-        navigate("/dashboard");
-        return;
-      }
     } finally {
       setLoading(false);
     }
   };
-
-  // Demo login for testing
-  // const handleDemoLogin = () => {
-  //   const demoOwner = {
-  //     id: 'demo-owner-123',
-  //     name: 'Demo Salon Owner',
-  //     email: 'demo@salon.com',
-  //     role: 'owner',
-  //     salonName: 'Premium Beauty Salon'
-  //   };
-  //   const demoToken = `demo-owner-token-${Date.now()}`;
-  //   login(demoToken, demoOwner);
-  //   navigate("/dashboard");
-  // };
 
   return (
     <div className="owner-login-container">
@@ -131,24 +103,6 @@ const OwnerLogin = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        {/* Demo login button for testing */}
-        {/* <button 
-          onClick={handleDemoLogin}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            marginTop: '10px',
-            fontSize: '14px'
-          }}
-        >
-          Try Demo Owner Login
-        </button> */}
 
         <p className="owner-redirect-text">
           Not registered yet?{" "}
