@@ -108,7 +108,7 @@ const MyAppointmentsPage = () => {
     setShowPopup(true);
   };
 
-  // Submit feedback
+  // Submit feedback - DEBUG VERSION
   const submitFeedback = async () => {
     if (!rating) {
       alert("Please provide a rating");
@@ -116,21 +116,47 @@ const MyAppointmentsPage = () => {
     }
 
     try {
+      // 🔍 DEBUG: Log all the data we're about to send
+      console.log("=== FEEDBACK DEBUG START ===");
+      console.log("selectedAppointment:", selectedAppointment);
+      console.log("appointmentId:", selectedAppointment._id);
+      console.log("salonId:", selectedAppointment.salonId);
+      console.log("salonId._id:", selectedAppointment.salonId?._id);
+      console.log("professionalId:", selectedAppointment.professionalId);
+      console.log("user:", user);
+      console.log("user.email:", user?.email);
+      console.log("rating:", rating);
+      console.log("feedbackText:", feedbackText);
+      console.log("=== FEEDBACK DEBUG END ===");
+
+      const feedbackData = {
+        appointmentId: selectedAppointment._id,
+        salonId: selectedAppointment.salonId._id,
+        professionalId: selectedAppointment.professionalId?._id || selectedAppointment.professionalId,
+        userEmail: user.email,
+        rating,
+        comment: feedbackText,
+      };
+
+      console.log("🔍 Sending feedback data:", feedbackData);
+
       const res = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appointmentId: selectedAppointment._id,
-          salonId: selectedAppointment.salonId._id,
-          professionalId: selectedAppointment.professionalId,
-          userEmail: user.email,
-          rating,
-          comment: feedbackText,
-        }),
+        body: JSON.stringify(feedbackData),
       });
 
+      const responseText = await res.text();
+      console.log("📥 Server response status:", res.status);
+      console.log("📥 Server response text:", responseText);
+
       if (!res.ok) {
-        alert("Failed to submit feedback");
+        try {
+          const errorData = JSON.parse(responseText);
+          alert(`Failed to submit feedback: ${errorData.message || "Unknown error"}`);
+        } catch {
+          alert(`Failed to submit feedback: ${responseText}`);
+        }
         return;
       }
 
@@ -147,7 +173,8 @@ const MyAppointmentsPage = () => {
         },
       });
     } catch (err) {
-      alert("Error occurred while submitting feedback");
+      console.error("❌ Error submitting feedback:", err);
+      alert(`Error occurred while submitting feedback: ${err.message}`);
     }
   };
 
