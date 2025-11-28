@@ -17,6 +17,8 @@ const RegisterPage1 = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const phoneCodes = ["+94", "+91", "+1", "+44"]; // add more if needed
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
@@ -85,26 +87,68 @@ const RegisterPage1 = () => {
           />
           {errors.email && <span className="error">{errors.email}</span>}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="register1-input"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+          <div className="password-input-container">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              className="register1-input password-input"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.88 9.88L14.12 14.12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10.73 5.08L12 4.85C16.24 4.85 19.5 8.58 20.62 12C19.5 15.42 16.24 19.15 12 19.15C11.67 19.15 11.34 19.12 11.02 19.06" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.61 6.61L17.39 17.39" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3.38 12C4.5 8.58 7.76 4.85 12 4.85" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          </div>
           {errors.password && <span className="error">{errors.password}</span>}
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            className="register1-input"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-          />
+          <div className="password-input-container">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              className="register1-input password-input"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.88 9.88L14.12 14.12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10.73 5.08L12 4.85C16.24 4.85 19.5 8.58 20.62 12C19.5 15.42 16.24 19.15 12 19.15C11.67 19.15 11.34 19.12 11.02 19.06" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.61 6.61L17.39 17.39" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3.38 12C4.5 8.58 7.76 4.85 12 4.85" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          </div>
           {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
 
           <div className="register1-phone">
@@ -113,7 +157,6 @@ const RegisterPage1 = () => {
               className="register1-input"
               value={formData.phoneCode}
               onChange={handleChange}
-              style={{ width: "30%", display: "inline-block", marginRight: "10px" }}
             >
               {phoneCodes.map((code) => (
                 <option key={code} value={code}>
@@ -128,40 +171,40 @@ const RegisterPage1 = () => {
               className="register1-input"
               value={formData.phoneNumber}
               onChange={handleChange}
-              style={{ width: "65%", display: "inline-block" }}
               required
             />
           </div>
           {errors.phoneNumber && <span className="error">{errors.phoneNumber}</span>}
 
-          <div className="working-hours" style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px" }}>Working Hours:</label>
-            <select
-              name="workingHoursStart"
-              value={formData.workingHoursStart}
-              onChange={handleChange}
-              className="register1-input"
-              style={{ width: "45%", display: "inline-block", marginRight: "10%" }}
-            >
-              {timeOptions.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
-            <select
-              name="workingHoursEnd"
-              value={formData.workingHoursEnd}
-              onChange={handleChange}
-              className="register1-input"
-              style={{ width: "45%", display: "inline-block" }}
-            >
-              {timeOptions.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
+          <div className="working-hours">
+            <label>Working Hours:</label>
+            <div className="working-hours-inputs">
+              <select
+                name="workingHoursStart"
+                value={formData.workingHoursStart}
+                onChange={handleChange}
+                className="register1-input"
+              >
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              <span className="working-hours-separator">to</span>
+              <select
+                name="workingHoursEnd"
+                value={formData.workingHoursEnd}
+                onChange={handleChange}
+                className="register1-input"
+              >
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <button type="submit" className="register1-button">
