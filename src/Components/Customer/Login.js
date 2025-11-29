@@ -10,7 +10,7 @@ import {
 import haircutImage from "../../Assets/hairdresser.jpg";
 import "./Login.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export default function CustomerLogin() {
   const [phone, setPhone] = useState("");
