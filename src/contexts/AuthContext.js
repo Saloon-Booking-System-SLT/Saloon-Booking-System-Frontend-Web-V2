@@ -19,11 +19,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check for existing token on app load
     const storedToken = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user') || 'null'); // Fixed: should be 'user' not 'userData'
+    const userData = JSON.parse(localStorage.getItem('user') || 'null'); // Standard user data
+    const salonData = JSON.parse(localStorage.getItem('salonUser') || 'null'); // Salon owner data
     
-    if (storedToken && userData) {
+    if (storedToken) {
       setToken(storedToken);
-      setUser(userData);
+      
+      // Use salon data if available, otherwise use standard user data
+      if (salonData && salonData.role === 'owner') {
+        setUser(salonData);
+      } else if (userData) {
+        setUser(userData);
+      }
     }
     setLoading(false);
   }, []);
@@ -37,7 +44,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user'); // Fixed: should be 'user' not 'userData'
+    localStorage.removeItem('user');
+    localStorage.removeItem('salonUser'); // Clear salon user data too
     setToken(null);
     setUser(null);
   };

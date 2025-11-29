@@ -95,18 +95,6 @@ const ModernDashboard = () => {
     }
   };
 
-  // ✅ Show confirmation when user tries to refresh/back
-  useEffect(() => {
-    const beforeUnloadHandler = (e) => {
-      e.preventDefault();
-      e.returnValue = "Do you really want to logout?";
-    };
-    window.addEventListener("beforeunload", beforeUnloadHandler);
-    return () => {
-      window.removeEventListener("beforeunload", beforeUnloadHandler);
-    };
-  }, []);
-
   // ✅ Close notification dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -120,27 +108,25 @@ const ModernDashboard = () => {
 
   // ✅ Fetch salon data and appointments
   useEffect(() => {
-    // Try to get salon data from auth context first, then localStorage
-    let salonData = null;
-    
-    if (user && user.role === 'owner') {
-      salonData = user;
-    } else {
-      const storedSalon = localStorage.getItem("salonUser");
-      if (storedSalon) {
-        try {
-          salonData = JSON.parse(storedSalon);
-        } catch (e) {
-          console.error('Failed to parse salon data from localStorage:', e);
-        }
-      }
-    }
-    
-    if (!salonData?.id) {
-      setError('Salon data not found. Please log in again.');
+    // Check if user is logged in and has owner role
+    if (!user) {
+      setError('Please log in to access the dashboard.');
       setLoading(false);
       navigate('/OwnerLogin');
       return;
+    }
+
+    if (user.role !== 'owner') {
+      setError('Access denied. Owner account required.');
+      setLoading(false);
+      navigate('/OwnerLogin');
+      return;
+    }
+
+    // Ensure id field exists (some data uses _id, some use id)
+    const salonData = { ...user };
+    if (!salonData.id && salonData._id) {
+      salonData.id = salonData._id;
     }
     
     setSalon(salonData);
