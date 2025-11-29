@@ -1,8 +1,40 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminHeader = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
+  const handleLogout = async () => {
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (confirmLogout) {
+      try {
+        await logout();
+        console.log('Admin logout successful');
+        navigate('/admin-login');
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Force logout even if there's an error
+        navigate('/admin-login');
+      }
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  const handleClickOutside = () => {
+    setShowNotifications(false);
+    setShowProfile(false);
+  };
+
+  React.useEffect(() => {
+    if (showNotifications || showProfile) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showNotifications, showProfile]);
 
   const notifications = [
     { id: 1, message: "New booking received", time: "5 min ago" },
@@ -42,7 +74,11 @@ const AdminHeader = () => {
           {/* Notifications */}
           <div className="relative">
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowNotifications(!showNotifications);
+                setShowProfile(false);
+              }}
               className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition"
             >
               <svg
@@ -63,7 +99,10 @@ const AdminHeader = () => {
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+              <div 
+                className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="px-4 py-2 border-b border-gray-200">
                   <h3 className="font-semibold text-gray-800">Notifications</h3>
                 </div>
@@ -90,14 +129,20 @@ const AdminHeader = () => {
           {/* User Profile */}
           <div className="relative">
             <button
-              onClick={() => setShowProfile(!showProfile)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProfile(!showProfile);
+                setShowNotifications(false);
+              }}
               className="flex items-center gap-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition"
             >
               <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                AD
+                {user?.username ? user.username.substring(0, 2).toUpperCase() : 'AD'}
               </div>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-semibold text-gray-800">Admin User</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  {user?.username || 'Admin User'}
+                </p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>
               <svg
@@ -117,26 +162,35 @@ const AdminHeader = () => {
 
             {/* Profile Dropdown */}
             {showProfile && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
-                <a
-                  href="#profile"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+              <div 
+                className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => {
+                    setShowProfile(false);
+                    // Add profile navigation here if needed
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
                 >
                   My Profile
-                </a>
-                <a
-                  href="#settings"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+                </button>
+                <button
+                  onClick={() => {
+                    setShowProfile(false);
+                    // Add settings navigation here if needed
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
                 >
                   Settings
-                </a>
+                </button>
                 <div className="border-t border-gray-200 my-2"></div>
-                <a
-                  href="#logout"
-                  className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
                 >
                   Logout
-                </a>
+                </button>
               </div>
             )}
           </div>
