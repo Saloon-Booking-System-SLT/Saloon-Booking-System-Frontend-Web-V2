@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 const Unauthorized = () => {
   const { user, logout } = useAuth();
@@ -25,8 +26,9 @@ const Unauthorized = () => {
       padding: '50px',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <h1 style={{ color: '#ff4444', marginBottom: '20px' }}>
-        ⚠️ Unauthorized Access
+      <h1 style={{ color: '#ff4444', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <ExclamationTriangleIcon style={{ height: '24px', width: '24px' }} />
+        Unauthorized Access
       </h1>
       <p style={{ fontSize: '18px', marginBottom: '10px' }}>
         You don't have permission to access this page.

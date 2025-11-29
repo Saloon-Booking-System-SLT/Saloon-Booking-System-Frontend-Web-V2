@@ -1,4 +1,4 @@
-/* SalonServices.css - Fixed Service Card Layout */
+/* SalonServices.css - Fixed Service Card Layout with Responsive Design */
 
 /* Layout */
 .calendar-container {
@@ -17,6 +17,37 @@
   padding-top: 20px;
   gap: 30px;
   border-right: 1px solid #c9e3f7;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 1024px) {
+  .modern-sidebar {
+    width: 60px;
+  }
+  
+  .modern-sidebar i {
+    font-size: 18px;
+  }
+  
+  .modern-logo {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .modern-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    width: 60px;
+    height: 100vh;
+  }
+  
+  .main-content {
+    margin-left: 60px !important;
+  }
 }
 
 .modern-logo {

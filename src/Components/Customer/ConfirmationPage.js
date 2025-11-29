@@ -1,6 +1,7 @@
 // ConfirmationPage.jsx - Fixed Version
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, ArrowPathIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import "./ConfirmationPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
@@ -201,7 +202,7 @@ const ConfirmationPage = () => {
     if (isSaving) return "Saving your appointments...";
     if (saveStatus === "success") return "✅ Appointments saved successfully!";
     if (saveStatus === "skipped") return "✅ Booking confirmed!";
-    if (saveStatus === "error") return "⚠️ There was an issue saving your appointments. Please check your bookings page.";
+    if (saveStatus === "error") return "There was an issue saving your appointments. Please check your bookings page.";
     return "Processing your booking...";
   };
 
@@ -284,7 +285,10 @@ const ConfirmationPage = () => {
                   <div key={index} className="appointment-card">
                     {isGroupBooking && (
                       <div className="member-info">
-                        <strong>👤 {appointment.memberName || customerName}</strong>
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="h-5 w-5 text-gray-600" />
+                          <strong>{appointment.memberName || customerName}</strong>
+                        </div>
                         {appointment.memberCategory && (
                           <span className="member-category">({appointment.memberCategory})</span>
                         )}
@@ -332,16 +336,37 @@ const ConfirmationPage = () => {
           <div className="important-notes">
             <h3>Important Information</h3>
             <ul>
-              <li>📍 Please arrive 10-15 minutes before your scheduled appointment</li>
-              <li>⏰ Late arrivals may result in reduced service time</li>
-              <li>💳 Payment will be collected at the salon</li>
+              <li className="flex items-center gap-2">
+                <MapPinIcon className="h-4 w-4 text-blue-600" />
+                Please arrive 10-15 minutes before your scheduled appointment
+              </li>
+              <li className="flex items-center gap-2">
+                <ClockIcon className="h-4 w-4 text-orange-600" />
+                Late arrivals may result in reduced service time
+              </li>
+              <li className="flex items-center gap-2">
+                <CreditCardIcon className="h-4 w-4 text-green-600" />
+                Payment will be collected at the salon
+              </li>
               {isGroupBooking && (
-                <li>👥 All group members should arrive together for their appointments</li>
+                <li className="flex items-center gap-2">
+                  <UsersIcon className="h-4 w-4 text-purple-600" />
+                  All group members should arrive together for their appointments
+                </li>
               )}
-              <li>📱 You will receive a confirmation SMS and email shortly</li>
-              <li>🔄 Changes or cancellations can be made up to 24 hours before the appointment</li>
+              <li className="flex items-center gap-2">
+                <DevicePhoneMobileIcon className="h-4 w-4 text-blue-600" />
+                You will receive a confirmation SMS and email shortly
+              </li>
+              <li className="flex items-center gap-2">
+                <ArrowPathIcon className="h-4 w-4 text-gray-600" />
+                Changes or cancellations can be made up to 24 hours before the appointment
+              </li>
               {isReschedule && (
-                <li>✏️ Your original appointment has been updated with the new time</li>
+                <li className="flex items-center gap-2">
+                  <PencilIcon className="h-4 w-4 text-indigo-600" />
+                  Your original appointment has been updated with the new time
+                </li>
               )}
             </ul>
           </div>
@@ -365,7 +390,10 @@ const ConfirmationPage = () => {
         </div>
 
         <div className="confirmation-footer">
-          <p>We can't wait to see you at {salonName}! 💫</p>
+          <p className="flex items-center justify-center gap-2">
+            We can't wait to see you at {salonName}!
+            <SparklesIcon className="h-5 w-5 text-yellow-500" />
+          </p>
           <p className="footer-note">A confirmation has been sent to your registered email and phone number.</p>
         </div>
       </div>

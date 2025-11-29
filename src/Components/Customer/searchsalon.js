@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import "./searchsaloon.css";
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import LocationPickerModal from "./LocationPickerModal";
@@ -327,7 +328,7 @@ const getCityFromLocation = (location) => {
                   <div className="user-name">{user.name}</div>
                   <ul>
                     <li onClick={() => navigate("/profile")}>👤 Profile</li>
-                    <li onClick={() => navigate("/appointments")}>📅 Appointments</li>
+                    <li onClick={() => navigate("/appointments")}><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments</li>
                     <li onClick={handleLogout}>🚪 Logout</li>
                     <li className="dropdown-divider"></li>
                     <li>Download the App</li>

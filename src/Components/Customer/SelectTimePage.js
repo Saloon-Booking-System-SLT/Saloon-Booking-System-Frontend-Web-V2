@@ -1,6 +1,7 @@
 // Individual Booking SelectTimePage.jsx - Fixed Multi-Service Version
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./SelectTimePage.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
@@ -541,7 +542,7 @@ const SelectTimePage = () => {
             <p>💇 {currentService.name}</p>
             <p>👤 {selectedProfessional?.name || "Any"}</p>
             {selectedTimes[serviceKey] && selectedDate && (
-              <p>📅 {new Date(selectedDate).toDateString()} 🕒 {filteredSlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}</p>
+              <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(selectedDate).toDateString()} <ClockIcon className="h-4 w-4 inline mr-1" /> {filteredSlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}</p>
             )}
             
             {/* Show all scheduled services */}
@@ -552,7 +553,7 @@ const SelectTimePage = () => {
                   <div key={index} className="appointment-item">
                     <p style={{ fontSize: '0.9em', margin: '2px 0' }}>
                       <strong>{appointment.serviceName}</strong><br />
-                      📅 {new Date(appointment.date).toLocaleDateString()} 🕒 {appointment.startTime}<br />
+                      <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(appointment.date).toLocaleDateString()} <ClockIcon className="h-4 w-4 inline mr-1" /> {appointment.startTime}<br />
                       LKR {appointment.price}
                     </p>
                     {index < appointmentsToDisplay.length - 1 && <hr />}
