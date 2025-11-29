@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const instance = axios.create({
-  // Replace localhost with your hosted backend URL
-  baseURL: "https://saloon-booking-system-backend-v2.onrender.com/api", 
+  // Use local development server
+  baseURL: "http://localhost:5000/api", 
   withCredentials: true,
 });
 
