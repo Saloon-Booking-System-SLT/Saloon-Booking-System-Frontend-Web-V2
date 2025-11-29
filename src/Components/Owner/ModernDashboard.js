@@ -83,10 +83,11 @@ const ModernDashboard = () => {
   const [error, setError] = useState(null);
   const notifRef = useRef();
   const navigate = useNavigate();
-  const { user, logout: authLogout, loading: authLoading } = useAuth();
+  const { user, logout: authLogout, loading: authLoading, isAuthenticated } = useAuth();
 
   console.log('Dashboard: Auth state', {
     authLoading,
+    isAuthenticated,
     hasUser: !!user,
     userRole: user?.role,
     userId: user?.id || user?._id
@@ -121,9 +122,9 @@ const ModernDashboard = () => {
       return;
     }
 
-    // Check if user is logged in and has owner role
-    if (!user) {
-      console.log('Dashboard: No user found, redirecting to login');
+    // Check if user is authenticated and has owner role
+    if (!isAuthenticated || !user) {
+      console.log('Dashboard: No authenticated user found, redirecting to login');
       setError('Please log in to access the dashboard.');
       setLoading(false);
       navigate('/OwnerLogin');
