@@ -6,6 +6,8 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [editPopup, setEditPopup] = useState(false);
   const [addressPopup, setAddressPopup] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -28,8 +30,57 @@ const Profile = () => {
         phone: parsed.phone || "",
         gender: parsed.gender || "",
       });
+      fetchFavorites();
     }
   }, [navigate]);
+
+  const fetchFavorites = async () => {
+    setFavoritesLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setFavoritesLoading(false);
+        return;
+      }
+
+      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data.favorites);
+      }
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
+
+  const removeFavorite = async (salonId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/favorites/${salonId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (res.ok) {
+        setFavorites(favorites.filter(salon => salon._id !== salonId));
+      }
+    } catch (err) {
+      console.error("Error removing favorite:", err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,6 +113,7 @@ const Profile = () => {
         <nav>
           <button className="nav-btn active">👤 Profile</button>
           <button className="nav-btn" onClick={() => navigate("/appointments")}>📅 Appointments</button>
+          <button className="nav-btn">❤️ Favorites</button>
           <button
             className="nav-btn logout"
             onClick={() => {
@@ -113,6 +165,57 @@ const Profile = () => {
               <p className="muted">No address added yet.</p>
             )}
             <button className="add-btn" onClick={() => setAddressPopup(true)}>＋ Add Address</button>
+          </div>
+
+          {/* Favorites Card */}
+          <div className="favorites-card">
+            <div className="card-header">
+              <h2>My Favorite Salons</h2>
+            </div>
+            {favoritesLoading ? (
+              <p className="muted">Loading favorites...</p>
+            ) : favorites.length > 0 ? (
+              <div className="favorites-list">
+                {favorites.map((salon) => (
+                  <div className="favorite-item" key={salon._id}>
+                    <img 
+                      src={salon.image || "https://via.placeholder.com/60x60?text=Salon"} 
+                      alt={salon.name}
+                      className="favorite-salon-image"
+                    />
+                    <div className="favorite-info">
+                      <h4>{salon.name}</h4>
+                      <p className="favorite-location">{salon.location}</p>
+                      <p className="favorite-type">{salon.salonType} Salon</p>
+                    </div>
+                    <div className="favorite-actions">
+                      <button 
+                        className="book-btn"
+                        onClick={() => navigate(`/BookSelectionPage`, { state: { salon } })}
+                      >
+                        Book Now
+                      </button>
+                      <button 
+                        className="remove-favorite-btn"
+                        onClick={() => removeFavorite(salon._id)}
+                      >
+                        ❤️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-favorites">
+                <p className="muted">You haven't added any favorite salons yet.</p>
+                <button 
+                  className="browse-btn" 
+                  onClick={() => navigate("/searchsalon")}
+                >
+                  Browse Salons
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
