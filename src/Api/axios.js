@@ -1,5 +1,12 @@
 import axios from "axios";
 
+// Multiple backend URLs for failover
+const BACKEND_URLS = [
+  "https://saloon-booking-system-backend-v2.onrender.com/api",
+  "https://salon-backend-production.railway.app/api",
+  // Add more backup URLs as needed
+];
+
 // Determine the API URL based on environment
 const getApiUrl = () => {
   // Check if we're in development (localhost)
@@ -16,21 +23,59 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Fallback to the known backend URL
-  return "https://saloon-booking-system-backend-v2.onrender.com/api";
+  // Return primary backend URL
+  return BACKEND_URLS[0];
 };
 
+// Test backend connectivity and switch to working URL
+const findWorkingBackend = async () => {
+  for (const url of BACKEND_URLS) {
+    try {
+      console.log(`Testing backend: ${url}`);
+      const response = await fetch(url.replace('/api', '/health'), {
+        method: 'GET',
+        mode: 'cors',
+        timeout: 10000
+      });
+      
+      if (response.ok) {
+        console.log(`✅ Backend working: ${url}`);
+        return url;
+      }
+    } catch (error) {
+      console.log(`❌ Backend failed: ${url}`, error.message);
+    }
+  }
+  
+  // If all fail, return primary URL
+  console.log('All backends failed, using primary URL');
+  return BACKEND_URLS[0];
+};
+
+// Initialize with working backend
+let workingBackendUrl = getApiUrl();
+
 const instance = axios.create({
-  baseURL: getApiUrl(),
-  withCredentials: false, // Set to false for hosted environments to avoid CORS issues
-  timeout: 45000, // 45 second timeout for slow Render cold starts
+  baseURL: workingBackendUrl,
+  withCredentials: false,
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   }
 });
 
-console.log('Axios instance created with baseURL:', getApiUrl());
+console.log('Axios instance created with baseURL:', workingBackendUrl);
+
+// Update instance baseURL when backend changes
+const updateBackendUrl = async () => {
+  const newUrl = await findWorkingBackend();
+  if (newUrl !== workingBackendUrl) {
+    workingBackendUrl = newUrl;
+    instance.defaults.baseURL = newUrl;
+    console.log('🔄 Backend URL updated to:', newUrl);
+  }
+};
 
 // Add request interceptor to attach token automatically
 instance.interceptors.request.use(
@@ -48,7 +93,7 @@ instance.interceptors.request.use(
   }
 );
 
-// Add response interceptor for better error handling
+// Add response interceptor for better error handling with failover
 instance.interceptors.response.use(
   (response) => {
     console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
@@ -64,27 +109,28 @@ instance.interceptors.response.use(
       baseURL: error.config?.baseURL
     });
     
-    // Handle CORS and network errors
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      console.error('❌ Network Error - Backend might be sleeping or unreachable');
+    // Handle CORS and network errors with automatic failover
+    if (error.code === 'ERR_NETWORK' || 
+        error.message === 'Network Error' ||
+        error.message.includes('CORS') ||
+        error.response?.status >= 500) {
       
-      // For Render, try to wake up the service with a simple request
-      if (error.config?.url && !error.config?._retry) {
-        console.log('🔄 Attempting to wake up backend service...');
-        try {
-          // Make a simple health check request to wake up Render
-          await fetch(getApiUrl().replace('/api', '/health'), { 
-            method: 'GET',
-            mode: 'cors' 
-          });
-          
-          // Retry the original request after a delay
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          error.config._retry = true;
-          return instance(error.config);
-        } catch (wakeUpError) {
-          console.error('Failed to wake up backend:', wakeUpError);
-        }
+      console.error('❌ Backend Error - Attempting failover...');
+      
+      if (!error.config?._retry) {
+        error.config._retry = true;
+        
+        // Try to find a working backend
+        const newBackendUrl = await findWorkingBackend();
+        
+        // Update the config with new backend URL
+        error.config.baseURL = newBackendUrl;
+        instance.defaults.baseURL = newBackendUrl;
+        
+        console.log('🔄 Retrying request with new backend:', newBackendUrl);
+        
+        // Retry the original request
+        return instance(error.config);
       }
     }
     
@@ -102,5 +148,8 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Initialize backend connectivity check
+updateBackendUrl();
 
 export default instance;
