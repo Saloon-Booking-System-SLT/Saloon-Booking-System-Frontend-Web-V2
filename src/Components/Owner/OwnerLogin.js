@@ -39,8 +39,23 @@ const OwnerLogin = () => {
       };
       
       // Store in both auth context and localStorage
+      console.log('Owner login: Storing user data', {
+        hasToken: !!token,
+        userRole: salonUserData.role,
+        userId: salonUserData.id
+      });
+      
       login(token, salonUserData);
-      localStorage.setItem('salonUser', JSON.stringify(salonUserData));
+      
+      // Double-ensure localStorage is set for hosted environments
+      try {
+        localStorage.setItem('salonUser', JSON.stringify(salonUserData));
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(salonUserData));
+        console.log('Owner login: localStorage set successfully');
+      } catch (e) {
+        console.error('Owner login: Failed to set localStorage', e);
+      }
       
       // Always navigate to dashboard - it will show approval message if pending
       navigate("/dashboard");

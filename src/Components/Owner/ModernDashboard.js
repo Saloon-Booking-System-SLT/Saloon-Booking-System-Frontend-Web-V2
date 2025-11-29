@@ -83,7 +83,14 @@ const ModernDashboard = () => {
   const [error, setError] = useState(null);
   const notifRef = useRef();
   const navigate = useNavigate();
-  const { user, logout: authLogout } = useAuth();
+  const { user, logout: authLogout, loading: authLoading } = useAuth();
+
+  console.log('Dashboard: Auth state', {
+    authLoading,
+    hasUser: !!user,
+    userRole: user?.role,
+    userId: user?.id || user?._id
+  });
 
   // ✅ Logout function
   const handleLogout = () => {
@@ -108,8 +115,15 @@ const ModernDashboard = () => {
 
   // ✅ Fetch salon data and appointments
   useEffect(() => {
+    // Wait for auth context to finish loading
+    if (authLoading) {
+      console.log('Dashboard: Waiting for auth to load...');
+      return;
+    }
+
     // Check if user is logged in and has owner role
     if (!user) {
+      console.log('Dashboard: No user found, redirecting to login');
       setError('Please log in to access the dashboard.');
       setLoading(false);
       navigate('/OwnerLogin');
@@ -117,6 +131,7 @@ const ModernDashboard = () => {
     }
 
     if (user.role !== 'owner') {
+      console.log('Dashboard: User is not an owner, redirecting');
       setError('Access denied. Owner account required.');
       setLoading(false);
       navigate('/OwnerLogin');
@@ -128,6 +143,11 @@ const ModernDashboard = () => {
     if (!salonData.id && salonData._id) {
       salonData.id = salonData._id;
     }
+    
+    console.log('Dashboard: Setting salon data', {
+      salonId: salonData.id,
+      salonName: salonData.salonName
+    });
     
     setSalon(salonData);
 
@@ -166,7 +186,7 @@ const ModernDashboard = () => {
     };
 
     fetchAppointments();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // ✅ Check approval status - show pending screen if not approved
   if (salon && salon.approvalStatus !== 'approved') {
@@ -340,6 +360,68 @@ const ModernDashboard = () => {
               </button>
             </div>
           </main>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Show loading screen while auth is loading
+  if (authLoading) {
+    return (
+      <div className="modern-full-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px',
+          backgroundColor: '#f8f9fa'
+        }}>
+          <div className="loading-spinner" style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #3498db',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p style={{ color: '#666', fontSize: '16px' }}>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Show error state if there's an authentication error
+  if (error) {
+    return (
+      <div className="modern-full-page">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '20px',
+          backgroundColor: '#f8f9fa'
+        }}>
+          <i className="fas fa-exclamation-triangle" style={{ fontSize: '48px', color: '#e74c3c' }}></i>
+          <p style={{ color: '#e74c3c', fontSize: '16px', textAlign: 'center', maxWidth: '400px' }}>{error}</p>
+          <button 
+            onClick={() => navigate('/OwnerLogin')}
+            style={{
+              padding: '12px 24px',
+              background: '#3498db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );

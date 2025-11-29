@@ -18,28 +18,79 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for existing token on app load
-    const storedToken = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user') || 'null'); // Standard user data
-    const salonData = JSON.parse(localStorage.getItem('salonUser') || 'null'); // Salon owner data
-    
-    if (storedToken) {
-      setToken(storedToken);
+    try {
+      const storedToken = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      const salonData = localStorage.getItem('salonUser');
       
-      // Use salon data if available, otherwise use standard user data
-      if (salonData && salonData.role === 'owner') {
-        setUser(salonData);
-      } else if (userData) {
-        setUser(userData);
+      console.log('AuthContext: Checking stored data', {
+        hasToken: !!storedToken,
+        hasUserData: !!userData,
+        hasSalonData: !!salonData
+      });
+      
+      if (storedToken) {
+        setToken(storedToken);
+        
+        // Parse salon data first (for owner accounts)
+        if (salonData) {
+          try {
+            const parsedSalonData = JSON.parse(salonData);
+            if (parsedSalonData && parsedSalonData.role === 'owner') {
+              console.log('AuthContext: Restoring salon user session');
+              setUser(parsedSalonData);
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error('AuthContext: Failed to parse salon data', e);
+            localStorage.removeItem('salonUser');
+          }
+        }
+        
+        // Parse standard user data
+        if (userData) {
+          try {
+            const parsedUserData = JSON.parse(userData);
+            if (parsedUserData) {
+              console.log('AuthContext: Restoring user session');
+              setUser(parsedUserData);
+            }
+          } catch (e) {
+            console.error('AuthContext: Failed to parse user data', e);
+            localStorage.removeItem('user');
+          }
+        }
       }
+    } catch (error) {
+      console.error('AuthContext: Error during session restore', error);
     }
     setLoading(false);
   }, []);
 
   const login = (newToken, userData) => {
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setToken(newToken);
-    setUser(userData);
+    try {
+      console.log('AuthContext: Logging in user', {
+        hasToken: !!newToken,
+        userRole: userData?.role,
+        userId: userData?.id || userData?._id
+      });
+      
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // For salon owners, also store in salonUser for backward compatibility
+      if (userData?.role === 'owner') {
+        localStorage.setItem('salonUser', JSON.stringify(userData));
+      }
+      
+      setToken(newToken);
+      setUser(userData);
+      
+      console.log('AuthContext: Login successful');
+    } catch (error) {
+      console.error('AuthContext: Login failed', error);
+    }
   };
 
   const logout = () => {
