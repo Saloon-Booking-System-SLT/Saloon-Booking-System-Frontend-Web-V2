@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { CalendarDaysIcon, ClockIcon, UserIcon, ScissorsIcon } from '@heroicons/react/24/outline';
 
 const FamilyBooking = () => {
   const navigate = useNavigate();
@@ -109,15 +110,15 @@ const FamilyBooking = () => {
                     <span style={styles.categoryBadge}>{appointment.memberCategory}</span>
                   </div>
                   <div style={styles.bookedCardDetails}>
-                    <p>💇 <strong>{appointment.serviceName}</strong></p>
-                    <p>🧑‍💼 {appointment.professionalName}</p>
-                    <p>📅 {new Date(appointment.date).toLocaleDateString('en-US', { 
+                    <p><ScissorsIcon style={{ height: '16px', width: '16px', display: 'inline', marginRight: '4px' }} /> <strong>{appointment.serviceName}</strong></p>
+                    <p><UserIcon style={{ height: '16px', width: '16px', display: 'inline', marginRight: '4px' }} /> {appointment.professionalName}</p>
+                    <p><CalendarDaysIcon style={{ height: '16px', width: '16px', display: 'inline', marginRight: '4px' }} /> {new Date(appointment.date).toLocaleDateString('en-US', { 
                       weekday: 'short', 
                       month: 'short', 
                       day: 'numeric',
                       year: 'numeric'
                     })}</p>
-                    <p>🕒 {appointment.startTime} - {appointment.endTime}</p>
+                    <p><ClockIcon style={{ height: '16px', width: '16px', display: 'inline', marginRight: '4px' }} /> {appointment.startTime} - {appointment.endTime}</p>
                     <p style={styles.priceText}>LKR {appointment.price.toLocaleString()}</p>
                   </div>
                 </div>

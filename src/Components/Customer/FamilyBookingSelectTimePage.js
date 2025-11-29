@@ -1,6 +1,7 @@
 // SelectTimePage.jsx - Fixed Family Booking Version
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
@@ -505,8 +506,8 @@ const SelectTimePage = () => {
                     <p><strong>👤 {appointment.memberName}</strong> {isGroupBooking && `(${appointment.memberCategory})`}</p>
                     <p>💇 {appointment.serviceName}</p>
                     <p>🧑‍💼 {appointment.professionalName}</p>
-                    <p>📅 {new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
-                    <p>🕒 {appointment.startTime} - {appointment.endTime}</p>
+                    <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                    <p><ClockIcon className="h-4 w-4 inline mr-1" /> {appointment.startTime} - {appointment.endTime}</p>
                     <p className="price-tag">LKR {appointment.price.toLocaleString()}</p>
                     {index < appointmentsToDisplay.length - 1 && <hr />}
                   </div>

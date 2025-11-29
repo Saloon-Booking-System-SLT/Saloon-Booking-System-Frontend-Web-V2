@@ -6,6 +6,7 @@ import logo from '../../Assets/logo.png';
 import dayjs from 'dayjs';
 import './SalonCalendar.css';
 import { API_BASE_URL } from '../../config/api';
+import { CalendarDaysIcon, UserIcon } from '@heroicons/react/24/outline';
 
 const SalonCalendar = () => {
   const navigate = useNavigate();
@@ -132,7 +133,7 @@ const SalonCalendar = () => {
           <h1 className="header-title">Calendar</h1>
           <div>
             <label className="input-label">
-              📅
+              <CalendarDaysIcon className="h-5 w-5" />
               <input
                 type="date"
                 value={selectedDate.toISOString().split("T")[0]}
@@ -140,7 +141,7 @@ const SalonCalendar = () => {
               />
             </label>
             <label className="input-label">
-              👩‍💼
+              <UserIcon className="h-5 w-5" />
               <select
                 value={selectedProfessionalId}
                 onChange={(e) => setSelectedProfessionalId(e.target.value)}

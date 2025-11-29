@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Profile.css";
 import { useNavigate } from "react-router-dom";
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -112,7 +113,7 @@ const Profile = () => {
         <div className="user-name">{user.name}</div>
         <nav>
           <button className="nav-btn active">👤 Profile</button>
-          <button className="nav-btn" onClick={() => navigate("/appointments")}>📅 Appointments</button>
+          <button className="nav-btn" onClick={() => navigate("/appointments")}><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments</button>
           <button className="nav-btn">❤️ Favorites</button>
           <button
             className="nav-btn logout"

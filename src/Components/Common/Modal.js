@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import './Modal.css';
 
 const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
@@ -22,31 +23,33 @@ const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
   if (!isOpen) return null;
 
   const sizeClasses = {
-    small: 'modal-small',
-    medium: 'modal-medium',
-    large: 'modal-large'
+    small: 'max-w-md',
+    medium: 'max-w-lg', 
+    large: 'max-w-4xl'
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300" onClick={onClose}>
       <div 
-        className={`modal-content ${sizeClasses[size]} slide-down`} 
+        className={`bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 hover:scale-105 w-full mx-4 ${sizeClasses[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <button 
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 group"
+            onClick={onClose}
+          >
+            <XMarkIcon className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
           </button>
         </div>
-        <div className="modal-body">
+        <div className="p-6">
           {children}
         </div>
       </div>
     </div>
   );
+};
 };
 
 export default Modal;

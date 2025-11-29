@@ -435,33 +435,31 @@ const ModernDashboard = () => {
 
         {/* Main Content */}
         <main className="modern-main-content">
-          {/* Header */}
-          <header className="modern-header">
-            <div className="header-left">
-              <h2>Salon Dashboard</h2>
-              <p className="welcome-message">
-                Welcome back, <strong>{salon?.name || 'Salon Owner'}</strong>! 
-                {stats.today > 0 
-                  ? ` You have ${stats.today} appointment${stats.today > 1 ? 's' : ''} today.`
-                  : ' No appointments scheduled for today.'
-                }
-              </p>
-            </div>
-            
-            <div className="modern-header-right" ref={notifRef}>
-              {/* Quick Stats */}
-              <div className="quick-stats">
-                <div className="stat-item">
-                  <i className="fas fa-calendar-day"></i>
-                  <span>{stats.today} Today</span>
-                </div>
-                <div className="stat-item">
-                  <i className="fas fa-clock"></i>
-                  <span>{stats.pending} Pending</span>
-                </div>
+        {/* Header */}
+        <header className="modern-header px-4 md:px-6">
+          <div className="header-left">
+            <h2 className="text-xl md:text-2xl font-bold">Salon Dashboard</h2>
+            <p className="welcome-message text-sm md:text-base">
+              Welcome back, <strong>{salon?.name || 'Salon Owner'}</strong>! 
+              {stats.today > 0 
+                ? ` You have ${stats.today} appointment${stats.today > 1 ? 's' : ''} today.`
+                : ' No appointments scheduled for today.'
+              }
+            </p>
+          </div>
+          
+          <div className="modern-header-right" ref={notifRef}>
+            {/* Quick Stats */}
+            <div className="quick-stats hidden md:flex">
+              <div className="stat-item">
+                <i className="fas fa-calendar-day"></i>
+                <span>{stats.today} Today</span>
               </div>
-
-              {/* Notification Bell */}
+              <div className="stat-item">
+                <i className="fas fa-clock"></i>
+                <span>{stats.pending} Pending</span>
+              </div>
+            </div>              {/* Notification Bell */}
               <div className="notif-wrapper">
                 <i
                   className="fas fa-bell"
@@ -559,16 +557,16 @@ const ModernDashboard = () => {
           </header>
 
           {/* Content */}
-          <section className="modern-content-area">
+          <section className="modern-content-area px-4 md:px-6">
             {/* Stats Overview */}
-            <div className="stats-overview">
+            <div className="stats-overview grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
               <div className="stat-card">
                 <div className="stat-icon total">
                   <i className="fas fa-calendar-check"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{stats.total}</h3>
-                  <p>Total Appointments</p>
+                  <h3 className="text-xl md:text-2xl">{stats.total}</h3>
+                  <p className="text-xs md:text-sm">Total Appointments</p>
                 </div>
               </div>
               <div className="stat-card">
@@ -576,8 +574,8 @@ const ModernDashboard = () => {
                   <i className="fas fa-sun"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{stats.today}</h3>
-                  <p>Today's Appointments</p>
+                  <h3 className="text-xl md:text-2xl">{stats.today}</h3>
+                  <p className="text-xs md:text-sm">Today's Appointments</p>
                 </div>
               </div>
               <div className="stat-card">
@@ -585,8 +583,8 @@ const ModernDashboard = () => {
                   <i className="fas fa-calendar-week"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{stats.upcoming}</h3>
-                  <p>Upcoming</p>
+                  <h3 className="text-xl md:text-2xl">{stats.upcoming}</h3>
+                  <p className="text-xs md:text-sm">Upcoming</p>
                 </div>
               </div>
               <div className="stat-card">
@@ -594,16 +592,16 @@ const ModernDashboard = () => {
                   <i className="fas fa-clock"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{stats.pending}</h3>
-                  <p>Pending Approval</p>
+                  <h3 className="text-xl md:text-2xl">{stats.pending}</h3>
+                  <p className="text-xs md:text-sm">Pending Approval</p>
                 </div>
               </div>
             </div>
 
             {/* Main Content Grid */}
-            <div className="dashboard-grid">
+            <div className="dashboard-grid grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
               {/* All Appointments */}
-              <div className="modern-appointments">
+              <div className="modern-appointments lg:col-span-2">
                 <div className="section-header">
                   <h3><i className="fas fa-list-alt"></i> All Appointments</h3>
                   <span className="section-badge">{appointments.length}</span>
