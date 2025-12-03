@@ -293,3 +293,132 @@
   }
 }
 
+/* Guest Alert Modal */
+.guest-alert-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.guest-alert-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.guest-alert-content h3 {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.guest-alert-content p {
+  color: #555;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.guest-alert-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.guest-alert-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.guest-alert-primary:hover {
+  background-color: #0056b3;
+}
+
+.guest-alert-secondary {
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.guest-alert-secondary:hover {
+  background-color: #e9ecef;
+}
+
+.guest-alert-note {
+  margin-top: 15px;
+  color: #6c757d !important;
+  font-size: 0.85rem;
+}
+
+/* Guest Notice */
+.guest-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 15px 0;
+  color: #856404;
+}
+
+.guest-notice a {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.guest-notice a:hover {
+  color: #0056b3;
+}
+
+/* Guest Disabled State */
+.guest-disabled {
+  position: relative;
+  cursor: not-allowed !important;
+}
+
+.guest-lock-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.9rem;
+}
+
+.guest-disabled-btn {
+  background-color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.guest-action-section {
+  margin-top: 20px;
+}
+
+.guest-action-note {
+  margin-top: 10px;
+  color: #6c757d;
+  font-size: 0.85rem;
+  text-align: center;
+}

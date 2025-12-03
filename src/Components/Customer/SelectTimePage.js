@@ -19,7 +19,9 @@ const SelectTimePage = () => {
   const rescheduleAppointment = location.state?.rescheduleAppointment || null;
   const isReschedule = !!rescheduleAppointment;
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [showGuestAlert, setShowGuestAlert] = useState(false);
 
   const [selectedServices, setSelectedServices] = useState(passedServices);
   const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
@@ -39,6 +41,25 @@ const SelectTimePage = () => {
       return total + (parseFloat(service.price) || 0);
     }, 0);
   }, [selectedServices]);
+
+  // Check user authentication status
+  useEffect(() => {
+    // Check for regular user
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsGuest(false);
+    }
+    
+    // Check for guest user
+    const guestUser = localStorage.getItem("guestUser");
+    if (guestUser) {
+      const guestData = JSON.parse(guestUser);
+      setUser(guestData);
+      setIsGuest(true);
+      setShowGuestAlert(true);
+    }
+  }, []);
 
   // Stable dates for next 7 days
   const dates = useMemo(() => {
@@ -212,9 +233,14 @@ const SelectTimePage = () => {
       startTime: startTime,
       endTime: endTime,
       professionalName: selectedProfessional?.name || "Any Professional",
-      memberName: user?.name || "Guest"
+      memberName: user?.name || "Guest",
+      phone: user?.phone || "",
+      email: user?.email || "",
     };
   }, [selectedTimes, serviceKey, selectedDates, filteredSlots, currentService, professionalId, selectedProfessional, salon, user]);
+
+  // Check if user is authorized to book
+  const isUserAuthorized = !isGuest && (user?.id !== 'guest');
 
   // ✅ Create appointment via API with CORRECT format
   const createAppointment = async (appointmentData) => {
@@ -258,6 +284,12 @@ const SelectTimePage = () => {
 
   // 🔥 FIXED: Handle reschedule for individual booking
   const handleReschedule = async () => {
+    // Check if user is guest
+    if (!isUserAuthorized) {
+      setShowGuestAlert(true);
+      return;
+    }
+
     if (!selectedTimes[serviceKey]) {
       alert("❌ Please select a time for rescheduling.");
       return;
@@ -312,6 +344,12 @@ const SelectTimePage = () => {
 
   // Handle continue for multi-service booking
   const handleContinue = async () => {
+    // Check if user is guest
+    if (!isUserAuthorized) {
+      setShowGuestAlert(true);
+      return;
+    }
+
     console.log("🔵 handleContinue called for service:", currentService.name);
     console.log("🔵 selectedTimes[serviceKey]:", selectedTimes[serviceKey]);
     
@@ -441,6 +479,16 @@ const SelectTimePage = () => {
     return allAppointments;
   }, [bookedAppointments, selectedTimes, serviceKey, getCurrentAppointmentData]);
 
+  // Handle login/signup navigation
+  const handleNavigateToLogin = () => {
+    navigate("/login", { 
+      state: { 
+        redirectTo: window.location.pathname,
+        stateData: location.state
+      }
+    });
+  };
+
   const appointmentsToDisplay = getAllAppointmentsForDisplay();
   const displayTotalAmount = appointmentsToDisplay.reduce((total, appointment) => {
     return total + (Number(appointment.price) || 0);
@@ -461,11 +509,44 @@ const SelectTimePage = () => {
   // Render
   return (
     <div className="SelectTimePage-container" key={renderKey}>
+      {/* Guest Alert Modal */}
+      {showGuestAlert && (
+        <div className="guest-alert-modal">
+          <div className="guest-alert-content">
+            <h3>🛑 Sign In Required</h3>
+            <p>You're currently browsing as a guest. To book appointments, please sign in or create an account.</p>
+            <div className="guest-alert-buttons">
+              <button 
+                className="guest-alert-primary"
+                onClick={handleNavigateToLogin}
+              >
+                Sign In / Sign Up
+              </button>
+              <button 
+                className="guest-alert-secondary"
+                onClick={() => setShowGuestAlert(false)}
+              >
+                Continue as Guest (View Only)
+              </button>
+            </div>
+            <p className="guest-alert-note">
+              <small>Note: Guest users can browse but cannot make bookings.</small>
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="left-column">
         <p className="breadcrumb">Services &gt; Professional &gt; <b>Time</b> &gt; Confirmation</p>
         <h2 className="heading-with-search">
           {isReschedule ? "Reschedule" : "Select Time for"} {currentService.name}
         </h2>
+
+        {isGuest && (
+          <div className="guest-notice">
+            <p>⚠️ You're browsing as a guest. <a onClick={() => setShowGuestAlert(true)}>Sign in to book</a></p>
+          </div>
+        )}
 
         {isReschedule && (
           <div className="reschedule-notice">
@@ -488,6 +569,7 @@ const SelectTimePage = () => {
               key={day.fullDate}
               className={`date-button ${selectedDates[serviceKey] === day.fullDate ? "selected" : ""}`}
               onClick={() => handleDateClick(serviceKey, professionalId, day.fullDate)}
+              disabled={isGuest}
             >
               <span>{day.date}</span><small>{day.day}</small>
             </button>
@@ -516,12 +598,18 @@ const SelectTimePage = () => {
               return (
                 <div
                   key={slotId}
-                  className={`SelectTimePage-card ${isBooked ? "disabled" : isSelected ? "selected" : ""}`}
-                  onClick={() => handleTimeClick(serviceKey, slotId, isBooked)}
-                  style={{ pointerEvents: isBooked ? "none" : "auto" }}
+                  className={`SelectTimePage-card ${isBooked ? "disabled" : isSelected ? "selected" : ""} ${isGuest ? "guest-disabled" : ""}`}
+                  onClick={() => !isGuest && handleTimeClick(serviceKey, slotId, isBooked)}
+                  style={{ 
+                    pointerEvents: isGuest || isBooked ? "none" : "auto",
+                    opacity: isGuest ? 0.6 : 1
+                  }}
                 >
                   <p>{slot.startTime} - {slot.endTime}</p>
                   <p>{isBooked ? "❌ Booked" : `LKR ${currentService.price}`}</p>
+                  {isGuest && (
+                    <div className="guest-lock-icon">🔒</div>
+                  )}
                 </div>
               );
             })
@@ -567,18 +655,33 @@ const SelectTimePage = () => {
               <p><strong>LKR {displayTotalAmount}</strong></p>
             </div>
           </div>
-          <button 
-            className="continue-button" 
-            onClick={handleContinue} 
-            disabled={!selectedTimes[serviceKey] || loading}
-          >
-            {loading ? "Processing..." : 
-             isReschedule ? "Reschedule Appointment" :
-             currentServiceIndex.current + 1 < selectedServices.length 
-               ? `Continue to Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
-               : `Confirm All Services (LKR ${displayTotalAmount})`
-            }
-          </button>
+          
+          {isGuest ? (
+            <div className="guest-action-section">
+              <button 
+                className="continue-button guest-disabled-btn"
+                onClick={() => setShowGuestAlert(true)}
+              >
+                🔒 Sign In to Book Appointment
+              </button>
+              <p className="guest-action-note">
+                <small>Guest users cannot make bookings. Please sign in to continue.</small>
+              </p>
+            </div>
+          ) : (
+            <button 
+              className="continue-button" 
+              onClick={handleContinue} 
+              disabled={!selectedTimes[serviceKey] || loading || !isUserAuthorized}
+            >
+              {loading ? "Processing..." : 
+                isReschedule ? "Reschedule Appointment" :
+                currentServiceIndex.current + 1 < selectedServices.length 
+                  ? `Continue to Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
+                  : `Confirm All Services (LKR ${displayTotalAmount})`
+              }
+            </button>
+          )}
         </div>
       </div>
 

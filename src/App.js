@@ -37,6 +37,7 @@ import SalonProfessionals from "./Components/Owner/SalonProfessionals";
 import SalonTimeSlots from "./Components/Owner/SalonTimeSlots";
 import OwnerFeedbackPage from "./Components/Owner/OwnerFeedbackPage";
 import SalonProfile from "./Components/Owner/SalonProfile";
+import ResetPassword from './Components/Owner/ResetPassword';
 
 // Admin Components
 import AdminDashboard from "./Components/Admin/AdminDashboard";
@@ -61,6 +62,7 @@ function App() {
           <Route path="/login/customer" element={<CustomerLogin />} />
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
           <Route path="/searchsalon" element={<CustomerRoute><Searchsalon /></CustomerRoute>} />

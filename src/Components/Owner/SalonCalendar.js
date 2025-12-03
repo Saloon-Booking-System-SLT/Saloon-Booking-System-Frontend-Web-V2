@@ -79,10 +79,7 @@ const SalonCalendar = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Booked': return '#60a5fa';
-      case 'Confirmed': return '#10b981';
-      case 'Arrived': return '#f59e0b';
-      case 'Started': return '#8b5cf6';
+      
       case 'Completed': return '#22c55e';
       case 'Cancel': return '#ef4444';
       default: return '#9ca3af';
