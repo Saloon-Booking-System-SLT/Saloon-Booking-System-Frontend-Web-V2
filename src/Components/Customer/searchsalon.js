@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import "./searchsaloon.css";
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import LocationPickerModal from "./LocationPickerModal";
@@ -23,6 +24,7 @@ const SearchSalon = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userFavorites, setUserFavorites] = useState([]);
 
   // Modal and mode states
   const [modalOpen, setModalOpen] = useState(false);
@@ -35,9 +37,66 @@ const SearchSalon = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     setMenuOpen(false);
     navigate("/login");
+  };
+
+  const fetchUserFavorites = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(`${API_BASE_URL}/api/users/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setUserFavorites(data.favorites.map(salon => salon._id));
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
+
+  const toggleFavorite = async (salonId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please log in to add favorites");
+        return;
+      }
+
+      const isFavorite = userFavorites.includes(salonId);
+      const method = isFavorite ? 'DELETE' : 'POST';
+      
+      const res = await fetch(`${API_BASE_URL}/api/users/favorites/${salonId}`, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (res.ok) {
+        if (isFavorite) {
+          setUserFavorites(userFavorites.filter(id => id !== salonId));
+        } else {
+          setUserFavorites([...userFavorites, salonId]);
+        }
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Error updating favorites');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert('Error updating favorites');
+    }
   };
 
 const fetchSalons = useCallback(async () => {
@@ -90,7 +149,10 @@ const fetchSalons = useCallback(async () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      fetchUserFavorites();
+    }
     fetchSalons();
   }, [fetchSalons]);
 
@@ -266,7 +328,7 @@ const getCityFromLocation = (location) => {
                   <div className="user-name">{user.name}</div>
                   <ul>
                     <li onClick={() => navigate("/profile")}>👤 Profile</li>
-                    <li onClick={() => navigate("/appointments")}>📅 Appointments</li>
+                    <li onClick={() => navigate("/appointments")}><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments</li>
                     <li onClick={handleLogout}>🚪 Logout</li>
                     <li className="dropdown-divider"></li>
                     <li>Download the App</li>
@@ -360,7 +422,20 @@ const getCityFromLocation = (location) => {
             {filteredSalons.length > 0 ? (
               filteredSalons.map((salon) => (
                 <div className="salon-card" key={salon._id}>
-                  <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
+                  <div className="salon-card-header">
+                    <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
+                    {user && (
+                      <button 
+                        className={`favorite-btn ${userFavorites.includes(salon._id) ? 'favorited' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(salon._id);
+                        }}
+                      >
+                        {userFavorites.includes(salon._id) ? '❤️' : '🤍'}
+                      </button>
+                    )}
+                  </div>
                   <div className="salon-info">
                     <h4>{salon.name}</h4>
                     <p>{getCityFromLocation(salon.location)}</p>
@@ -412,7 +487,20 @@ const getCityFromLocation = (location) => {
             {filteredSalons.length > 0 ? (
               filteredSalons.map((salon) => (
                 <div className="salon-card" key={salon._id}>
-                  <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
+                  <div className="salon-card-header">
+                    <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
+                    {user && (
+                      <button 
+                        className={`favorite-btn ${userFavorites.includes(salon._id) ? 'favorited' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(salon._id);
+                        }}
+                      >
+                        {userFavorites.includes(salon._id) ? '❤️' : '🤍'}
+                      </button>
+                    )}
+                  </div>
                   <div className="salon-info">
                     <h4>{salon.name}</h4>
                     <p>{getCityFromLocation(salon.location)}</p>

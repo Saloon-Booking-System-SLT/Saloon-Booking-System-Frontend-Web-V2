@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import './SalonsManagement.css';
 import { useNavigate } from 'react-router-dom';
+import { 
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  CheckIcon,
+  XMarkIcon,
+  EyeIcon,
+  BuildingStorefrontIcon
+} from '@heroicons/react/24/outline';
 import axios from '../../Api/axios';
 import AdminLayout from './AdminLayout';
 
@@ -151,59 +159,63 @@ const SalonsManagement = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="filters-section">
-          <div className="search-box">
-            <i className="fas fa-search search-icon"></i>
-            <input
-              type="text"
-              placeholder="Search by name, email, or location"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
-
-          <div className="filters-row">
-            <div className="filter-dropdown">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-              <i className="fas fa-chevron-down filter-icon"></i>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, email, or location"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              />
             </div>
 
-            <div className="filter-dropdown">
-              <select
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All Cities</option>
-                {cities.slice(1).map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              <i className="fas fa-chevron-down filter-icon"></i>
-            </div>
+            <div className="flex flex-wrap gap-3">
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-32"
+                >
+                  <option value="All">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
 
-            <div className="filter-dropdown">
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All Types</option>
-                {types.slice(1).map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <i className="fas fa-chevron-down filter-icon"></i>
+              <div className="relative">
+                <select
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-32"
+                >
+                  <option value="All">All Cities</option>
+                  {cities.slice(1).map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-32"
+                >
+                  <option value="All">All Types</option>
+                  {types.slice(1).map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>
@@ -244,42 +256,55 @@ const SalonsManagement = () => {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="flex gap-2">
                           {salon.approvalStatus === 'pending' && (
                             <>
                               <button 
-                                className="view-details-btn"
-                                style={{ backgroundColor: '#28a745' }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200"
                                 onClick={() => handleApproveSalon(salon._id)}
+                                title="Approve Salon"
                               >
-                                ✓ Approve
+                                <CheckIcon className="h-4 w-4" />
+                                Approve
                               </button>
                               <button 
-                                className="view-details-btn"
-                                style={{ backgroundColor: '#dc3545' }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
                                 onClick={() => handleRejectSalon(salon._id)}
+                                title="Reject Salon"
                               >
-                                ✗ Reject
+                                <XMarkIcon className="h-4 w-4" />
+                                Reject
                               </button>
                             </>
                           )}
                           {salon.approvalStatus === 'rejected' && (
                             <button 
-                              className="view-details-btn"
-                              style={{ backgroundColor: '#28a745' }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200"
                               onClick={() => handleApproveSalon(salon._id)}
+                              title="Approve Salon"
                             >
-                              ✓ Approve
+                              <CheckIcon className="h-4 w-4" />
+                              Approve
                             </button>
                           )}
                           {salon.approvalStatus === 'approved' && (
-                            <button 
-                              className="view-details-btn"
-                              style={{ backgroundColor: '#dc3545' }}
-                              onClick={() => handleRejectSalon(salon._id)}
-                            >
-                              ✗ Reject
-                            </button>
+                            <>
+                              <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
+                                onClick={() => handleRejectSalon(salon._id)}
+                                title="Reject Salon"
+                              >
+                                <XMarkIcon className="h-4 w-4" />
+                                Reject
+                              </button>
+                              <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                                title="View Details"
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                                View
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

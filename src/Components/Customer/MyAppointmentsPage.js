@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./MyAppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
@@ -195,7 +196,7 @@ const MyAppointmentsPage = () => {
           >
             👤 Profile
           </button>
-          <button className="nav-btn active">📅 Appointments</button>
+          <button className="nav-btn active"><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments</button>
           <button
             className="nav-btn logout"
             onClick={() => {
@@ -216,7 +217,7 @@ const MyAppointmentsPage = () => {
           ← Back
         </button>
 
-        <h2>📋 My Appointments</h2>
+        <h2>My Appointments</h2>
         {appointments.length === 0 ? (
           <p className="no-data">No appointments found.</p>
         ) : (
@@ -235,9 +236,9 @@ const MyAppointmentsPage = () => {
                 />
                 <div className="salon-info">
                   <h4>{a.salonId?.name}</h4>
-                  <p>📍 {a.salonId?.location}</p>
+                  <p> {a.salonId?.location}</p>
                   <p className="appt-date">
-                    📅{" "}
+                    {" "}
                     {new Date(a.date).toLocaleDateString("en-US", {
                       weekday: "long",
                       day: "numeric",
@@ -245,7 +246,7 @@ const MyAppointmentsPage = () => {
                     })}
                   </p>
                   <p className="appt-time">
-                    🕒{" "}
+                    {" "}
                     {a.startTime && a.endTime
                       ? `${a.startTime} - ${a.endTime}`
                       : "Time pending"}

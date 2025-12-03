@@ -1,6 +1,7 @@
 // src/pages/CheckoutPage.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { CreditCardIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import "./CheckoutPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
@@ -125,7 +126,10 @@ const CheckoutPage = () => {
                   checked={paymentMethod === "card"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
-                <span>💳 Credit/Debit Card</span>
+                <span className="flex items-center gap-2">
+                  <CreditCardIcon className="h-5 w-5" />
+                  Credit/Debit Card
+                </span>
               </label>
               
               <label className="payment-option">
@@ -135,7 +139,10 @@ const CheckoutPage = () => {
                   checked={paymentMethod === "cash"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
-                <span>💰 Cash on Arrival</span>
+                <span className="flex items-center gap-2">
+                  <BanknotesIcon className="h-5 w-5" />
+                  Cash on Arrival
+                </span>
               </label>
             </div>
           </div>

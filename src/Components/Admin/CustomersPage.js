@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import './CustomersPage.css';
 import axios from '../../Api/axios';
 
@@ -244,9 +245,15 @@ const CustomersPage = () => {
                     </td>
                     <td>
                       {customer.smsOptIn ? (
-                        <span className="opt-in yes">✓ Yes</span>
+                        <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                          <CheckIcon className="h-4 w-4" />
+                          Yes
+                        </span>
                       ) : (
-                        <span className="opt-in no">✗ No</span>
+                        <span className="inline-flex items-center gap-1 text-red-600 font-medium">
+                          <XMarkIcon className="h-4 w-4" />
+                          No
+                        </span>
                       )}
                     </td>
                     <td>
@@ -396,7 +403,19 @@ const CustomersPage = () => {
 
               <div className="detail-row">
                 <strong>SMS Opt-in:</strong>
-                <span>{selectedCustomer.smsOptIn ? '✓ Yes' : '✗ No'}</span>
+                <span className="inline-flex items-center gap-1">
+                  {selectedCustomer.smsOptIn ? (
+                    <>
+                      <CheckIcon className="h-4 w-4 text-green-600" />
+                      <span className="text-green-600 font-medium">Yes</span>
+                    </>
+                  ) : (
+                    <>
+                      <XMarkIcon className="h-4 w-4 text-red-600" />
+                      <span className="text-red-600 font-medium">No</span>
+                    </>
+                  )}
+                </span>
               </div>
               <div className="detail-row">
                 <strong>Blacklisted:</strong>
