@@ -49,15 +49,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="sidebar-footer">
-        <div 
-          className="nav-icon" 
-          onClick={() => navigate('/help')}
-          title="Help & Support"
-        >
-          <i className="fas fa-question-circle"></i>
-        </div>
-      </div>
+      
     </aside>
   );
 };

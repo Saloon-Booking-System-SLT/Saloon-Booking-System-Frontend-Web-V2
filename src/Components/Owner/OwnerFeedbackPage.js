@@ -17,8 +17,8 @@ const OwnerFeedbackPage = () => {
         <img src={logo} alt="Brand Logo" className="modern-logo" />
         <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
         <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate('/calendar')}></i>
-        <i className="fas fa-smile" title="Services" onClick={() => navigate('/services')}></i>
-        <i className="fas fa-comment active" title="Feedbacks"></i>
+        <i className="fas fa-cut" title="Services" onClick={() => navigate('/services')}></i>
+        <i className="fas fa-comment-alt active" title="Feedbacks"></i>
         <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
         <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
       </aside>

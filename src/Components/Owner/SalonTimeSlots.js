@@ -122,8 +122,8 @@ const SalonTimeSlots = () => {
         <img src={logo} alt="Brand Logo" className="modern-logo" />
         <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
         <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate('/calendar')}></i>
-        <i className="fas fa-smile" title="Services" onClick={() => navigate('/services')}></i>
-        <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate('/feedbacks')}></i>
+        <i className="fas fa-cut" title="Services" onClick={() => navigate('/services')}></i>
+        <i className="fas fa-comment-alt" title="Feedbacks" onClick={() => navigate('/feedbacks')}></i>
         <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
         <i className="fas fa-clock active" title="Time Slots"></i>
       </aside>
