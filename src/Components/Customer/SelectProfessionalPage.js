@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
-
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
-
+const API_BASE_URL = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace("/api", "")
+  : "https://saloon-booking-system-backend-v2.onrender.com";
 
 const SelectProfessionalPage = () => {
   const location = useLocation();
@@ -14,13 +12,11 @@ const SelectProfessionalPage = () => {
   const { salon, selectedServices } = location.state || {};
 
   const [professionals, setProfessionals] = useState([]);
-  const [popupService, setPopupService] = useState(null);
   const [serviceProfessionals, setServiceProfessionals] = useState({});
   const [reviews, setReviews] = useState({});
   const [viewReviewsPro, setViewReviewsPro] = useState(null);
   const [selectedProReviews, setSelectedProReviews] = useState([]);
 
-  // Fetch professionals
   useEffect(() => {
     if (!salon?._id) return;
 
@@ -30,7 +26,6 @@ const SelectProfessionalPage = () => {
       .catch((err) => console.error("Failed to fetch professionals", err));
   }, [salon]);
 
-  // Fetch reviews for all professionals
   useEffect(() => {
     if (!professionals.length) return;
 
@@ -49,7 +44,6 @@ const SelectProfessionalPage = () => {
     });
   }, [professionals]);
 
-  // Get average rating
   const getAverageRating = (proId) => {
     const feedbacks = reviews[proId] || [];
     if (!feedbacks.length) return 0;
@@ -57,18 +51,15 @@ const SelectProfessionalPage = () => {
     return (total / feedbacks.length).toFixed(1);
   };
 
-  // Open popup with full review list
   const openReviewPopup = async (pro) => {
     setViewReviewsPro(pro);
 
-    // Fetch fresh reviews directly
     const res = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
     const data = await res.json();
 
     setSelectedProReviews(data.feedbacks || []);
   };
 
-  // Close popup
   const closeReviewPopup = () => {
     setViewReviewsPro(null);
     setSelectedProReviews([]);
@@ -107,11 +98,9 @@ const SelectProfessionalPage = () => {
 
         <h2 className="heading-with-search">Select professionals</h2>
 
-        {/* If ONE service */}
         {selectedServices.length === 1 ? (
           <>
             <div className="select-services-list">
-              {/* Option ANY */}
               <div
                 className={`select-services-card ${
                   serviceProfessionals[selectedServices[0].name]?._id === "any"
@@ -135,7 +124,6 @@ const SelectProfessionalPage = () => {
                 </div>
               </div>
 
-              {/* Professionals */}
               {professionals.map((pro) => {
                 const proReviews = reviews[pro._id] || [];
                 const avgRating = getAverageRating(pro._id);
@@ -145,8 +133,7 @@ const SelectProfessionalPage = () => {
                   <div
                     key={pro._id}
                     className={`select-services-card ${
-                      serviceProfessionals[selectedServices[0].name]?._id ===
-                      pro._id
+                      serviceProfessionals[selectedServices[0].name]?._id === pro._id
                         ? "selected"
                         : ""
                     }`}
@@ -184,17 +171,12 @@ const SelectProfessionalPage = () => {
                       </div>
                     </div>
 
-                    {/* 👁️ Eye Button */}
-                    <button
-                      className="view-reviews-btn"
-                      onClick={() => openReviewPopup(pro)}
-                    >
+                    <button className="view-reviews-btn" onClick={() => openReviewPopup(pro)}>
                       👁 View
                     </button>
 
                     <div className="checkbox-icon">
-                      {serviceProfessionals[selectedServices[0].name]?._id ===
-                      pro._id
+                      {serviceProfessionals[selectedServices[0].name]?._id === pro._id
                         ? "✔"
                         : "☐"}
                     </div>
@@ -205,7 +187,6 @@ const SelectProfessionalPage = () => {
           </>
         ) : (
           <>
-            {/* MULTIPLE SERVICES CODE (unchanged except eye icon inside modal) */}
             <h4>Select for each service:</h4>
             <div className="select-services-list">
               {selectedServices.map((service) => (
@@ -216,16 +197,9 @@ const SelectProfessionalPage = () => {
                       <p>{service.duration}</p>
                       <p>LKR {service.price}</p>
                       <p style={{ fontSize: "13px" }}>
-                        Selected:{" "}
-                        {serviceProfessionals[service.name]?.name || "None"}
+                        Selected: {serviceProfessionals[service.name]?.name || "None"}
                       </p>
                     </div>
-                    <button
-                      className="assign-btn"
-                      onClick={() => setPopupService(service)}
-                    >
-                      Assign
-                    </button>
                   </div>
                 </div>
               ))}
@@ -234,7 +208,6 @@ const SelectProfessionalPage = () => {
         )}
       </div>
 
-      {/* RIGHT SIDE SUMMARY */}
       <div className="right-column">
         <div className="summary-box">
           <img
@@ -262,45 +235,58 @@ const SelectProfessionalPage = () => {
               </div>
             ))}
           </div>
+
           <div className="total-section">
             <p>Total</p>
             <p>
               <strong>LKR {totalPrice}</strong>
             </p>
           </div>
+
           <button className="continue-button" onClick={handleContinue}>
             Continue
           </button>
         </div>
       </div>
 
-      {/* 👁️ FEEDBACK POPUP */}
       {viewReviewsPro && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h3>Reviews for {viewReviewsPro.name}</h3>
+  <div className="modal-backdrop">
+    <div className="modal">
+      <h3>Reviews for {viewReviewsPro.name}</h3>
 
-            {selectedProReviews.length === 0 ? (
-              <p>No reviews yet</p>
-            ) : (
-              selectedProReviews.map((fb) => (
-                <div key={fb._id} className="feedback-item">
-                  <p>
-                    ⭐ {fb.rating} — <b>{fb.userEmail}</b>
-                  </p>
-                  <p>{fb.comment}</p>
-                  <small>{new Date(fb.createdAt).toLocaleString()}</small>
-                  <hr />
-                </div>
-              ))
-            )}
+      <div className="modal-body">
+        {selectedProReviews.length === 0 ? (
+          <p>No reviews yet</p>
+        ) : (
+          selectedProReviews.map((fb) => (
+            <div key={fb._id} className="feedback-item">
+              <p>
+                {"⭐".repeat(fb.rating)}
+              </p>
+              <p>{fb.comment}</p>
 
-            <button className="cancel-button" onClick={closeReviewPopup}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+              {/* 💎 Professional date format */}
+              <small>
+                {new Date(fb.createdAt).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </small>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Changed from cancel-button to modal-close-button */}
+      <button className="modal-close-button" onClick={closeReviewPopup}>
+        Close
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };

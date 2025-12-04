@@ -1,15 +1,21 @@
 /* Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-/* BookSelectionPage Styles */
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* BookSelectionPage Container */
 .book-selection-container {
   min-height: 100vh;
   background: #ffffff;
   color: #2d3748;
   display: flex;
   flex-direction: column;
-  padding: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Header/Navbar */
@@ -20,6 +26,8 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 100;
 }
 
 .book-selection-logo {
@@ -46,6 +54,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+  font-family: 'Poppins', sans-serif;
 }
 
 .book-selection-back-btn:hover {
@@ -61,8 +70,7 @@
   position: relative;
 }
 
-.selection-header::before {
-  content: '';
+.selection-header-line {
   position: absolute;
   top: 0;
   left: 0;
@@ -97,137 +105,161 @@
   justify-content: center;
   gap: 40px;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px 80px;
 }
 
-/* Booking Cards - Ash/Grey Boxes */
+/* Booking Cards */
 .booking-card {
-  background: linear-gradient(145deg, #e2e8f0, #cbd5e0);
-  color: #2d3748;
-  border-radius: 20px;
-  padding: 40px 30px;
-  width: 360px;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: #ffffff;
+  border-radius: 24px;
+  width: 500px;
+  max-width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: 'Poppins', sans-serif;
-  position: relative;
   overflow: hidden;
-  border: 2px solid rgba(203, 213, 224, 0.5);
+  border: 2px solid #e2e8f0;
   animation: fadeIn 0.6s ease;
 }
 
-.booking-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
+.booking-card:hover,
+.booking-card-hovered {
+  transform: translateY(-15px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+/* Card Image Section */
+.card-image-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+}
+
+.card-image {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s ease;
+  object-fit: cover;
+  transition: transform 0.6s ease;
 }
 
-.booking-card:hover::before {
-  left: 100%;
+.booking-card:hover .card-image,
+.booking-card-hovered .card-image {
+  transform: scale(1.1);
 }
 
-.booking-card:hover {
-  transform: translateY(-15px) scale(1.02);
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.2),
-    0 0 0 4px rgba(22, 29, 111, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  background: linear-gradient(145deg, #edf2f7, #d4dce5);
+.card-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 31, 63, 0.5) 100%);
+  pointer-events: none;
 }
 
-.card-icon {
-  font-size: 4.5rem;
-  margin-bottom: 25px;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-  animation: bounce 2s ease infinite;
-  transition: transform 0.3s ease;
+.card-image-label {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
-.booking-card:hover .card-icon {
-  animation: none;
-  transform: scale(1.15) rotateY(10deg);
+.card-image-label-icon {
+  font-size: 1.5rem;
 }
 
-.booking-card h2 {
-  font-size: 1.75rem;
-  margin-bottom: 12px;
+.card-image-label-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+/* Card Content */
+.card-content {
+  padding: 40px 35px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 1.85rem;
+  margin-bottom: 15px;
   font-weight: 700;
   color: #1a202c;
   letter-spacing: -0.5px;
 }
 
-.booking-card p {
-  font-size: 1rem;
+.card-description {
+  font-size: 1.05rem;
   margin-bottom: 25px;
   color: #4a5568;
-  line-height: 1.6;
-  text-align: center;
+  line-height: 1.7;
 }
 
 /* Feature List */
-.book-selection-feature-list {
+.card-feature-list {
   list-style: none;
   padding: 0;
   margin: 0 0 30px 0;
   width: 100%;
 }
 
-.book-selection-feature-item {
+.card-feature-item {
   font-size: 0.95rem;
   color: #2d3748;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
+  padding: 10px 15px;
+  background: rgba(226, 232, 240, 0.4);
+  border-radius: 10px;
   transition: all 0.3s ease;
 }
 
-.book-selection-feature-item:hover {
-  background: rgba(255, 255, 255, 0.8);
+.card-feature-item:hover {
+  background: rgba(226, 232, 240, 0.7);
   transform: translateX(5px);
 }
 
-.book-selection-checkmark {
+.card-checkmark {
   color: #38a169;
   font-weight: 700;
   margin-right: 12px;
   font-size: 1.2rem;
+  flex-shrink: 0;
   filter: drop-shadow(0 2px 4px rgba(56, 161, 105, 0.3));
 }
 
 /* Select Button */
-.select-btn {
+.card-select-btn {
   background: linear-gradient(135deg, #161d6f 0%, #001f3f 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 14px 32px;
+  border-radius: 14px;
+  padding: 18px 32px;
   font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
   box-shadow: 0 6px 20px rgba(22, 29, 111, 0.3);
+  font-family: 'Poppins', sans-serif;
   position: relative;
   overflow: hidden;
 }
 
-.select-btn::before {
+.card-select-btn::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -240,18 +272,18 @@
   transition: width 0.6s, height 0.6s;
 }
 
-.select-btn:hover::before {
+.card-select-btn:hover::before {
   width: 300px;
   height: 300px;
 }
 
-.select-btn:hover {
+.card-select-btn:hover {
   background: linear-gradient(135deg, #001f3f 0%, #0a2540 100%);
   transform: translateY(-3px);
   box-shadow: 0 10px 25px rgba(22, 29, 111, 0.4);
 }
 
-.select-btn:active {
+.card-select-btn:active {
   transform: translateY(0);
   box-shadow: 0 4px 15px rgba(22, 29, 111, 0.3);
 }
@@ -353,15 +385,6 @@
   }
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-}
-
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
@@ -372,6 +395,12 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .booking-card {
+    width: 450px;
+  }
+}
+
 @media (max-width: 768px) {
   .book-selection-header {
     padding: 15px 20px;
@@ -398,16 +427,27 @@
 
   .booking-card {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
+  }
+
+  .card-image-container {
+    height: 250px;
+  }
+
+  .card-content {
     padding: 35px 25px;
   }
 
-  .card-icon {
-    font-size: 3.5rem;
+  .card-title {
+    font-size: 1.6rem;
   }
 
-  .booking-card h2 {
-    font-size: 1.5rem;
+  .card-description {
+    font-size: 1rem;
+  }
+
+  .book-selection-info-card {
+    padding: 30px 20px;
   }
 }
 
@@ -416,20 +456,63 @@
     font-size: 1.8rem;
   }
 
+  .selection-subtitle {
+    font-size: 0.95rem;
+  }
+
   .booking-card {
+    border-radius: 20px;
+  }
+
+  .card-image-container {
+    height: 220px;
+  }
+
+  .card-image-label {
+    padding: 10px 16px;
+    bottom: 15px;
+    left: 15px;
+  }
+
+  .card-image-label-icon {
+    font-size: 1.3rem;
+  }
+
+  .card-image-label-text {
+    font-size: 0.9rem;
+  }
+
+  .card-content {
     padding: 30px 20px;
   }
 
-  .card-icon {
-    font-size: 3rem;
+  .card-title {
+    font-size: 1.5rem;
   }
 
-  .select-btn {
-    padding: 12px 24px;
+  .card-description {
+    font-size: 0.95rem;
+  }
+
+  .card-feature-item {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  .card-select-btn {
+    padding: 14px 24px;
     font-size: 1rem;
   }
 
-  .book-selection-info-card {
-    padding: 25px 20px;
+  .book-selection-info-icon {
+    font-size: 2.5rem;
+  }
+
+  .book-selection-info-title {
+    font-size: 1.4rem;
+  }
+
+  .book-selection-info-text {
+    font-size: 1rem;
   }
 }
