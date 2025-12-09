@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace("/api", "")
+  : "https://saloon-booking-system-backend-v2.onrender.com";
 
 const SelectProfessionalPage = () => {
   const location = useLocation();
@@ -12,22 +12,20 @@ const SelectProfessionalPage = () => {
   const { salon, selectedServices } = location.state || {};
 
   const [professionals, setProfessionals] = useState([]);
-  const [popupService, setPopupService] = useState(null);
   const [serviceProfessionals, setServiceProfessionals] = useState({});
   const [reviews, setReviews] = useState({});
   const [viewReviewsPro, setViewReviewsPro] = useState(null);
+  const [selectedProReviews, setSelectedProReviews] = useState([]);
 
-
-  // Fetch professionals for this salon
   useEffect(() => {
     if (!salon?._id) return;
+
     fetch(`${API_BASE_URL}/api/professionals/${salon._id}`)
       .then((res) => res.json())
       .then((data) => setProfessionals(data))
       .catch((err) => console.error("Failed to fetch professionals", err));
   }, [salon]);
 
-  // Fetch reviews for all professionals in parallel
   useEffect(() => {
     if (!professionals.length) return;
 
@@ -35,41 +33,39 @@ const SelectProfessionalPage = () => {
       professionals.map((pro) =>
         fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`)
           .then((res) => res.json())
-          .then((data) => {
-            console.log("Reviews for", pro.name, ":", data.feedbacks);
-            return data.feedbacks; // ✅ return only the feedback array
-          })
+          .then((data) => data.feedbacks)
       )
     ).then((results) => {
-      const mapped = {};
-      professionals.forEach((pro, index) => {
-        mapped[pro._id] = results[index];
+      const obj = {};
+      professionals.forEach((pro, i) => {
+        obj[pro._id] = results[i];
       });
-      setReviews(mapped);
+      setReviews(obj);
     });
   }, [professionals]);
 
-  // Calculate average rating
   const getAverageRating = (proId) => {
-    const feedbacks = reviews[proId] || []; // ✅ Directly use reviews[proId] since it's already the feedback array
-    if (feedbacks.length === 0) return 0;
+    const feedbacks = reviews[proId] || [];
+    if (!feedbacks.length) return 0;
     const total = feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
     return (total / feedbacks.length).toFixed(1);
   };
 
-  const totalPrice =
-    selectedServices?.reduce((acc, s) => acc + s.price, 0) || 0;
+  const openReviewPopup = async (pro) => {
+    setViewReviewsPro(pro);
 
-  const openPopup = (service) => setPopupService(service);
-  const closePopup = () => setPopupService(null);
+    const res = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
+    const data = await res.json();
 
-  const handleSelectProForService = (serviceName, pro) => {
-    setServiceProfessionals((prev) => ({
-      ...prev,
-      [serviceName]: pro,
-    }));
-    closePopup();
+    setSelectedProReviews(data.feedbacks || []);
   };
+
+  const closeReviewPopup = () => {
+    setViewReviewsPro(null);
+    setSelectedProReviews([]);
+  };
+
+  const totalPrice = selectedServices?.reduce((acc, s) => acc + s.price, 0) || 0;
 
   const handleContinue = () => {
     if (
@@ -83,13 +79,6 @@ const SelectProfessionalPage = () => {
       selectedServices.length === 1
         ? serviceProfessionals[selectedServices[0].name] || "any"
         : serviceProfessionals;
-
-    localStorage.setItem(
-      "selectedProfessional",
-      JSON.stringify(selectedProfessional)
-    );
-    localStorage.setItem("selectedServices", JSON.stringify(selectedServices));
-    localStorage.setItem("selectedSalon", JSON.stringify(salon));
 
     navigate("/select-time", {
       state: {
@@ -106,15 +95,12 @@ const SelectProfessionalPage = () => {
         <p className="breadcrumb">
           Services &gt; <b>Professional</b> &gt; Time &gt; Confirm
         </p>
+
         <h2 className="heading-with-search">Select professionals</h2>
 
         {selectedServices.length === 1 ? (
           <>
-            <h4 style={{ marginTop: "10px" }}>
-              For: {selectedServices[0].name}
-            </h4>
             <div className="select-services-list">
-              {/* Option for Any Professional */}
               <div
                 className={`select-services-card ${
                   serviceProfessionals[selectedServices[0].name]?._id === "any"
@@ -130,9 +116,7 @@ const SelectProfessionalPage = () => {
                   })
                 }
               >
-                <div>
-                  <h4>Any professional</h4>
-                </div>
+                <h4>Any professional</h4>
                 <div className="checkbox-icon">
                   {serviceProfessionals[selectedServices[0].name]?._id === "any"
                     ? "✔"
@@ -140,7 +124,6 @@ const SelectProfessionalPage = () => {
                 </div>
               </div>
 
-              {/* List of Professionals */}
               {professionals.map((pro) => {
                 const proReviews = reviews[pro._id] || [];
                 const avgRating = getAverageRating(pro._id);
@@ -150,18 +133,19 @@ const SelectProfessionalPage = () => {
                   <div
                     key={pro._id}
                     className={`select-services-card ${
-                      serviceProfessionals[selectedServices[0].name]?._id ===
-                      pro._id
+                      serviceProfessionals[selectedServices[0].name]?._id === pro._id
                         ? "selected"
                         : ""
                     }`}
-                    onClick={() =>
-                      setServiceProfessionals({
-                        [selectedServices[0].name]: pro,
-                      })
-                    }
                   >
-                    <div className="professional-info">
+                    <div
+                      className="professional-info"
+                      onClick={() =>
+                        setServiceProfessionals({
+                          [selectedServices[0].name]: pro,
+                        })
+                      }
+                    >
                       <img
                         src={
                           pro.image
@@ -176,19 +160,23 @@ const SelectProfessionalPage = () => {
                       <div>
                         <h4>{pro.name}</h4>
                         <p>{pro.role}</p>
-                        {/* ✅ Only show average rating, no feedback comments */}
+
                         <p style={{ fontSize: "13px", color: "#555" }}>
-                          {reviewCount > 0 ? (
-                            `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? 's' : ''})`
-                          ) : (
-                            "No reviews yet"
-                          )}
+                          {reviewCount > 0
+                            ? `⭐ ${avgRating} (${reviewCount} review${
+                                reviewCount !== 1 ? "s" : ""
+                              })`
+                            : "No reviews yet"}
                         </p>
                       </div>
                     </div>
+
+                    <button className="view-reviews-btn" onClick={() => openReviewPopup(pro)}>
+                      👁 View
+                    </button>
+
                     <div className="checkbox-icon">
-                      {serviceProfessionals[selectedServices[0].name]?._id ===
-                      pro._id
+                      {serviceProfessionals[selectedServices[0].name]?._id === pro._id
                         ? "✔"
                         : "☐"}
                     </div>
@@ -199,32 +187,19 @@ const SelectProfessionalPage = () => {
           </>
         ) : (
           <>
-            <h4 style={{ marginTop: "10px" }}>For each service:</h4>
+            <h4>Select for each service:</h4>
             <div className="select-services-list">
               {selectedServices.map((service) => (
                 <div key={service.id} className="select-services-card">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <div>
                       <h4>{service.name}</h4>
                       <p>{service.duration}</p>
                       <p>LKR {service.price}</p>
-                      <p style={{ fontSize: "13px", color: "#777" }}>
-                        Selected:{" "}
-                        {serviceProfessionals[service.name]?.name || "None"}
+                      <p style={{ fontSize: "13px" }}>
+                        Selected: {serviceProfessionals[service.name]?.name || "None"}
                       </p>
                     </div>
-                    <button
-                      className="assign-btn"
-                      onClick={() => openPopup(service)}
-                    >
-                      Assign
-                    </button>
                   </div>
                 </div>
               ))}
@@ -260,80 +235,58 @@ const SelectProfessionalPage = () => {
               </div>
             ))}
           </div>
+
           <div className="total-section">
             <p>Total</p>
             <p>
               <strong>LKR {totalPrice}</strong>
             </p>
           </div>
+
           <button className="continue-button" onClick={handleContinue}>
             Continue
           </button>
         </div>
       </div>
 
-      {/* Popup to assign professional per service */}
-      {popupService && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h3>Select professional for {popupService.name}</h3>
-            <div className="services-list">
-              {professionals.map((pro) => {
-                const proReviews = reviews[pro._id] || [];
-                const avgRating = getAverageRating(pro._id);
-                const reviewCount = proReviews.length;
-                
-                return (
-                  <div
-                    key={pro._id}
-                    className={`service-card ${
-                      serviceProfessionals[popupService.name]?._id === pro._id
-                        ? "selected"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      handleSelectProForService(popupService.name, pro)
-                    }
-                  >
-                    <div className="professional-info">
-                      <img
-                        src={
-                          pro.image
-                            ? pro.image.startsWith("http")
-                              ? pro.image
-                              : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                            : "https://via.placeholder.com/50"
-                        }
-                        alt={pro.name}
-                      />
-                      <div>
-                        <h4>{pro.name}</h4>
-                        <p>{pro.role}</p>
-                        {/* ✅ Only show average rating, no feedback comments */}
-                        <p style={{ fontSize: "13px", color: "#555" }}>
-                          {reviewCount > 0 ? (
-                            `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? 's' : ''})`
-                          ) : (
-                            "No reviews yet"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="checkbox-icon">
-                      {serviceProfessionals[popupService.name]?._id === pro._id
-                        ? "✔"
-                        : "☐"}
-                    </div>
-                  </div>
-                );
-              })}
+      {viewReviewsPro && (
+  <div className="modal-backdrop">
+    <div className="modal">
+      <h3>Reviews for {viewReviewsPro.name}</h3>
+
+      <div className="modal-body">
+        {selectedProReviews.length === 0 ? (
+          <p>No reviews yet</p>
+        ) : (
+          selectedProReviews.map((fb) => (
+            <div key={fb._id} className="feedback-item">
+              <p>
+                {"⭐".repeat(fb.rating)}
+              </p>
+              <p>{fb.comment}</p>
+
+              {/* 💎 Professional date format */}
+              <small>
+                {new Date(fb.createdAt).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </small>
             </div>
-            <button className="cancel-button" onClick={closePopup}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+          ))
+        )}
+      </div>
+
+      {/* Changed from cancel-button to modal-close-button */}
+      <button className="modal-close-button" onClick={closeReviewPopup}>
+        Close
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };
