@@ -160,19 +160,23 @@ export default function CustomerLogin() {
   };
 
   const handleGuestContinue = () => {
-    // For guest users, you might not set any authentication
-    // Or create a temporary guest session
-    const guestUser = {
-      id: 'guest',
-      name: 'Guest',
-      role: 'guest',
-      isGuest: true
-    };
-    
-    // Store guest info without token
-    localStorage.setItem('guestUser', JSON.stringify(guestUser));
-    navigate("/");
+  // Create a guest user object
+  const guestUser = {
+    id: 'guest-' + Date.now(), // Add timestamp for unique ID
+    name: 'Guest User',
+    role: 'guest',
+    isGuest: true,
+    phone: '',
+    email: '',
+    photoURL: ''
   };
+  
+  // Store guest info in localStorage
+  localStorage.setItem('guestUser', JSON.stringify(guestUser));
+  
+  // Navigate to search salon page instead of home
+  navigate("/searchsalon");
+};
 
   const handleResendOtp = () => {
     setOtp("");

@@ -8,27 +8,54 @@ import {
   DevicePhoneMobileIcon,
   SparklesIcon,
   BuildingStorefrontIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline';
 import "./Home.css";
 
 const Home = () => {
   const [user, setUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    // Check for regular user
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsGuest(false);
+    }
+    
+    // Check for guest user
+    const guestUser = localStorage.getItem("guestUser");
+    if (guestUser) {
+      const guestData = JSON.parse(guestUser);
+      setUser(guestData);
+      setIsGuest(true);
+    }
   }, []);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  
+
   const handleLogout = () => {
+    // Remove both regular and guest user data
     localStorage.removeItem("user");
+    localStorage.removeItem("guestUser");
     setUser(null);
+    setIsGuest(false);
     setMenuOpen(false);
     navigate("/login");
+  };
+
+  const handleGuestLogout = () => {
+    localStorage.removeItem("guestUser");
+    setUser(null);
+    setIsGuest(false);
+    setMenuOpen(false);
+    navigate("/");
   };
 
   return (
@@ -36,7 +63,7 @@ const Home = () => {
       <header className="navbar px-4 md:px-6 lg:px-8">
         <div className="logo" onClick={() => navigate("/")}>Mobitel Salon</div>
         <nav className="nav-menu">
-          <button className="nav-btn-light hidden md:block" onClick={() => navigate("/business")}>For Business</button>
+          
           {!user ? (
             <>
               <button className="nav-link hidden sm:block" onClick={() => navigate("/login/customer")}>Log In</button>
@@ -66,36 +93,70 @@ const Home = () => {
             </>
           ) : (
             <div className="home-menu-container profile-warp">
-              <img
-                src={user.photoURL || "https://via.placeholder.com/40"}
-                alt="Profile"
-                className="profile-icon"
-                onClick={toggleMenu}
-              />
+              {isGuest ? (
+                // Guest user icon
+                <div 
+                  className="guest-profile-icon flex items-center justify-center bg-gray-200 text-gray-700 rounded-full cursor-pointer"
+                  onClick={toggleMenu}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                </div>
+              ) : (
+                // Regular user profile image
+                <img
+                  src={user.photoURL || "https://via.placeholder.com/40"}
+                  alt="Profile"
+                  className="profile-icon"
+                  onClick={toggleMenu}
+                />
+              )}
+              
               {menuOpen && (
-                  <div className="dropdown-menu">
-                    <div className="user-name">{user.name}</div>
-                    <ul>
-                      <li onClick={() => navigate("/profile")} className="flex items-center gap-2">
-                        <UserIcon className="h-4 w-4" />
-                        Profile
+                <div className="dropdown-menu">
+                  <div className="user-name">
+                    {isGuest ? "Guest User" : user.name}
+                    {isGuest && <span className="guest-badge">Guest</span>}
+                  </div>
+                  <ul>
+                    {!isGuest && (
+                      <>
+                        <li onClick={() => navigate("/profile")} className="flex items-center gap-2">
+                          <UserIcon className="h-4 w-4" />
+                          Profile
+                        </li>
+                        <li onClick={() => navigate("/appointments")} className="flex items-center gap-2">
+                          <CalendarDaysIcon className="h-4 w-4" />
+                          Appointments
+                        </li>
+                      </>
+                    )}
+                    
+                    {isGuest ? (
+                      <li onClick={handleGuestLogout} className="flex items-center gap-2">
+                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                        Exit Guest Mode
                       </li>
-                      <li onClick={() => navigate("/appointments")} className="flex items-center gap-2">
-                        <CalendarDaysIcon className="h-4 w-4" />
-                        Appointments
-                      </li>
+                    ) : (
                       <li onClick={handleLogout} className="flex items-center gap-2">
                         <ArrowRightOnRectangleIcon className="h-4 w-4" />
                         Logout
                       </li>
-                      <li className="dropdown-divider"></li>
-                      <li>Download the App</li>
-                      <li>Help & Support</li>
-                      <li>සිංහල</li>
-                      <li className="dropdown-divider"></li>
-                      <li>For Business →</li>
-                    </ul>
-                  </div>
+                    )}
+                    
+                    <li className="dropdown-divider"></li>
+                    <li>Download the App</li>
+                    <li>Help & Support</li>
+                    <li>සිංහල</li>
+                    <li className="dropdown-divider"></li>
+                    <li>For Business →</li>
+                  </ul>
+                </div>
               )}
             </div>
           )}

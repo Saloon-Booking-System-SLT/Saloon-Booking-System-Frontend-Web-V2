@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import "./searchsaloon.css";
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import LocationPickerModal from "./LocationPickerModal";
@@ -23,6 +23,7 @@ const SearchSalon = () => {
   const [genderFilter, setGenderFilter] = useState("All");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [user, setUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userFavorites, setUserFavorites] = useState([]);
 
@@ -35,12 +36,24 @@ const SearchSalon = () => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("guestUser");
     setUser(null);
+    setIsGuest(false);
     setMenuOpen(false);
     navigate("/login");
+  };
+
+  const handleGuestLogout = () => {
+    localStorage.removeItem("guestUser");
+    setUser(null);
+    setIsGuest(false);
+    setMenuOpen(false);
+    navigate("/");
   };
 
   const fetchUserFavorites = async () => {
@@ -66,9 +79,17 @@ const SearchSalon = () => {
 
   const toggleFavorite = async (salonId) => {
     try {
+      // Check if user is guest
+      if (isGuest) {
+        alert("Please log in to add favorites");
+        navigate("/login");
+        return;
+      }
+
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Please log in to add favorites");
+        navigate("/login");
         return;
       }
 
@@ -99,60 +120,70 @@ const SearchSalon = () => {
     }
   };
 
-const fetchSalons = useCallback(async () => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/salons`);
-    let salons = await res.json();
+  const fetchSalons = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/salons`);
+      let salons = await res.json();
 
-    const salonsWithRatings = await Promise.all(
-      salons.map(async (salon) => {
-        try {
-          // Fetch all professionals in this salon
-          const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
-          const professionals = await profRes.json();
+      const salonsWithRatings = await Promise.all(
+        salons.map(async (salon) => {
+          try {
+            // Fetch all professionals in this salon
+            const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
+            const professionals = await profRes.json();
 
-          // Fetch feedbacks for each professional
-          const allFeedbacks = await Promise.all(
-            professionals.map(async (pro) => {
-              const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
-              const data = await fbRes.json();
-              return data.feedbacks || []; // get only feedback array
-            })
-          );
+            // Fetch feedbacks for each professional
+            const allFeedbacks = await Promise.all(
+              professionals.map(async (pro) => {
+                const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
+                const data = await fbRes.json();
+                return data.feedbacks || [];
+              })
+            );
 
-          // Flatten all feedbacks
-          const flatFeedbacks = allFeedbacks.flat();
+            // Flatten all feedbacks
+            const flatFeedbacks = allFeedbacks.flat();
 
-          // Calculate average rating
-          const avgRating = flatFeedbacks.length
-            ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
-            : 0;
+            // Calculate average rating
+            const avgRating = flatFeedbacks.length
+              ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
+              : 0;
 
-          return { ...salon, avgRating: avgRating.toFixed(1) };
-        } catch (err) {
-          return { ...salon, avgRating: 0 };
-        }
-      })
-    );
+            return { ...salon, avgRating: avgRating.toFixed(1) };
+          } catch (err) {
+            return { ...salon, avgRating: 0 };
+          }
+        })
+      );
 
-    // Sort by rating
-    salonsWithRatings.sort((a, b) => b.avgRating - a.avgRating);
+      // Sort by rating
+      salonsWithRatings.sort((a, b) => b.avgRating - a.avgRating);
 
-    setAllSalons(salonsWithRatings);
-    if (!isNearbyMode) applyFilters(salonsWithRatings, query, genderFilter);
-  } catch (err) {
-    console.error("Failed to load salons", err);
-    alert("Failed to load salons");
-  }
-}, [query, genderFilter, isNearbyMode]);
-
+      setAllSalons(salonsWithRatings);
+      if (!isNearbyMode) applyFilters(salonsWithRatings, query, genderFilter);
+    } catch (err) {
+      console.error("Failed to load salons", err);
+      alert("Failed to load salons");
+    }
+  }, [query, genderFilter, isNearbyMode]);
 
   useEffect(() => {
+    // Check for regular user
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      setIsGuest(false);
       fetchUserFavorites();
     }
+    
+    // Check for guest user
+    const guestUser = localStorage.getItem("guestUser");
+    if (guestUser) {
+      const guestData = JSON.parse(guestUser);
+      setUser(guestData);
+      setIsGuest(true);
+    }
+    
     fetchSalons();
   }, [fetchSalons]);
 
@@ -187,82 +218,65 @@ const fetchSalons = useCallback(async () => {
     setFilteredSalons(filtered);
   };
 
-const fetchNearbySalons = async (lat, lng, manual = false) => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/salons/nearby?lat=${lat}&lng=${lng}`);
-    if (!res.ok) throw new Error("Failed to load nearby salons");
-    let data = await res.json();
+  const fetchNearbySalons = async (lat, lng, manual = false) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/salons/nearby?lat=${lat}&lng=${lng}`);
+      if (!res.ok) throw new Error("Failed to load nearby salons");
+      let data = await res.json();
 
-    const nearbyWithRatings = await Promise.all(
-      data.map(async (salon) => {
-        try {
-          const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
-          const professionals = await profRes.json();
+      const nearbyWithRatings = await Promise.all(
+        data.map(async (salon) => {
+          try {
+            const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
+            const professionals = await profRes.json();
 
-          const allFeedbacks = await Promise.all(
-            professionals.map(async (pro) => {
-              const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
-              const fbData = await fbRes.json();
-              return fbData.feedbacks || [];
-            })
-          );
+            const allFeedbacks = await Promise.all(
+              professionals.map(async (pro) => {
+                const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
+                const fbData = await fbRes.json();
+                return fbData.feedbacks || [];
+              })
+            );
 
-          const flatFeedbacks = allFeedbacks.flat();
-          const avgRating = flatFeedbacks.length
-            ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
-            : 0;
+            const flatFeedbacks = allFeedbacks.flat();
+            const avgRating = flatFeedbacks.length
+              ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
+              : 0;
 
-          return { ...salon, avgRating: avgRating.toFixed(1) };
-        } catch {
-          return { ...salon, avgRating: 0 };
-        }
-      })
+            return { ...salon, avgRating: avgRating.toFixed(1) };
+          } catch {
+            return { ...salon, avgRating: 0 };
+          }
+        })
+      );
+
+      nearbyWithRatings.sort((a, b) => b.avgRating - a.avgRating);
+      setNearbySalons(nearbyWithRatings);
+      setIsNearbyMode(true);
+      setManualNearbyMode(manual);
+      setQuery("");
+      setShowSuggestions(false);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const getCityFromLocation = (location) => {
+    if (!location) return "";
+
+    const districts = [
+      "Colombo", "Kandy", "Galle", "Matara", "Kurunegala", "Gampaha", "Jaffna",
+      "Anuradhapura", "Polonnaruwa", "Batticaloa", "Trincomalee", "Ratnapura",
+      "Badulla", "Nuwara Eliya", "Hambantota", "Kalutara", "Puttalam", "Monaragala",
+      "Kegalle", "Matale", "Ampara", "Kilinochchi", "Mannar", "Mullaitivu", "Vavuniya"
+    ];
+
+    const found = districts.find((d) =>
+      location.toLowerCase().includes(d.toLowerCase())
     );
 
-    nearbyWithRatings.sort((a, b) => b.avgRating - a.avgRating);
-    setNearbySalons(nearbyWithRatings);
-    setIsNearbyMode(true);
-    setManualNearbyMode(manual);
-    setQuery("");
-    setShowSuggestions(false);
-  } catch (err) {
-    alert(err.message);
-  }
-};
-
-const getCityFromLocation = (location) => {
-  if (!location) return "";
-
-  // Common Sri Lankan districts (you can add or remove as needed)
-  const districts = [
-    "Colombo", "Kandy", "Galle", "Matara", "Kurunegala", "Gampaha", "Jaffna",
-    "Anuradhapura", "Polonnaruwa", "Batticaloa", "Trincomalee", "Ratnapura",
-    "Badulla", "Nuwara Eliya", "Hambantota", "Kalutara", "Puttalam", "Monaragala",
-    "Kegalle", "Matale", "Ampara", "Kilinochchi", "Mannar", "Mullaitivu", "Vavuniya"
-  ];
-
-  // Try to find any known district name in the address (case-insensitive)
-  const found = districts.find((d) =>
-    location.toLowerCase().includes(d.toLowerCase())
-  );
-
-  return found || "Unknown";
-};
-
-  // Auto fetch nearest salons on page load (disabled to show all salons first)
-  // useEffect(() => {
-  //   if (navigator.geolocation) {
-  //     navigator.geolocation.getCurrentPosition(
-  //       (pos) => {
-  //         const { latitude, longitude } = pos.coords;
-  //         fetchNearbySalons(latitude, longitude, false);
-  //       },
-  //       (err) => {
-  //         console.warn("Geolocation denied or unavailable.", err);
-  //       }
-  //     );
-  //   }
-  // }, []);
+    return found || "Unknown";
+  };
 
   const handleLocationInputChange = (e) => {
     setQuery(e.target.value);
@@ -294,7 +308,7 @@ const getCityFromLocation = (location) => {
       <header className="navbar">
         <div className="logo logo-lowered" onClick={() => navigate("/")}>Salon</div>
         <nav className="nav-menu">
-          <button className="nav-btn-light" onClick={() => navigate("/business")}>For Business</button>
+          
           {!user ? (
             <>
               <button className="nav-link" onClick={() => navigate("/login")}>Log In</button>
@@ -317,19 +331,52 @@ const getCityFromLocation = (location) => {
             </>
           ) : (
             <div className="menu-container profile-warp">
-              <img
-                src={user.photoURL || "https://ui-avatars.com/api/?name=User&background=random&size=40"}
-                alt="Profile"
-                className="profile-icon"
-                onClick={toggleMenu}
-              />
+              {isGuest ? (
+                // Guest user icon
+                <div 
+                  className="guest-profile-icon flex items-center justify-center bg-gray-200 text-gray-700 rounded-full cursor-pointer"
+                  onClick={toggleMenu}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                </div>
+              ) : (
+                // Regular user profile image
+                <img
+                  src={user.photoURL || "https://ui-avatars.com/api/?name=User&background=random&size=40"}
+                  alt="Profile"
+                  className="profile-icon"
+                  onClick={toggleMenu}
+                />
+              )}
+              
               {menuOpen && (
                 <div className="dropdown-menu">
-                  <div className="user-name">{user.name}</div>
+                  <div className="user-name">
+                    {isGuest ? "Guest User" : user.name}
+                    {isGuest && <span className="guest-badge">Guest</span>}
+                  </div>
                   <ul>
-                    <li onClick={() => navigate("/profile")}>👤 Profile</li>
-                    <li onClick={() => navigate("/appointments")}><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments</li>
-                    <li onClick={handleLogout}>🚪 Logout</li>
+                    {!isGuest && (
+                      <>
+                        <li onClick={() => navigate("/profile")}>👤 Profile</li>
+                        <li onClick={() => navigate("/appointments")}>
+                          <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments
+                        </li>
+                      </>
+                    )}
+                    
+                    {isGuest ? (
+                      <li onClick={handleGuestLogout}>🚪 Exit Guest Mode</li>
+                    ) : (
+                      <li onClick={handleLogout}>🚪 Logout</li>
+                    )}
+                    
                     <li className="dropdown-divider"></li>
                     <li>Download the App</li>
                     <li>Help & Support</li>
@@ -424,7 +471,7 @@ const getCityFromLocation = (location) => {
                 <div className="salon-card" key={salon._id}>
                   <div className="salon-card-header">
                     <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
-                    {user && (
+                    {user && !isGuest && (
                       <button 
                         className={`favorite-btn ${userFavorites.includes(salon._id) ? 'favorited' : ''}`}
                         onClick={(e) => {
@@ -489,7 +536,7 @@ const getCityFromLocation = (location) => {
                 <div className="salon-card" key={salon._id}>
                   <div className="salon-card-header">
                     <img src={salon.image || fallbackImage} alt={salon.name} className="salon-image" />
-                    {user && (
+                    {user && !isGuest && (
                       <button 
                         className={`favorite-btn ${userFavorites.includes(salon._id) ? 'favorited' : ''}`}
                         onClick={(e) => {
