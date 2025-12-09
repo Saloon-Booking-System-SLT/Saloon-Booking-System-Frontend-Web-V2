@@ -31,16 +31,17 @@ const OwnerLogin = () => {
     setLoading(true);
 
     try {
+      console.log('🔐 Attempting login...');
       const res = await axios.post(`${API_BASE_URL}/salons/login`, formData);
       
       const { token, salon } = res.data;
       
-      console.log('Login response:', { token, salon });
+      console.log('📥 Login response:', { token: !!token, salon });
       
       // ✅ FIX: If approvalStatus is undefined, default to 'approved' (for backward compatibility)
       const approvalStatus = salon.approvalStatus || 'approved';
       
-      console.log('Approval status:', approvalStatus);
+      console.log('🔍 Approval status:', approvalStatus);
       
       // Check approval status
       if (approvalStatus === 'pending') {
@@ -60,18 +61,32 @@ const OwnerLogin = () => {
         ...salon,
         role: 'owner',
         id: salon._id || salon.id,
-        approvalStatus: approvalStatus // ✅ Include the status in user data
+        approvalStatus: approvalStatus
       };
       
-      console.log('Salon user data being saved:', salonUserData);
+      console.log('💾 Saving salon user data:', salonUserData);
       
-      login(token, salonUserData);
+      // ✅ CRITICAL FIX: Save EVERYTHING to localStorage BEFORE calling login()
+      localStorage.setItem('token', token);
+      localStorage.setItem('userRole', 'owner'); // ← THIS IS THE CRITICAL LINE!
+      localStorage.setItem('userEmail', salon.email);
+      localStorage.setItem('userName', salon.name);
+      localStorage.setItem('userId', salon.id || salon._id);
       localStorage.setItem('salonUser', JSON.stringify(salonUserData));
       
-      console.log('Navigating to dashboard...');
+      console.log('✅ Saved to localStorage:');
+      console.log('  - token:', !!localStorage.getItem('token'));
+      console.log('  - userRole:', localStorage.getItem('userRole'));
+      console.log('  - userEmail:', localStorage.getItem('userEmail'));
+      console.log('  - userName:', localStorage.getItem('userName'));
+      
+      // Call the auth context login (it might also set things, but we've already set them)
+      login(token, salonUserData);
+      
+      console.log('🚀 Navigating to dashboard...');
       navigate("/dashboard");
     } catch (err) {
-      console.error("Owner login error:", err);
+      console.error("❌ Owner login error:", err);
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);

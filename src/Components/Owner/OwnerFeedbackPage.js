@@ -20,6 +20,7 @@ const OwnerFeedbackPage = () => {
         <i className="fas fa-smile" title="Services" onClick={() => navigate('/services')}></i>
         <i className="fas fa-comment active" title="Feedbacks"></i>
         <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
+        <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
         <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
       </aside>
     );

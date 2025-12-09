@@ -6,6 +6,7 @@ import axiosInstance from '../../Api/axios';
 import dayjs from 'dayjs';
 import { useAuth } from '../../contexts/AuthContext';
 
+
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
   'https://saloon-booking-system-backend-v2.onrender.com';
@@ -21,6 +22,7 @@ const Sidebar = () => {
     { icon: 'fas fa-cut', path: '/services', key: 'services', title: 'Services' },
     { icon: 'fas fa-comment-alt', path: '/feedbacks', key: 'feedbacks', title: 'Feedbacks' },
     { icon: 'fas fa-users', path: '/professionals', key: 'professionals', title: 'Professionals' },
+   { icon: 'fas fa-calendar-check', path: '/book-appointment', key: 'book-appointment', title: 'Book An Appointment' },
     { icon: 'fas fa-clock', path: '/timeslots', key: 'timeslots', title: 'Time Slots' },
   ];
 

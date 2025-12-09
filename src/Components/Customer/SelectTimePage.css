@@ -422,3 +422,36 @@
   font-size: 0.85rem;
   text-align: center;
 }
+
+/* Add to SelectTimePage.css or FamilyBookingSelectTime.css */
+.reschedule-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+  border: 1px solid #f5c6cb;
+}
+
+.time-warning {
+  font-size: 0.8em;
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.reschedule-notice p {
+  margin: 4px 0;
+}
+
+/* Disabled state for buttons when within 24 hours */
+.continue-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.date-button:disabled,
+.SelectTimePage-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

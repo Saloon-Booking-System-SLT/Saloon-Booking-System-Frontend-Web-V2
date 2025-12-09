@@ -1,4 +1,4 @@
-// Individual Booking SelectTimePage.jsx - Fixed Multi-Service Version
+// Individual Booking SelectTimePage.jsx - Hide Past Times
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
@@ -22,6 +22,7 @@ const SelectTimePage = () => {
   const [user, setUser] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [showGuestAlert, setShowGuestAlert] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState("");
 
   const [selectedServices, setSelectedServices] = useState(passedServices);
   const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
@@ -42,24 +43,133 @@ const SelectTimePage = () => {
     }, 0);
   }, [selectedServices]);
 
-  // Check user authentication status
-  useEffect(() => {
-    // Check for regular user
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsGuest(false);
-    }
+  // Check if appointment is within 24 hours
+  const isWithin24Hours = useCallback((appointmentDate, appointmentStartTime) => {
+    if (!appointmentDate || !appointmentStartTime) return false;
     
-    // Check for guest user
-    const guestUser = localStorage.getItem("guestUser");
-    if (guestUser) {
-      const guestData = JSON.parse(guestUser);
-      setUser(guestData);
-      setIsGuest(true);
-      setShowGuestAlert(true);
+    try {
+      const appointmentDateTime = new Date(`${appointmentDate}T${appointmentStartTime}:00`);
+      const now = new Date();
+      
+      // Calculate difference in milliseconds
+      const timeDifference = appointmentDateTime.getTime() - now.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+      
+      console.log("⏰ Time check:", {
+        appointmentDateTime,
+        now,
+        hoursDifference,
+        isWithin24Hours: hoursDifference <= 24
+      });
+      
+      return hoursDifference <= 24;
+    } catch (error) {
+      console.error("Error checking time:", error);
+      return false;
     }
   }, []);
+
+  // Check if time slot is in the past
+  const isPastTimeSlot = useCallback((date, startTime) => {
+    if (!date || !startTime) return true;
+    
+    try {
+      const slotDateTime = new Date(`${date}T${startTime}:00`);
+      const now = new Date();
+      
+      return slotDateTime < now;
+    } catch (error) {
+      console.error("Error checking if slot is past:", error);
+      return true;
+    }
+  }, []);
+
+  // Check user authentication status on mount and when location changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      // Check for regular user
+      const storedUser = localStorage.getItem("user");
+      const guestUser = localStorage.getItem("guestUser");
+      
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setIsGuest(false);
+        setShowGuestAlert(false); // Close guest alert if user is now logged in
+      } else if (guestUser) {
+        const guestData = JSON.parse(guestUser);
+        setUser(guestData);
+        setIsGuest(true);
+      } else {
+        // No user at all
+        setUser(null);
+        setIsGuest(false);
+      }
+    };
+    
+    checkAuthStatus();
+  }, [location]); // Re-run when location changes (after login redirect)
+
+  // Check for login success in location state
+  useEffect(() => {
+    if (location.state?.loginSuccess && location.state?.userData) {
+      // User logged in successfully
+      setUser(location.state.userData);
+      setIsGuest(false);
+      setShowGuestAlert(false);
+      
+      // Clear the state to prevent infinite loop
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
+  // Restore booking data after login
+  useEffect(() => {
+    const pendingBookingData = localStorage.getItem('pendingBookingData');
+    
+    if (pendingBookingData && user && !isGuest) {
+      try {
+        const data = JSON.parse(pendingBookingData);
+        
+        console.log("🔄 Restoring booking data after login:", data);
+        
+        // Restore booking state
+        if (data.selectedServices && data.selectedServices.length > 0) {
+          setSelectedServices(data.selectedServices);
+        }
+        
+        if (data.selectedProfessional) {
+          setSelectedProfessional(data.selectedProfessional);
+        }
+        
+        if (data.selectedDates && Object.keys(data.selectedDates).length > 0) {
+          setSelectedDates(data.selectedDates);
+        }
+        
+        if (data.selectedTimes && Object.keys(data.selectedTimes).length > 0) {
+          setSelectedTimes(data.selectedTimes);
+        }
+        
+        if (data.bookedAppointments && data.bookedAppointments.length > 0) {
+          setBookedAppointments(data.bookedAppointments);
+        }
+        
+        if (data.currentServiceIndex !== undefined) {
+          currentServiceIndex.current = data.currentServiceIndex;
+        }
+        
+        // Clear the pending booking data from localStorage
+        localStorage.removeItem('pendingBookingData');
+        
+        // Force re-render
+        setRenderKey(prev => prev + 1);
+        
+      } catch (error) {
+        console.error("Error restoring booking data:", error);
+        localStorage.removeItem('pendingBookingData');
+      }
+    }
+  }, [user, isGuest]);
 
   // Stable dates for next 7 days
   const dates = useMemo(() => {
@@ -105,21 +215,32 @@ const SelectTimePage = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const key = `${professionalId}-${date}`;
-      setAvailableSlots(prev => ({ ...prev, [key]: Array.isArray(data) ? data : [] }));
-      console.debug("Fetched slots", key, Array.isArray(data) ? data.length : typeof data);
+      
+      // Filter out past time slots before setting state
+      const filteredData = Array.isArray(data) ? data.filter(slot => {
+        if (!slot.startTime) return false;
+        return !isPastTimeSlot(date, slot.startTime);
+      }) : [];
+      
+      setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
+      console.debug("Fetched and filtered slots", key, filteredData.length, "of", data.length);
     } catch (err) {
       console.error("Error fetching time slots:", err);
       const key = `${professionalId}-${date}`;
       setAvailableSlots(prev => ({ ...prev, [key]: [] }));
     }
-  }, []);
+  }, [isPastTimeSlot]);
 
-  // Init reschedule data
+  // Initialize reschedule data
   useEffect(() => {
     if (!isReschedule || !rescheduleAppointment) return;
+    
+    console.log("🔄 Initializing reschedule data:", rescheduleAppointment);
+    
     if (rescheduleAppointment.professionalId) {
       setSelectedProfessional(rescheduleAppointment.professionalId);
     }
+    
     if (rescheduleAppointment.services?.length) {
       const mapped = rescheduleAppointment.services.map(s => ({
         name: s.name,
@@ -127,10 +248,16 @@ const SelectTimePage = () => {
         duration: s.duration || "30 minutes",
       }));
       setSelectedServices(mapped);
+      
+      // Set selected date and time for the rescheduled appointment
+      const serviceName = mapped[0]?.name;
+      if (serviceName && rescheduleAppointment.date) {
+        setSelectedDates(prev => ({ ...prev, [serviceName]: rescheduleAppointment.date }));
+      }
     }
   }, [isReschedule, rescheduleAppointment]);
 
-  // Fetch default date slots for current service
+  // Fetch slots for current service
   useEffect(() => {
     if (!selectedProfessional || selectedServices.length === 0) return;
     
@@ -156,6 +283,7 @@ const SelectTimePage = () => {
       return;
     }
 
+    // For reschedule: use the appointment's date, otherwise use today
     const defaultDate = isReschedule && rescheduleAppointment?.date 
       ? rescheduleAppointment.date 
       : dates[0]?.fullDate;
@@ -165,7 +293,7 @@ const SelectTimePage = () => {
       setSelectedTimes(prev => ({ ...prev, [currentService.name]: null }));
       fetchTimeSlots(professionalId, defaultDate);
     }
-  }, [selectedProfessional, selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, currentServiceIndex.current]);
+  }, [selectedProfessional, selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots]);
 
   // Build derived values for current service
   const currentService = useMemo(() => {
@@ -180,6 +308,14 @@ const SelectTimePage = () => {
   const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
   const filteredSlots = currentService.duration ? filterMatchingSlots(safeSlots, currentService.duration) : safeSlots;
 
+  // Filter out past time slots from displayed slots
+  const displaySlots = useMemo(() => {
+    return filteredSlots.filter(slot => {
+      if (!slot.startTime) return false;
+      return !isPastTimeSlot(selectedDate, slot.startTime);
+    });
+  }, [filteredSlots, selectedDate, isPastTimeSlot]);
+
   // Handlers
   const handleDateClick = (serviceName, profId, fullDate) => {
     setSelectedDates(prev => ({ ...prev, [serviceName]: fullDate }));
@@ -189,39 +325,72 @@ const SelectTimePage = () => {
 
   const handleTimeClick = (serviceName, slotId, isBooked) => {
     if (isBooked) return;
+    
+    // Check if rescheduling within 24 hours
+    if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
+      setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
+      return;
+    }
+    
     setSelectedTimes(prev => ({ ...prev, [serviceName]: slotId }));
   };
 
-  // Compute end time helper
+  // Compute end time helper - FIXED VERSION
   const computeEndFromStartAndDuration = (startTime, durationStr) => {
     if (!startTime) return "";
-    const parts = durationStr.split(" ");
-    let minutes = 0;
+    
+    // Parse duration string (e.g., "30 minutes", "1 hour 30 minutes")
+    const parts = durationStr?.split(" ") || [];
+    let totalMinutes = 0;
+    
     for (let i = 0; i < parts.length; i += 2) {
       const val = parseInt(parts[i]);
       const unit = parts[i + 1]?.toLowerCase() || "";
-      if (unit.includes("hour")) minutes += (isNaN(val) ? 0 : val) * 60;
-      else if (unit.includes("min")) minutes += isNaN(val) ? 0 : val;
+      
+      if (!isNaN(val)) {
+        if (unit.includes("hour") || unit.includes("hr")) {
+          totalMinutes += val * 60;
+        } else if (unit.includes("min")) {
+          totalMinutes += val;
+        }
+      }
     }
-    const [h, m] = startTime.split(":").map(Number);
-    const total = h * 60 + m + minutes;
-    const endH = String(Math.floor(total / 60)).padStart(2, "0");
-    const endM = String(total % 60).padStart(2, "0");
-    return `${endH}:${endM}`;
+    
+    // If no duration parsed, default to 30 minutes
+    if (totalMinutes === 0) totalMinutes = 30;
+    
+    // Parse start time
+    const [hours, minutes] = startTime.split(":").map(Number);
+    
+    // Add duration
+    const totalStartMinutes = hours * 60 + minutes;
+    const totalEndMinutes = totalStartMinutes + totalMinutes;
+    
+    // Calculate end time
+    const endHours = Math.floor(totalEndMinutes / 60) % 24;
+    const endMinutes = totalEndMinutes % 60;
+    
+    return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
   };
 
-  // Get current appointment data
+  // Get current appointment data - FIXED VERSION
   const getCurrentAppointmentData = useCallback(() => {
     const slotId = selectedTimes[serviceKey];
     const date = selectedDates[serviceKey];
-    const selectedSlot = filteredSlots.find(s => 
+    const selectedSlot = displaySlots.find(s => 
       (s._id && s._id === slotId) || 
       (s.id && s.id === slotId) || 
       (s.startTime && s.startTime === slotId)
     );
 
-    const startTime = selectedSlot?.startTime || selectedSlot?.start;
+    const startTime = selectedSlot?.startTime || selectedSlot?.start || "";
     const endTime = computeEndFromStartAndDuration(startTime, currentService.duration);
+
+    console.log("📅 Current appointment data:", {
+      startTime,
+      duration: currentService.duration,
+      calculatedEndTime: endTime
+    });
 
     return {
       salonId: salon?._id,
@@ -237,21 +406,16 @@ const SelectTimePage = () => {
       phone: user?.phone || "",
       email: user?.email || "",
     };
-  }, [selectedTimes, serviceKey, selectedDates, filteredSlots, currentService, professionalId, selectedProfessional, salon, user]);
+  }, [selectedTimes, serviceKey, selectedDates, displaySlots, currentService, professionalId, selectedProfessional, salon, user]);
 
   // Check if user is authorized to book
   const isUserAuthorized = !isGuest && (user?.id !== 'guest');
 
-  // ✅ Create appointment via API with CORRECT format
+  // Create appointment via API
   const createAppointment = async (appointmentData) => {
     try {
       setLoading(true);
-      console.log("📤 Sending appointment data:", {
-        phone: user?.phone || "",
-        email: user?.email || "",
-        name: user?.name || "Guest",
-        appointments: [appointmentData]
-      });
+      console.log("📤 Sending appointment data:", appointmentData);
 
       const response = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: "POST",
@@ -273,7 +437,7 @@ const SelectTimePage = () => {
         throw new Error(result.message || "Failed to create appointment");
       }
 
-      return result.data[0]; // Return the created appointment
+      return result.data[0];
     } catch (error) {
       console.error("❌ Error creating appointment:", error);
       throw error;
@@ -282,7 +446,7 @@ const SelectTimePage = () => {
     }
   };
 
-  // 🔥 FIXED: Handle reschedule for individual booking
+  // Handle reschedule for individual booking - UPDATED with 24-hour check
   const handleReschedule = async () => {
     // Check if user is guest
     if (!isUserAuthorized) {
@@ -300,9 +464,20 @@ const SelectTimePage = () => {
       return;
     }
 
+    // Check if appointment is within 24 hours
+    if (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
+      setRescheduleError("❌ You cannot reschedule an appointment that is within 24 hours. Please contact customer support.");
+      return;
+    }
+
     setLoading(true);
     try {
       const currentAppointment = getCurrentAppointmentData();
+      
+      // Validate the appointment data
+      if (!currentAppointment.startTime || !currentAppointment.endTime) {
+        throw new Error("Invalid time selection. Please select a valid time slot.");
+      }
       
       console.log("🔄 Sending reschedule request:", {
         appointmentId: rescheduleAppointment._id,
@@ -351,16 +526,15 @@ const SelectTimePage = () => {
     }
 
     console.log("🔵 handleContinue called for service:", currentService.name);
-    console.log("🔵 selectedTimes[serviceKey]:", selectedTimes[serviceKey]);
     
     if (!selectedTimes[serviceKey]) {
       alert("❌ Please select a time for the current service.");
       return;
     }
 
-    // 🔥 FIXED: Handle reschedule
+    // Handle reschedule
     if (isReschedule) {
-      handleReschedule();
+      await handleReschedule();
       return;
     }
 
@@ -463,6 +637,7 @@ const SelectTimePage = () => {
     localStorage.removeItem('selectedServices');
     localStorage.removeItem('selectedProfessional');
     localStorage.removeItem('selectedSalon');
+    localStorage.removeItem('pendingBookingData'); // Also clear pending booking data
 
     navigate("/confirmationpage", { state: confirmationData });
   };
@@ -481,12 +656,30 @@ const SelectTimePage = () => {
 
   // Handle login/signup navigation
   const handleNavigateToLogin = () => {
-    navigate("/login", { 
+    // Store current booking data in localStorage before navigating to login
+    const bookingData = {
+      selectedServices,
+      selectedProfessional,
+      salon,
+      selectedDates,
+      selectedTimes,
+      bookedAppointments,
+      currentServiceIndex: currentServiceIndex.current,
+      isReschedule,
+      rescheduleAppointment
+    };
+    
+    localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
+    
+    navigate("/login/customer", { 
       state: { 
         redirectTo: window.location.pathname,
         stateData: location.state
       }
     });
+    
+    // Close the guest alert modal after navigation trigger
+    setShowGuestAlert(false);
   };
 
   const appointmentsToDisplay = getAllAppointmentsForDisplay();
@@ -544,17 +737,31 @@ const SelectTimePage = () => {
 
         {isGuest && (
           <div className="guest-notice">
-            <p>⚠️ You're browsing as a guest. <a onClick={() => setShowGuestAlert(true)}>Sign in to book</a></p>
+            <p>⚠️ You're browsing as a guest. <a onClick={() => setShowGuestAlert(true)} style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}>Sign in to book</a></p>
           </div>
         )}
 
         {isReschedule && (
           <div className="reschedule-notice">
             <p>🔁 You are rescheduling an existing appointment</p>
+            {rescheduleAppointment.date && rescheduleAppointment.startTime && rescheduleAppointment.endTime && (
+              <p>
+                Current: {new Date(rescheduleAppointment.date).toLocaleDateString()} at {rescheduleAppointment.startTime} - {rescheduleAppointment.endTime}
+                {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && 
+                  <span style={{color: 'red', fontWeight: 'bold'}}> (Within 24 hours - cannot reschedule)</span>
+                }
+              </p>
+            )}
           </div>
         )}
 
-        {selectedServices.length > 1 && (
+        {rescheduleError && (
+          <div className="reschedule-error">
+            <p>{rescheduleError}</p>
+          </div>
+        )}
+
+        {selectedServices.length > 1 && !isReschedule && (
           <div className="service-progress">
             <p>Service {currentServiceIndex.current + 1} of {selectedServices.length}</p>
             {bookedAppointments.length > 0 && (
@@ -569,7 +776,7 @@ const SelectTimePage = () => {
               key={day.fullDate}
               className={`date-button ${selectedDates[serviceKey] === day.fullDate ? "selected" : ""}`}
               onClick={() => handleDateClick(serviceKey, professionalId, day.fullDate)}
-              disabled={isGuest}
+              disabled={isGuest || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))}
             >
               <span>{day.date}</span><small>{day.day}</small>
             </button>
@@ -587,28 +794,49 @@ const SelectTimePage = () => {
             <p>No professional selected</p>
           ) : !selectedDate ? (
             <p>Please select a date</p>
-          ) : filteredSlots.length === 0 ? (
-            <p>No available time slots for {new Date(selectedDate).toLocaleDateString()}</p>
+          ) : displaySlots.length === 0 ? (
+            <p>
+              No available time slots for {new Date(selectedDate).toLocaleDateString()}
+              {isPastTimeSlot(selectedDate, "23:59") && (
+                <span style={{display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px'}}>
+                  ⏰ Today's available slots have passed. Please select a future date.
+                </span>
+              )}
+            </p>
           ) : (
-            filteredSlots.map(slot => {
+            displaySlots.map(slot => {
               const slotId = slot._id || slot.id || slot.startTime;
               const isSelected = selectedTimes[serviceKey] === slotId;
               const isBooked = !!slot.isBooked;
+              
+              // Calculate end time for display
+              const displayStartTime = slot.startTime || slot.start;
+              const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
 
               return (
                 <div
                   key={slotId}
                   className={`SelectTimePage-card ${isBooked ? "disabled" : isSelected ? "selected" : ""} ${isGuest ? "guest-disabled" : ""}`}
-                  onClick={() => !isGuest && handleTimeClick(serviceKey, slotId, isBooked)}
+                  onClick={() => {
+                    if (isGuest || isBooked) return;
+                    if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
+                      setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
+                      return;
+                    }
+                    handleTimeClick(serviceKey, slotId, isBooked);
+                  }}
                   style={{ 
-                    pointerEvents: isGuest || isBooked ? "none" : "auto",
-                    opacity: isGuest ? 0.6 : 1
+                    pointerEvents: isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? "none" : "auto",
+                    opacity: isGuest || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? 0.6 : 1
                   }}
                 >
-                  <p>{slot.startTime} - {slot.endTime}</p>
+                  <p>{displayStartTime} - {displayEndTime}</p>
                   <p>{isBooked ? "❌ Booked" : `LKR ${currentService.price}`}</p>
                   {isGuest && (
                     <div className="guest-lock-icon">🔒</div>
+                  )}
+                  {isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && (
+                    <div className="time-warning">⏰ Cannot reschedule</div>
                   )}
                 </div>
               );
@@ -630,7 +858,12 @@ const SelectTimePage = () => {
             <p>💇 {currentService.name}</p>
             <p>👤 {selectedProfessional?.name || "Any"}</p>
             {selectedTimes[serviceKey] && selectedDate && (
-              <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(selectedDate).toDateString()} <ClockIcon className="h-4 w-4 inline mr-1" /> {filteredSlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}</p>
+              <p>
+                <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> 
+                {new Date(selectedDate).toDateString()} 
+                <ClockIcon className="h-4 w-4 inline mr-1" /> 
+                {displaySlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}
+              </p>
             )}
             
             {/* Show all scheduled services */}
@@ -641,7 +874,10 @@ const SelectTimePage = () => {
                   <div key={index} className="appointment-item">
                     <p style={{ fontSize: '0.9em', margin: '2px 0' }}>
                       <strong>{appointment.serviceName}</strong><br />
-                      <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(appointment.date).toLocaleDateString()} <ClockIcon className="h-4 w-4 inline mr-1" /> {appointment.startTime}<br />
+                      <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> 
+                      {new Date(appointment.date).toLocaleDateString()} 
+                      <ClockIcon className="h-4 w-4 inline mr-1" /> 
+                      {appointment.startTime} - {appointment.endTime}<br />
                       LKR {appointment.price}
                     </p>
                     {index < appointmentsToDisplay.length - 1 && <hr />}
@@ -672,10 +908,20 @@ const SelectTimePage = () => {
             <button 
               className="continue-button" 
               onClick={handleContinue} 
-              disabled={!selectedTimes[serviceKey] || loading || !isUserAuthorized}
+              disabled={
+                !selectedTimes[serviceKey] || 
+                loading || 
+                !isUserAuthorized || 
+                (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
+              }
+              title={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ? 
+                "Cannot reschedule within 24 hours of appointment" : ""}
             >
               {loading ? "Processing..." : 
-                isReschedule ? "Reschedule Appointment" :
+                isReschedule ? 
+                  (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ? 
+                    "Reschedule Not Allowed (Within 24h)" : 
+                    "Reschedule Appointment") :
                 currentServiceIndex.current + 1 < selectedServices.length 
                   ? `Continue to Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
                   : `Confirm All Services (LKR ${displayTotalAmount})`

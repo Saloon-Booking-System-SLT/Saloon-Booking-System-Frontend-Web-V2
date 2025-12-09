@@ -36,6 +36,8 @@ const SearchSalon = () => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -306,7 +308,7 @@ const SearchSalon = () => {
       <header className="navbar">
         <div className="logo logo-lowered" onClick={() => navigate("/")}>Salon</div>
         <nav className="nav-menu">
-          <button className="nav-btn-light" onClick={() => navigate("/business")}>For Business</button>
+          
           {!user ? (
             <>
               <button className="nav-link" onClick={() => navigate("/login")}>Log In</button>

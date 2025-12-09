@@ -79,7 +79,10 @@ const SalonCalendar = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      
+      case 'Booked': return '#60a5fa';
+      case 'Confirmed': return '#10b981';
+      case 'Arrived': return '#f59e0b';
+      case 'Started': return '#8b5cf6';
       case 'Completed': return '#22c55e';
       case 'Cancel': return '#ef4444';
       default: return '#9ca3af';
@@ -122,6 +125,7 @@ const SalonCalendar = () => {
         <i className="fas fa-smile" title="Customers" onClick={() => navigate('/services')}></i>
         <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
         <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
+        <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
         <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
       </aside>
 

@@ -1,0 +1,252 @@
+/* Owner Mode Specific Styles */
+.owner-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e3f2fd;
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #bbdefb;
+}
+
+.owner-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1565c0;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.owner-saloon-name {
+  font-weight: 600;
+  color: #1565c0;
+  font-size: 1.1rem;
+}
+
+.booking-id-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f3f4f6;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.booking-id-display strong {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+/* Customer Information Section */
+.customer-info-section,
+.salon-info-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #374151;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 10px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-item span:first-child {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.customer-notes {
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* Owner Notes */
+.owner-notes {
+  background: #f0f9ff;
+  border: 2px solid #bae6fd;
+  border-radius: 15px;
+  padding: 25px;
+  margin-top: 20px;
+}
+
+.owner-notes h3 {
+  color: #0369a1;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.owner-notes ul {
+  list-style: none;
+  padding: 0;
+}
+
+.owner-notes li {
+  padding: 10px 0;
+  padding-left: 30px;
+  position: relative;
+  color: #0c4a6e;
+  line-height: 1.5;
+  border-bottom: 1px solid #e0f2fe;
+}
+
+.owner-notes li:last-child {
+  border-bottom: none;
+}
+
+.owner-notes li:before {
+  content: "📝";
+  position: absolute;
+  left: 0;
+  top: 10px;
+}
+
+.payment-status {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-left: 8px;
+}
+
+.payment-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.payment-status.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Tertiary Button */
+.btn-tertiary {
+  padding: 15px 30px;
+  border: 2px solid #3b82f6;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+  background: white;
+  color: #3b82f6;
+}
+
+.btn-tertiary:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Appointment Details Grid */
+.appointment-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-weight: 500;
+  color: #374151;
+}
+
+.detail-row.price-row {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 5px;
+}
+
+.detail-value.price {
+  color: #059669;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .owner-mode-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .appointment-details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .confirmation-actions {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-tertiary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmation-card {
+    padding: 20px;
+  }
+  
+  .confirmation-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+}

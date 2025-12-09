@@ -38,6 +38,8 @@ const Home = () => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  
+
   const handleLogout = () => {
     // Remove both regular and guest user data
     localStorage.removeItem("user");
@@ -61,7 +63,7 @@ const Home = () => {
       <header className="navbar px-4 md:px-6 lg:px-8">
         <div className="logo" onClick={() => navigate("/")}>Mobitel Salon</div>
         <nav className="nav-menu">
-          <button className="nav-btn-light hidden md:block" onClick={() => navigate("/business")}>For Business</button>
+          
           {!user ? (
             <>
               <button className="nav-link hidden sm:block" onClick={() => navigate("/login/customer")}>Log In</button>
