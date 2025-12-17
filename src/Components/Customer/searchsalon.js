@@ -122,48 +122,31 @@ const SearchSalon = () => {
 
   const fetchSalons = useCallback(async () => {
     try {
+      console.log('🔍 Fetching salons from:', `${API_BASE_URL}/api/salons`);
       const res = await fetch(`${API_BASE_URL}/api/salons`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       let salons = await res.json();
+      console.log('✅ Received salons:', salons.length);
 
-      const salonsWithRatings = await Promise.all(
-        salons.map(async (salon) => {
-          try {
-            // Fetch all professionals in this salon
-            const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
-            const professionals = await profRes.json();
+      // OPTIMIZED: Set default rating without fetching all feedbacks
+      // Ratings will be lazy-loaded when user clicks on a salon
+      const salonsWithDefaultRating = salons.map(salon => ({
+        ...salon,
+        avgRating: 0 // Will be loaded on-demand
+      }));
 
-            // Fetch feedbacks for each professional
-            const allFeedbacks = await Promise.all(
-              professionals.map(async (pro) => {
-                const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
-                const data = await fbRes.json();
-                return data.feedbacks || [];
-              })
-            );
-
-            // Flatten all feedbacks
-            const flatFeedbacks = allFeedbacks.flat();
-
-            // Calculate average rating
-            const avgRating = flatFeedbacks.length
-              ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
-              : 0;
-
-            return { ...salon, avgRating: avgRating.toFixed(1) };
-          } catch (err) {
-            return { ...salon, avgRating: 0 };
-          }
-        })
-      );
-
-      // Sort by rating
-      salonsWithRatings.sort((a, b) => b.avgRating - a.avgRating);
-
-      setAllSalons(salonsWithRatings);
-      if (!isNearbyMode) applyFilters(salonsWithRatings, query, genderFilter);
+      setAllSalons(salonsWithDefaultRating);
+      if (!isNearbyMode) applyFilters(salonsWithDefaultRating, query, genderFilter);
+      
+      console.log('✅ Salons loaded and filtered');
     } catch (err) {
-      console.error("Failed to load salons", err);
-      alert("Failed to load salons");
+      console.error("❌ Failed to load salons:", err);
+      console.error("API URL:", `${API_BASE_URL}/api/salons`);
+      // Don't show alert on error - just log it
     }
   }, [query, genderFilter, isNearbyMode]);
 
