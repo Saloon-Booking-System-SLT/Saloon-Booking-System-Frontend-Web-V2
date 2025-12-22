@@ -20,29 +20,21 @@ const SelectProfessionalPage = () => {
   useEffect(() => {
     if (!salon?._id) return;
 
-    fetch(`${API_BASE_URL}/api/professionals/${salon._id}`)
+    // ⚡ Use optimized endpoint - gets professionals with ratings in ONE call
+    fetch(`${API_BASE_URL}/api/professionals/${salon._id}/with-ratings`)
       .then((res) => res.json())
-      .then((data) => setProfessionals(data))
+      .then((data) => {
+        setProfessionals(data);
+        
+        // Build reviews object from the data (feedbacks already included)
+        const reviewsObj = {};
+        data.forEach(pro => {
+          reviewsObj[pro._id] = pro.feedbacks || [];
+        });
+        setReviews(reviewsObj);
+      })
       .catch((err) => console.error("Failed to fetch professionals", err));
   }, [salon]);
-
-  useEffect(() => {
-    if (!professionals.length) return;
-
-    Promise.all(
-      professionals.map((pro) =>
-        fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`)
-          .then((res) => res.json())
-          .then((data) => data.feedbacks)
-      )
-    ).then((results) => {
-      const obj = {};
-      professionals.forEach((pro, i) => {
-        obj[pro._id] = results[i];
-      });
-      setReviews(obj);
-    });
-  }, [professionals]);
 
   const getAverageRating = (proId) => {
     const feedbacks = reviews[proId] || [];

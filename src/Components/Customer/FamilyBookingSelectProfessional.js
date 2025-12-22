@@ -14,16 +14,40 @@ const SelectProfessionalPage = () => {
   const [professionals, setProfessionals] = useState([]);
   const [popupService, setPopupService] = useState(null);
   const [serviceProfessionals, setServiceProfessionals] = useState({});
+  const [reviews, setReviews] = useState({});
 
   useEffect(() => {
     if (!salon?._id) return;
-    fetch(`${API_BASE_URL}/api/professionals/${salon._id}`)
+    
+    // ⚡ Use optimized endpoint - gets professionals with ratings in ONE call
+    fetch(`${API_BASE_URL}/api/professionals/${salon._id}/with-ratings`)
       .then((res) => res.json())
-      .then((data) => setProfessionals(data))
+      .then((data) => {
+        setProfessionals(data);
+        
+        // Build reviews object from the data (feedbacks already included)
+        const reviewsObj = {};
+        data.forEach(pro => {
+          reviewsObj[pro._id] = pro.feedbacks || [];
+        });
+        setReviews(reviewsObj);
+      })
       .catch((err) => console.error("Failed to fetch professionals", err));
   }, [salon]);
 
   const totalPrice = selectedServices?.reduce((acc, s) => acc + s.price, 0) || 0;
+
+  // Helper functions for ratings
+  const getAverageRating = (proId) => {
+    const feedbacks = reviews[proId] || [];
+    if (!feedbacks.length) return 0;
+    const total = feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
+    return (total / feedbacks.length).toFixed(1);
+  };
+
+  const getReviewCount = (proId) => {
+    return reviews[proId]?.length || 0;
+  };
 
   const openPopup = (service) => setPopupService(service);
   const closePopup = () => setPopupService(null);
@@ -89,40 +113,50 @@ const SelectProfessionalPage = () => {
                 </div>
               </div>
 
-              {professionals.map((pro) => (
-                <div
-                  key={pro._id}
-                  className={`select-services-card ${
-                    serviceProfessionals[selectedServices[0].name]?._id === pro._id ? "selected" : ""
-                  }`}
-                  onClick={() =>
-                    setServiceProfessionals({
-                      [selectedServices[0].name]: pro,
-                    })
-                  }
-                >
-                  <div className="professional-info">
-                    <img
-                    src={
-                      pro.image
-                        ? pro.image.startsWith("http")
-                          ? pro.image
-                          : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                        : "https://via.placeholder.com/150"
+              {professionals.map((pro) => {
+                const avgRating = getAverageRating(pro._id);
+                const reviewCount = getReviewCount(pro._id);
+                
+                return (
+                  <div
+                    key={pro._id}
+                    className={`select-services-card ${
+                      serviceProfessionals[selectedServices[0].name]?._id === pro._id ? "selected" : ""
+                    }`}
+                    onClick={() =>
+                      setServiceProfessionals({
+                        [selectedServices[0].name]: pro,
+                      })
                     }
-                    alt={pro.name}
-                    className="select-services-image"
-                  />
-                    <div>
-                      <h4>{pro.name}</h4>
-                      <p>{pro.role}</p>
+                  >
+                    <div className="professional-info">
+                      <img
+                      src={
+                        pro.image
+                          ? pro.image.startsWith("http")
+                            ? pro.image
+                            : `${API_BASE_URL}/uploads/professionals/${pro.image}`
+                          : "https://via.placeholder.com/150"
+                      }
+                      alt={pro.name}
+                      className="select-services-image"
+                    />
+                      <div>
+                        <h4>{pro.name}</h4>
+                        <p>{pro.role}</p>
+                        {avgRating > 0 && (
+                          <p className="rating-display">
+                            ⭐ {avgRating} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="checkbox-icon">
+                      {serviceProfessionals[selectedServices[0].name]?._id === pro._id ? "✔" : "☐"}
                     </div>
                   </div>
-                  <div className="checkbox-icon">
-                    {serviceProfessionals[selectedServices[0].name]?._id === pro._id ? "✔" : "☐"}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         ) : (
@@ -185,27 +219,39 @@ const SelectProfessionalPage = () => {
           <div className="modal">
             <h3>Select professional for {popupService.name}</h3>
             <div className="services-list">
-              {professionals.map((pro) => (
-                <div
-                  key={pro._id}
-                  className={`service-card ${
-                    serviceProfessionals[popupService.name]?._id === pro._id ? "selected" : ""
-                  }`}
-                  onClick={() => handleSelectProForService(popupService.name, pro)}
-                >
-                  <div className="professional-info">
-                    <img
-                      src={pro.image || "https://via.placeholder.com/50"}
-                      alt={pro.name}
-                    />
-                    <div>
-                      <h4>{pro.name}</h4>
-                      <p>{pro.role}</p>
+              {professionals.map((pro) => {
+                const avgRating = getAverageRating(pro._id);
+                const reviewCount = getReviewCount(pro._id);
+                
+                return (
+                  <div
+                    key={pro._id}
+                    className={`service-card ${
+                      serviceProfessionals[popupService.name]?._id === pro._id ? "selected" : ""
+                    }`}
+                    onClick={() => handleSelectProForService(popupService.name, pro)}
+                  >
+                    <div className="professional-info">
+                      <img
+                        src={pro.image || "https://via.placeholder.com/50"}
+                        alt={pro.name}
+                      />
+                      <div>
+                        <h4>{pro.name}</h4>
+                        <p>{pro.role}</p>
+                        {avgRating > 0 && (
+                          <p className="rating-display">
+                            ⭐ {avgRating} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="checkbox-icon">
+                      {serviceProfessionals[popupService.name]?._id === pro._id ? "✔" : "☐"}
                     </div>
                   </div>
-                  <div className="checkbox-icon">
-                    {serviceProfessionals[popupService.name]?._id === pro._id ? "✔" : "☐"}
-                  </div>
+                );
+              })}
                 </div>
               ))}
             </div>

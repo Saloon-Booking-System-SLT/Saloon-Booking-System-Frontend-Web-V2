@@ -75,7 +75,9 @@ const SelectProfessionalPage = () => {
       setError(null);
       
       console.log("📡 Fetching professionals for salon ID:", salonId);
-      const response = await fetch(`${API_BASE_URL}/api/professionals/${salonId}`);
+      
+      // ⚡ Use optimized endpoint - gets professionals with ratings in ONE call
+      const response = await fetch(`${API_BASE_URL}/api/professionals/${salonId}/with-ratings`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -90,57 +92,18 @@ const SelectProfessionalPage = () => {
       
       setProfessionals(data);
       
-      // Fetch reviews for all professionals
-      await fetchReviews(data);
+      // Build reviews object from the data (feedbacks already included)
+      const reviewsObj = {};
+      data.forEach(pro => {
+        reviewsObj[pro._id] = pro.feedbacks || [];
+      });
+      setReviews(reviewsObj);
+      setIsLoading(false);
       
     } catch (err) {
       console.error("❌ Failed to fetch professionals", err);
       setError("Failed to load professionals. Please try again.");
       setProfessionals([]);
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch reviews for all professionals
-  const fetchReviews = async (proList) => {
-    if (!proList.length) {
-      setIsLoading(false);
-      return;
-    }
-    
-    try {
-      console.log("📡 Fetching reviews for professionals...");
-      
-      const reviewPromises = proList.map((pro) =>
-        fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`)
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status} for ${pro.name}`);
-            return res.json();
-          })
-          .then((data) => ({
-            proId: pro._id,
-            reviews: data.feedbacks || []
-          }))
-          .catch((err) => {
-            console.error(`Error fetching reviews for ${pro.name}:`, err);
-            return { proId: pro._id, reviews: [] };
-          })
-      );
-      
-      const results = await Promise.all(reviewPromises);
-      
-      const reviewMap = {};
-      results.forEach(({ proId, reviews }) => {
-        reviewMap[proId] = reviews;
-      });
-      
-      setReviews(reviewMap);
-      console.log("✅ Reviews loaded for", results.length, "professionals");
-      setIsLoading(false);
-      
-    } catch (err) {
-      console.error("❌ Error fetching reviews:", err);
-      setReviews({});
       setIsLoading(false);
     }
   };
