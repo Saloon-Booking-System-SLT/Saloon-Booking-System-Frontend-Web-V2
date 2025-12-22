@@ -252,8 +252,6 @@ const SelectProfessionalPage = () => {
                   </div>
                 );
               })}
-                </div>
-              ))}
             </div>
             <button className="cancel-button" onClick={closePopup}>Cancel</button>
           </div>
