@@ -122,43 +122,11 @@ const SearchSalon = () => {
 
   const fetchSalons = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/salons`);
-      let salons = await res.json();
+      // ⚡ Use optimized endpoint that returns salons with ratings in ONE call
+      const res = await fetch(`${API_BASE_URL}/api/salons/with-ratings`);
+      const salonsWithRatings = await res.json();
 
-      const salonsWithRatings = await Promise.all(
-        salons.map(async (salon) => {
-          try {
-            // Fetch all professionals in this salon
-            const profRes = await fetch(`${API_BASE_URL}/api/professionals/${salon._id}`);
-            const professionals = await profRes.json();
-
-            // Fetch feedbacks for each professional
-            const allFeedbacks = await Promise.all(
-              professionals.map(async (pro) => {
-                const fbRes = await fetch(`${API_BASE_URL}/api/feedback/professionals/${pro._id}`);
-                const data = await fbRes.json();
-                return data.feedbacks || [];
-              })
-            );
-
-            // Flatten all feedbacks
-            const flatFeedbacks = allFeedbacks.flat();
-
-            // Calculate average rating
-            const avgRating = flatFeedbacks.length
-              ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / flatFeedbacks.length
-              : 0;
-
-            return { ...salon, avgRating: avgRating.toFixed(1) };
-          } catch (err) {
-            return { ...salon, avgRating: 0 };
-          }
-        })
-      );
-
-      // Sort by rating
-      salonsWithRatings.sort((a, b) => b.avgRating - a.avgRating);
-
+      // Salons already have avgRating and reviewCount from backend
       setAllSalons(salonsWithRatings);
       if (!isNearbyMode) applyFilters(salonsWithRatings, query, genderFilter);
     } catch (err) {
