@@ -5,13 +5,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import CustomerRoute from './Components/CustomerRoute';
 import OwnerRoute from './Components/OwnerRoute';
 import AdminRoute from './Components/AdminRoute';
-import Unauthorized from './Components/Unauthorized';
+// import Unauthorized from './Components/Unauthorized';
 import 'leaflet/dist/leaflet.css';
 import ApprovedOwnerRoute from './Components/ApprovedOwnerRoute';
 
 // Customer Components
 import Home from './Components/Customer/HomePage';
 import CustomerLogin from './Components/Customer/Login';
+import CreateAccount from './Components/Customer/CreateAccount';
 import Searchsalon from './Components/Customer/searchsalon';
 import Profile from './Components/Customer/Profile';
 import SelectServicesPage from './Components/Customer/SelectServicesPage';
@@ -64,8 +65,9 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login/customer" element={<CustomerLogin />} />
+          <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+          {/* <Route path="/unauthorized" element={<Unauthorized />} /> */}
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
