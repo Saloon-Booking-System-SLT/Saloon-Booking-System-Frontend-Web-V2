@@ -2,24 +2,26 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CreditCardIcon, BanknotesIcon } from '@heroicons/react/24/outline';
+import PayHereButton from './PayHereButton';
 import "./CheckoutPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
+const API_BASE_URL = process.env.REACT_APP_API_URL ?
+  process.env.REACT_APP_API_URL.replace('/api', '') :
   'https://saloon-booking-system-backend-v2.onrender.com';
 
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const appointmentData = location.state;
-  
+
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState("payhere");
   const [phone, setPhone] = useState(appointmentData?.phone || "");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvc, setCvc] = useState("");
   const [cardName, setCardName] = useState("");
+  const [appointmentId, setAppointmentId] = useState(null);
 
   if (!appointmentData) {
     return (
@@ -54,9 +56,9 @@ const CheckoutPage = () => {
             phone: phone
           }),
         });
-        
+
         const data = await res.json();
-        
+
         if (data.success) {
           alert("✅ Appointment rescheduled successfully!");
           navigate("/appointments");
@@ -83,8 +85,22 @@ const CheckoutPage = () => {
       const data = await res.json();
 
       if (data.success) {
-        alert("✅ Appointment booked successfully!");
-        navigate("/appointments");
+        // For PayHere, store appointmentId and show PayHere button
+        if (paymentMethod === "payhere") {
+          const createdAppointmentId = data.appointments?.[0]?._id || data.appointment?._id;
+
+          if (!createdAppointmentId) {
+            throw new Error("No appointment ID returned from server");
+          }
+
+          console.log("✅ Appointment created, ID:", createdAppointmentId);
+          setAppointmentId(createdAppointmentId);
+          alert("✅ Appointment created! Please proceed with payment.");
+        } else {
+          // For cash or card payment, complete the flow
+          alert("✅ Appointment booked successfully!");
+          navigate("/appointments");
+        }
       } else {
         alert("❌ Failed to book appointment: " + (data.message || "Unknown error"));
       }
@@ -101,7 +117,7 @@ const CheckoutPage = () => {
       <div className="checkout-content">
         <div className="checkout-left">
           <h2>Checkout</h2>
-          
+
           <div className="checkout-section">
             <h3>Contact Information</h3>
             <div className="form-group">
@@ -122,6 +138,19 @@ const CheckoutPage = () => {
               <label className="payment-option">
                 <input
                   type="radio"
+                  value="payhere"
+                  checked={paymentMethod === "payhere"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                <span className="flex items-center gap-2">
+                  <CreditCardIcon className="h-5 w-5" />
+                  PayHere (Online Payment)
+                </span>
+              </label>
+
+              <label className="payment-option">
+                <input
+                  type="radio"
                   value="card"
                   checked={paymentMethod === "card"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
@@ -131,7 +160,7 @@ const CheckoutPage = () => {
                   Credit/Debit Card
                 </span>
               </label>
-              
+
               <label className="payment-option">
                 <input
                   type="radio"
@@ -151,32 +180,32 @@ const CheckoutPage = () => {
             <div className="checkout-section">
               <h3>Card Details</h3>
               <div className="card-input">
-                <input 
-                  type="text" 
-                  placeholder="Card Number" 
+                <input
+                  type="text"
+                  placeholder="Card Number"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
                   maxLength="16"
                 />
                 <div className="card-row">
-                  <input 
-                    type="text" 
-                    placeholder="MM/YY" 
+                  <input
+                    type="text"
+                    placeholder="MM/YY"
                     value={expiry}
                     onChange={(e) => setExpiry(e.target.value)}
                     maxLength="5"
                   />
-                  <input 
-                    type="text" 
-                    placeholder="CVC" 
+                  <input
+                    type="text"
+                    placeholder="CVC"
                     value={cvc}
                     onChange={(e) => setCvc(e.target.value)}
                     maxLength="3"
                   />
                 </div>
-                <input 
-                  type="text" 
-                  placeholder="Cardholder Name" 
+                <input
+                  type="text"
+                  placeholder="Cardholder Name"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                 />
@@ -184,13 +213,40 @@ const CheckoutPage = () => {
             </div>
           )}
 
-          <button 
-            className="pay-button" 
-            onClick={handlePayment}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : `Pay LKR ${appointmentData.service?.price || "0"}`}
-          </button>
+          {paymentMethod === "payhere" ? (
+            appointmentId ? (
+              <PayHereButton
+                appointmentId={appointmentId}
+                amount={appointmentData.service?.price || 0}
+                customer={{
+                  first_name: appointmentData.name?.split(' ')[0] || 'Guest',
+                  last_name: appointmentData.name?.split(' ').slice(1).join(' ') || '',
+                  email: appointmentData.email || 'guest@example.com',
+                  phone: phone || '0000000000',
+                  address: appointmentData.address || 'N/A',
+                  city: appointmentData.city || 'Colombo',
+                  country: 'Sri Lanka'
+                }}
+                onError={(error) => alert(error)}
+              />
+            ) : (
+              <button
+                className="pay-button"
+                onClick={handlePayment}
+                disabled={loading}
+              >
+                {loading ? "Creating Appointment..." : "Continue to Payment"}
+              </button>
+            )
+          ) : (
+            <button
+              className="pay-button"
+              onClick={handlePayment}
+              disabled={loading}
+            >
+              {loading ? "Processing..." : `Pay LKR ${appointmentData.service?.price || "0"}`}
+            </button>
+          )}
         </div>
 
         <div className="checkout-right">

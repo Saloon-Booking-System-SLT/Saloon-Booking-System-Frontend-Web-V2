@@ -100,3 +100,9 @@ export const updatePaymentStatus = async (paymentId, status) => {
   const response = await axios.patch(`/payments/${paymentId}/status`, { status });
   return response.data;
 };
+
+// ========== PAYHERE ==========
+export const initiatePayHerePayment = async (paymentData) => {
+  const response = await axios.post('/payments/payhere/initiate', paymentData);
+  return response.data;
+};

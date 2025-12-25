@@ -25,6 +25,10 @@ import FamilyBookingSelectTimePage from './Components/Customer/FamilyBookingSele
 import BookSelectionPage from './Components/Customer/BookSelectionPage';
 import CheckoutPage from './Components/Customer/CheckoutPage';
 import ConfirmationPage from './Components/Customer/ConfirmationPage';
+import PaymentSuccess from './Components/Customer/PaymentSuccess';
+import PaymentCancel from './Components/Customer/PaymentCancel';
+import TestCheckout from './Components/Customer/TestCheckout';
+import PayHereTest from './Components/Customer/PayHereTest';
 
 // Owner Components
 import OwnerLogin from "./Components/Owner/OwnerLogin";
@@ -67,6 +71,7 @@ function App() {
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/payhere-test" element={<PayHereTest />} />
 
           {/* Customer Protected Routes */}
           <Route path="/searchsalon" element={<CustomerRoute><Searchsalon /></CustomerRoute>} />
@@ -82,12 +87,15 @@ function App() {
           <Route path="/bookselectionpage" element={<CustomerRoute><BookSelectionPage /></CustomerRoute>} />
           <Route path="/checkoutpage" element={<CustomerRoute><CheckoutPage /></CustomerRoute>} />
           <Route path="/confirmationpage" element={<CustomerRoute><ConfirmationPage /></CustomerRoute>} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route path="/test-checkout" element={<TestCheckout />} />
 
           {/* Owner Routes */}
           {/* Public Owner Routes */}
           <Route path="/register" element={<RegisterPage1 />} />
           <Route path="/register-step-2" element={<BusinessSetupWizard />} />
-          
+
           {/* Protected Owner Routes */}
           <Route path="/dashboard" element={<OwnerRoute><ModernDashboard /></OwnerRoute>} />
           <Route path="/calendar" element={<ApprovedOwnerRoute><SalonCalendar /></ApprovedOwnerRoute>} />
@@ -113,7 +121,7 @@ function App() {
           <Route path="/loyalty" element={<AdminRoute><LoyaltyPage /></AdminRoute>} />
           <Route path="/financial" element={<AdminRoute><FinancialInsights /></AdminRoute>} />
           <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
-          
+
           {/* Admin Routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
 
