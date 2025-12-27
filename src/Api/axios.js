@@ -2,26 +2,27 @@ import axios from "axios";
 
 // Multiple backend URLs for failover
 const BACKEND_URLS = [
-  "http://localhost:5000/api"
+  "https://saloon-booking-system-backend-v2.onrender.com/api",
+  "https://salon-backend-production.railway.app/api",
   // Add more backup URLs as needed
 ];
 
 // Determine the API URL based on environment
 const getApiUrl = () => {
   // Check if we're in development (localhost)
-  const isDevelopment = window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-
+  const isDevelopment = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1';
+  
   if (isDevelopment) {
     return "http://localhost:5000/api";
   }
-
+  
   // For production/hosted environments
   // Check if REACT_APP_API_URL is set
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
-
+  
   // Return primary backend URL
   return BACKEND_URLS[0];
 };
@@ -36,7 +37,7 @@ const findWorkingBackend = async () => {
         mode: 'cors',
         timeout: 10000
       });
-
+      
       if (response.ok) {
         console.log(`✅ Backend working: ${url}`);
         return url;
@@ -45,7 +46,7 @@ const findWorkingBackend = async () => {
       console.log(`❌ Backend failed: ${url}`, error.message);
     }
   }
-
+  
   // If all fail, return primary URL
   console.log('All backends failed, using primary URL');
   return BACKEND_URLS[0];
@@ -107,38 +108,38 @@ instance.interceptors.response.use(
       method: error.config?.method,
       baseURL: error.config?.baseURL
     });
-
+    
     // Handle CORS and network errors with automatic failover
-    if (error.code === 'ERR_NETWORK' ||
-      error.message === 'Network Error' ||
-      error.message.includes('CORS') ||
-      error.response?.status >= 500) {
-
+    if (error.code === 'ERR_NETWORK' || 
+        error.message === 'Network Error' ||
+        error.message.includes('CORS') ||
+        error.response?.status >= 500) {
+      
       console.error('❌ Backend Error - Attempting failover...');
-
+      
       if (!error.config?._retry) {
         error.config._retry = true;
-
+        
         // Try to find a working backend
         const newBackendUrl = await findWorkingBackend();
-
+        
         // Update the config with new backend URL
         error.config.baseURL = newBackendUrl;
         instance.defaults.baseURL = newBackendUrl;
-
+        
         console.log('🔄 Retrying request with new backend:', newBackendUrl);
-
+        
         // Retry the original request
         return instance(error.config);
       }
     }
-
+    
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('salonUser');
-
+      
       // Only redirect if we're not already on a login page
       if (!window.location.pathname.includes('Login')) {
         window.location.href = '/OwnerLogin';
