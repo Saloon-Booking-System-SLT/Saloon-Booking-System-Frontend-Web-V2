@@ -204,6 +204,28 @@ const SelectTimePage = () => {
     return null;
   }, [rescheduleAppointment]);
 
+  // Helper: resolve professional for a given service (used for multi-service booking)
+  const resolveProfessionalForService = useCallback((serviceId) => {
+    if (!selectedProfessional) return null;
+
+    // If selectedProfessional is a single object, it applies to all services
+    if (selectedProfessional._id) {
+      return selectedProfessional;
+    }
+
+    // If selectedProfessional is an object mapping service IDs to professional objects
+    if (selectedProfessional[serviceId]) {
+      return selectedProfessional[serviceId];
+    }
+
+    // Fallback for array of professionals (e.g., if "Any" was selected and it's an array of available pros)
+    if (Array.isArray(selectedProfessional) && selectedProfessional.length > 0) {
+      return selectedProfessional[0]; // Or some other logic to pick one
+    }
+
+    return null;
+  }, [selectedProfessional]);
+
   // Fetch time slots
   const fetchTimeSlots = useCallback(async (professionalId, date) => {
     if (!professionalId || !date) {
@@ -243,6 +265,7 @@ const SelectTimePage = () => {
 
     if (rescheduleAppointment.services?.length) {
       const mapped = rescheduleAppointment.services.map(s => ({
+        _id: s.serviceId || s._id,
         name: s.name,
         price: s.price,
         duration: s.duration || "30 minutes",
@@ -250,36 +273,25 @@ const SelectTimePage = () => {
       setSelectedServices(mapped);
 
       // Set selected date and time for the rescheduled appointment
-      const serviceName = mapped[0]?.name;
-      if (serviceName && rescheduleAppointment.date) {
-        setSelectedDates(prev => ({ ...prev, [serviceName]: rescheduleAppointment.date }));
+      const serviceId = mapped[0]?._id;
+      if (serviceId && rescheduleAppointment.date) {
+        setSelectedDates(prev => ({ ...prev, [serviceId]: rescheduleAppointment.date }));
       }
     }
   }, [isReschedule, rescheduleAppointment]);
 
-  // Fetch slots for current service
+  // Update the useEffect that fetches slots to use service-specific professional
   useEffect(() => {
-    if (!selectedProfessional || selectedServices.length === 0) return;
+    if (selectedServices.length === 0) return;
 
     const currentService = selectedServices[currentServiceIndex.current];
     if (!currentService) return;
 
-    let professionalId = null;
-
-    if (selectedProfessional._id) {
-      professionalId = selectedProfessional._id;
-    } else if (selectedProfessional[currentService.name]?._id) {
-      professionalId = selectedProfessional[currentService.name]._id;
-    } else if (Array.isArray(selectedProfessional) && selectedProfessional.length > 0) {
-      professionalId = selectedProfessional[0]?._id;
-    } else if (selectedProfessional.professionalId) {
-      professionalId = selectedProfessional.professionalId;
-    } else if (typeof selectedProfessional === 'string') {
-      professionalId = selectedProfessional;
-    }
+    const professional = resolveProfessionalForService(currentService._id);
+    const professionalId = professional?._id;
 
     if (!professionalId) {
-      console.error("No professional ID found");
+      console.error("No professional ID found for service:", currentService.name);
       return;
     }
 
@@ -289,19 +301,20 @@ const SelectTimePage = () => {
       : dates[0]?.fullDate;
 
     if (defaultDate) {
-      setSelectedDates((prev) => ({ ...prev, [currentService.name]: defaultDate }));
-      setSelectedTimes(prev => ({ ...prev, [currentService.name]: null }));
+      setSelectedDates((prev) => ({ ...prev, [currentService._id]: defaultDate }));
+      setSelectedTimes(prev => ({ ...prev, [currentService._id]: null }));
       fetchTimeSlots(professionalId, defaultDate);
     }
-  }, [selectedProfessional, selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots]);
+  }, [selectedServices, currentServiceIndex.current, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, resolveProfessionalForService]);
 
   // Build derived values for current service
   const currentService = useMemo(() => {
     return selectedServices[currentServiceIndex.current] || {};
   }, [selectedServices, currentServiceIndex.current]);
 
-  const serviceKey = currentService.name || "service";
-  const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);
+  const serviceKey = currentService._id || "service";
+  const professional = resolveProfessionalForService(serviceKey);
+  const professionalId = professional?._id;
   const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;
   const slotKey = professionalId && selectedDate ? `${professionalId}-${selectedDate}` : null;
   const rawSlots = slotKey ? availableSlots[slotKey] : [];
@@ -317,13 +330,13 @@ const SelectTimePage = () => {
   }, [filteredSlots, selectedDate, isPastTimeSlot]);
 
   // Handlers
-  const handleDateClick = (serviceName, profId, fullDate) => {
-    setSelectedDates(prev => ({ ...prev, [serviceName]: fullDate }));
-    setSelectedTimes(prev => ({ ...prev, [serviceName]: null }));
+  const handleDateClick = (serviceId, profId, fullDate) => {
+    setSelectedDates(prev => ({ ...prev, [serviceId]: fullDate }));
+    setSelectedTimes(prev => ({ ...prev, [serviceId]: null }));
     fetchTimeSlots(profId, fullDate);
   };
 
-  const handleTimeClick = (serviceName, slotId, isBooked) => {
+  const handleTimeClick = (serviceId, slotId, isBooked) => {
     if (isBooked) return;
 
     // Check if rescheduling within 24 hours
@@ -332,7 +345,7 @@ const SelectTimePage = () => {
       return;
     }
 
-    setSelectedTimes(prev => ({ ...prev, [serviceName]: slotId }));
+    setSelectedTimes(prev => ({ ...prev, [serviceId]: slotId }));
   };
 
   // Compute end time helper - FIXED VERSION
@@ -375,8 +388,12 @@ const SelectTimePage = () => {
 
   // Get current appointment data - FIXED VERSION
   const getCurrentAppointmentData = useCallback(() => {
-    const slotId = selectedTimes[serviceKey];
-    const date = selectedDates[serviceKey];
+    const currentService = selectedServices[currentServiceIndex.current];
+    const serviceId = currentService?._id;
+    const slotId = selectedTimes[serviceId];
+    const date = selectedDates[serviceId];
+    const professional = resolveProfessionalForService(serviceId);
+
     const selectedSlot = displaySlots.find(s =>
       (s._id && s._id === slotId) ||
       (s.id && s.id === slotId) ||
@@ -384,7 +401,7 @@ const SelectTimePage = () => {
     );
 
     const startTime = selectedSlot?.startTime || selectedSlot?.start || "";
-    const endTime = computeEndFromStartAndDuration(startTime, currentService.duration);
+    const endTime = computeEndFromStartAndDuration(startTime, currentService?.duration);
 
     console.log("📅 Current appointment data:", {
       startTime,
@@ -394,19 +411,20 @@ const SelectTimePage = () => {
 
     return {
       salonId: salon?._id,
-      professionalId: professionalId,
-      serviceName: currentService.name,
-      price: currentService.price,
-      duration: currentService.duration,
+      professionalId: professional?._id,
+      professionalName: professional?.name || "Any Professional",
+      serviceId: serviceId,
+      serviceName: currentService?.name,
+      price: currentService?.price,
+      duration: currentService?.duration,
       date: date,
       startTime: startTime,
       endTime: endTime,
-      professionalName: selectedProfessional?.name || "Any Professional",
       memberName: user?.name || "Guest",
       phone: user?.phone || "",
       email: user?.email || "",
     };
-  }, [selectedTimes, serviceKey, selectedDates, displaySlots, currentService, professionalId, selectedProfessional, salon, user]);
+  }, [selectedTimes, selectedDates, displaySlots, selectedServices, currentServiceIndex.current, salon, user, resolveProfessionalForService]);
 
   // Check if user is authorized to book
   const isUserAuthorized = !isGuest && (user?.id !== 'guest');
@@ -525,9 +543,12 @@ const SelectTimePage = () => {
       return;
     }
 
-    console.log("🔵 handleContinue called for service:", currentService.name);
+    const currentService = selectedServices[currentServiceIndex.current];
+    const serviceId = currentService?._id;
 
-    if (!selectedTimes[serviceKey]) {
+    console.log("🔵 handleContinue called for service:", currentService?.name);
+
+    if (!selectedTimes[serviceId]) {
       alert("❌ Please select a time for the current service.");
       return;
     }
@@ -555,13 +576,15 @@ const SelectTimePage = () => {
 
       const nextService = selectedServices[currentServiceIndex.current];
       if (nextService) {
-        setSelectedTimes(prev => ({ ...prev, [nextService.name]: null }));
+        const nextServiceId = nextService._id;
+        setSelectedTimes(prev => ({ ...prev, [nextServiceId]: null }));
 
         // Auto-fetch slots for next service
-        const nextProfessionalId = resolveProfessionalId(selectedProfessional, nextService.name);
+        const nextProfessional = resolveProfessionalForService(nextServiceId);
+        const nextProfessionalId = nextProfessional?._id;
         const nextDefaultDate = dates[0]?.fullDate;
         if (nextProfessionalId && nextDefaultDate) {
-          setSelectedDates(prev => ({ ...prev, [nextService.name]: nextDefaultDate }));
+          setSelectedDates(prev => ({ ...prev, [nextServiceId]: nextDefaultDate }));
           fetchTimeSlots(nextProfessionalId, nextDefaultDate);
         }
       }
@@ -617,7 +640,7 @@ const SelectTimePage = () => {
         date: appointment.date,
         startTime: appointment.startTime,
         endTime: appointment.endTime,
-        professionalName: selectedProfessional?.name || "Any Professional",
+        professionalName: resolveProfessionalForService(appointment.services[0].serviceId)?.name || "Any Professional",
         memberName: user?.name || "Guest"
       })),
       totalAmount: totalAmount,
@@ -625,7 +648,7 @@ const SelectTimePage = () => {
       customerName: user?.name || "Guest",
       isGroupBooking: false,
       salonLocation: salon?.location,
-      professionalName: selectedProfessional?.name || "Any Professional",
+      professionalName: professional?.name || "Any Professional",
       services: selectedServices,
       appointmentId: createdAppointments[0]?._id,
       multipleAppointments: createdAppointments.length > 1
