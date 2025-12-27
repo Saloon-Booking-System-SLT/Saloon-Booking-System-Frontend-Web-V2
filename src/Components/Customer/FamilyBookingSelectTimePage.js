@@ -5,8 +5,8 @@ import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
+const API_BASE_URL = process.env.REACT_APP_API_URL ?
+  process.env.REACT_APP_API_URL.replace('/api', '') :
   'http://localhost:5000';
 
 const SelectTimePage = () => {
@@ -31,7 +31,7 @@ const SelectTimePage = () => {
       console.log("✅ Loaded appointments from location state:", fromState.length);
       return fromState;
     }
-    
+
     const fromStorage = localStorage.getItem('bookedAppointments');
     if (fromStorage) {
       try {
@@ -44,7 +44,7 @@ const SelectTimePage = () => {
         console.error("Failed to parse bookedAppointments from localStorage:", e);
       }
     }
-    
+
     console.log("ℹ️ No previous appointments found");
     return [];
   }, [location.state?.bookedAppointments]);
@@ -81,22 +81,22 @@ const SelectTimePage = () => {
   // Check if appointment is within 24 hours
   const isWithin24Hours = useCallback((appointmentDate, appointmentStartTime) => {
     if (!appointmentDate || !appointmentStartTime) return false;
-    
+
     try {
       const appointmentDateTime = new Date(`${appointmentDate}T${appointmentStartTime}:00`);
       const now = new Date();
-      
+
       // Calculate difference in milliseconds
       const timeDifference = appointmentDateTime.getTime() - now.getTime();
       const hoursDifference = timeDifference / (1000 * 60 * 60);
-      
+
       console.log("⏰ Time check:", {
         appointmentDateTime,
         now,
         hoursDifference,
         isWithin24Hours: hoursDifference <= 24
       });
-      
+
       return hoursDifference <= 24;
     } catch (error) {
       console.error("Error checking time:", error);
@@ -107,11 +107,11 @@ const SelectTimePage = () => {
   // Check if time slot is in the past
   const isPastTimeSlot = useCallback((date, startTime) => {
     if (!date || !startTime) return true;
-    
+
     try {
       const slotDateTime = new Date(`${date}T${startTime}:00`);
       const now = new Date();
-      
+
       return slotDateTime < now;
     } catch (error) {
       console.error("Error checking if slot is past:", error);
@@ -142,13 +142,13 @@ const SelectTimePage = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const key = `${professionalId}-${date}`;
-      
+
       // Filter out past time slots before setting state
       const filteredData = Array.isArray(data) ? data.filter(slot => {
         if (!slot.startTime) return false;
         return !isPastTimeSlot(date, slot.startTime);
       }) : [];
-      
+
       setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
       console.debug("Fetched and filtered slots", key, filteredData.length, "of", data.length);
     } catch (err) {
@@ -160,12 +160,12 @@ const SelectTimePage = () => {
 
   useEffect(() => {
     if (!selectedProfessional || selectedServices.length === 0) return;
-    
+
     const currentService = selectedServices[currentServiceIndex.current];
     if (!currentService) return;
 
     let professionalId = null;
-    
+
     if (selectedProfessional._id) {
       professionalId = selectedProfessional._id;
     } else if (selectedProfessional[currentService.name]?._id) {
@@ -195,7 +195,7 @@ const SelectTimePage = () => {
   const currentService = useMemo(() => {
     return selectedServices[currentServiceIndex.current] || {};
   }, [selectedServices, currentServiceIndex.current]);
-  
+
   const serviceKey = currentService.name || "service";
   const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);
   const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;
@@ -277,7 +277,7 @@ const SelectTimePage = () => {
   // 🔥 UPDATED: Handle reschedule for family booking with 24-hour check
   const handleReschedule = async () => {
     setRescheduleError("");
-    
+
     if (!selectedTimes[serviceKey]) {
       alert("❌ Please select a time for rescheduling.");
       return;
@@ -297,7 +297,7 @@ const SelectTimePage = () => {
     setLoading(true);
     try {
       const currentAppointment = getCurrentAppointmentData();
-      
+
       const rescheduleData = {
         date: currentAppointment.date,
         startTime: currentAppointment.startTime,
@@ -346,25 +346,25 @@ const SelectTimePage = () => {
       handleReschedule();
       return;
     }
-    
+
     // Check if there are more services to book
     if (currentServiceIndex.current + 1 < selectedServices.length) {
       // Add current appointment to booked list
       const currentAppointment = getCurrentAppointmentData();
       const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
-      
+
       console.log("💾 Saving appointment:", currentAppointment);
       console.log("📊 Total booked after save:", updatedBookedAppointments.length);
-      
+
       setBookedAppointments(updatedBookedAppointments);
-      
+
       // Also save to localStorage for persistence
       localStorage.setItem('bookedAppointments', JSON.stringify(updatedBookedAppointments));
-      
+
       // Move to next service
       currentServiceIndex.current += 1;
       setRenderKey(k => k + 1);
-      
+
       const nextService = selectedServices[currentServiceIndex.current];
       if (nextService) {
         setSelectedTimes(prev => ({ ...prev, [nextService.name]: null }));
@@ -373,13 +373,13 @@ const SelectTimePage = () => {
       // All services booked, add final appointment and navigate to confirmation
       const currentAppointment = getCurrentAppointmentData();
       const finalBookedAppointments = [...bookedAppointments, currentAppointment];
-      
+
       console.log("💾 Adding final appointment:", currentAppointment);
       console.log("📊 Final total appointments:", finalBookedAppointments.length);
-      
+
       setBookedAppointments(finalBookedAppointments);
       localStorage.setItem('bookedAppointments', JSON.stringify(finalBookedAppointments));
-      
+
       // Navigate to confirmation page with all appointment data
       navigateToConfirmation(finalBookedAppointments);
     }
@@ -390,25 +390,25 @@ const SelectTimePage = () => {
       alert("❌ Please select a time for the current service.");
       return;
     }
-    
+
     // Add ALL pending appointments (already booked + current one)
     const allAppointmentsToSave = [...bookedAppointments];
-    
+
     // Add current appointment if time is selected
     if (selectedTimes[serviceKey]) {
       allAppointmentsToSave.push(getCurrentAppointmentData());
     }
-    
+
     // Store in localStorage for persistence
     localStorage.setItem('bookedAppointments', JSON.stringify(allAppointmentsToSave));
     localStorage.setItem('isGroupBooking', JSON.stringify(true));
     localStorage.setItem('selectedSalon', JSON.stringify(salon));
-    
+
     // Clear service selection for next round
     localStorage.removeItem('selectedServices');
     localStorage.removeItem('selectedProfessional');
     localStorage.removeItem('groupMembers');
-    
+
     // Navigate back to family booking page to add more members
     navigate('/familybooking', {
       state: {
@@ -421,7 +421,7 @@ const SelectTimePage = () => {
 
   const navigateToConfirmation = (appointments) => {
     const totalAmount = calculateTotalPrice(appointments);
-    
+
     const confirmationData = {
       salonName: salon?.name || "Our Salon",
       appointmentDetails: appointments,
@@ -451,17 +451,17 @@ const SelectTimePage = () => {
     localStorage.removeItem('isGroupBooking');
     localStorage.removeItem('groupMembers');
 
-    navigate("/confirmationpage", { state: confirmationData });
+    navigate("/checkoutpage", { state: confirmationData });
   };
 
   const getAllAppointmentsForDisplay = useCallback(() => {
     const allAppointments = [...bookedAppointments];
-    
+
     // If there's a current appointment selected, include it
     if (selectedTimes[serviceKey]) {
       allAppointments.push(getCurrentAppointmentData());
     }
-    
+
     return allAppointments;
   }, [bookedAppointments, selectedTimes, serviceKey, getCurrentAppointmentData]);
 
@@ -501,8 +501,8 @@ const SelectTimePage = () => {
             {rescheduleAppointment.date && rescheduleAppointment.startTime && (
               <p>
                 Current appointment: {new Date(rescheduleAppointment.date).toLocaleDateString()} at {rescheduleAppointment.startTime}
-                {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && 
-                  <span style={{color: 'red', fontWeight: 'bold'}}> (Within 24 hours - cannot reschedule)</span>
+                {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) &&
+                  <span style={{ color: 'red', fontWeight: 'bold' }}> (Within 24 hours - cannot reschedule)</span>
                 }
               </p>
             )}
@@ -546,7 +546,7 @@ const SelectTimePage = () => {
             <p>
               No available time slots for {new Date(selectedDate).toLocaleDateString()}
               {isPastTimeSlot(selectedDate, "23:59") && (
-                <span style={{display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px'}}>
+                <span style={{ display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
                   ⏰ Today's available slots have passed. Please select a future date.
                 </span>
               )}
@@ -568,7 +568,7 @@ const SelectTimePage = () => {
                     }
                     handleTimeClick(serviceKey, slotId, isBooked);
                   }}
-                  style={{ 
+                  style={{
                     pointerEvents: isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? "none" : "auto",
                     opacity: isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? 0.5 : 1
                   }}
@@ -595,7 +595,7 @@ const SelectTimePage = () => {
           <div className="salon-info">
             <h4>{salon?.name}</h4>
             <p>{salon?.location}</p>
-            
+
             {/* Show all booked appointments */}
             {appointmentsToDisplay.length > 0 && (
               <div className="booked-familyappointments-summary">
@@ -613,38 +613,38 @@ const SelectTimePage = () => {
                 ))}
               </div>
             )}
-            
+
             <div className="total-section">
               <p>Total Amount</p>
               <p><strong>LKR {totalAmount.toLocaleString()}</strong></p>
             </div>
           </div>
-          
+
           <div className="booking-buttons">
-            <button 
-              className="continue-button" 
-              onClick={handleContinue} 
+            <button
+              className="continue-button"
+              onClick={handleContinue}
               disabled={
-                !selectedTimes[serviceKey] || 
-                loading || 
+                !selectedTimes[serviceKey] ||
+                loading ||
                 (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
               }
-              title={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ? 
+              title={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
                 "Cannot reschedule within 24 hours of appointment" : ""}
             >
-              {loading ? "Processing..." : 
-               isReschedule ? 
-                 (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ? 
-                   "Reschedule Not Allowed (Within 24h)" : 
-                   "Reschedule Appointment") :
-               currentServiceIndex.current + 1 < selectedServices.length 
-                ? "Continue to Next Member" 
-                : `Confirm the Booking (LKR ${totalAmount.toLocaleString()})`
+              {loading ? "Processing..." :
+                isReschedule ?
+                  (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
+                    "Reschedule Not Allowed (Within 24h)" :
+                    "Reschedule Appointment") :
+                  currentServiceIndex.current + 1 < selectedServices.length
+                    ? "Continue to Next Member"
+                    : `Confirm the Booking (LKR ${totalAmount.toLocaleString()})`
               }
             </button>
-            
+
             {isGroupBooking && !isReschedule && (
-              <button 
+              <button
                 className="add-appointment-button"
                 onClick={handleAddAppointment}
                 disabled={!selectedTimes[serviceKey] || loading}
