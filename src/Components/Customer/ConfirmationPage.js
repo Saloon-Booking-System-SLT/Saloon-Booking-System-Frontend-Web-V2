@@ -1,19 +1,24 @@
 // ConfirmationPage.jsx - Fixed Version
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, ArrowPathIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import "./ConfirmationPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+import { API_BASE_URL } from "../../config/api";
+import "./ConfirmationPage.css";
+
 
 const ConfirmationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("pending"); // pending, success, error, skipped
-  
+  const [searchParams] = useSearchParams();
+  const [fetchedAppointment, setFetchedAppointment] = useState(null);
+  const [saveStatus, setSaveStatus] = useState("pending"); // pending, success, error, skipped, verifying
+
+  // Get order_id from URL if present (from PayHere return)
+  const orderId = searchParams.get('order_id');
+
   const {
     salonName = "Our Salon",
     appointmentDetails = [],
@@ -29,7 +34,34 @@ const ConfirmationPage = () => {
     user = JSON.parse(localStorage.getItem("user")) || {},
     appointmentId, // This indicates individual booking was already saved
     isReschedule // This indicates it's a reschedule
-  } = location.state || {};
+  } = location.state || (fetchedAppointment ? {
+    salonName: fetchedAppointment.salonId?.name || "Salon",
+    // Map services array correctly
+    appointmentDetails: fetchedAppointment.services ? fetchedAppointment.services.map(s => ({
+      serviceName: s.name,
+      professionalName: fetchedAppointment.professionalId?.name || "Any Professional",
+      date: fetchedAppointment.date,
+      startTime: fetchedAppointment.startTime,
+      endTime: fetchedAppointment.endTime,
+      price: s.price,
+      duration: s.duration
+    })) : [],
+    // If services array is empty but top-level fields exist (fallback)
+    totalAmount: fetchedAppointment.amount || 0,
+    customerName: fetchedAppointment.name || "Guest",
+    appointmentId: fetchedAppointment._id,
+    salon: fetchedAppointment.salonId,
+    // Ensure we handle single-service-like structure if services array is missing
+    ...(fetchedAppointment.services && fetchedAppointment.services.length === 0 ? {
+      appointmentDetails: [{
+        serviceName: "Service",
+        date: fetchedAppointment.date,
+        startTime: fetchedAppointment.startTime,
+        endTime: fetchedAppointment.endTime,
+        price: fetchedAppointment.amount
+      }]
+    } : {})
+  } : {});
 
   console.log("📋 Confirmation Page Data:", {
     salonName,
@@ -47,23 +79,27 @@ const ConfirmationPage = () => {
 
   // Save appointments to backend when confirmation page loads - ONLY FOR GROUP BOOKINGS
   useEffect(() => {
+    // 🚨 FIX: Skip saving if we are just viewing an existing order (PayHere return)
+    if (orderId) {
+      return;
+    }
+
     const saveAppointmentsToBackend = async () => {
       // 🚨 FIX: Skip saving for individual bookings (they're already saved)
       if (!isGroupBooking) {
         console.log("✅ Individual booking - appointments already saved, skipping backend save");
         setSaveStatus("skipped");
-        
+
         // Clear localStorage for individual bookings too
         localStorage.removeItem('selectedServices');
         localStorage.removeItem('selectedProfessional');
         localStorage.removeItem('selectedSalon');
         localStorage.removeItem('bookedAppointments');
-        
+
         return;
       }
 
       if (appointmentDetails.length === 0) {
-        console.log("❌ No appointment details to save");
         setSaveStatus("error");
         return;
       }
@@ -71,14 +107,13 @@ const ConfirmationPage = () => {
       // Check if we've already saved these appointments
       const savedKey = `appointments_saved_${bookingId}`;
       if (localStorage.getItem(savedKey)) {
-        console.log("✅ Appointments already saved, skipping...");
         setSaveStatus("success");
         return;
       }
 
       setIsSaving(true);
       setSaveStatus("pending");
-      
+
       try {
         // Transform data for backend - only for group bookings
         const appointmentData = {
@@ -102,8 +137,6 @@ const ConfirmationPage = () => {
           isGroupBooking: true // Only true for group bookings
         };
 
-        console.log("💾 Saving GROUP appointments to backend:", appointmentData);
-
         const response = await fetch(`${API_BASE_URL}/api/appointments`, {
           method: "POST",
           headers: {
@@ -113,15 +146,10 @@ const ConfirmationPage = () => {
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
-          console.log("✅ Group appointments saved successfully:", result.data);
           setSaveStatus("success");
-          
-          // Mark as saved to prevent duplicate saves
           localStorage.setItem(savedKey, "true");
-          
-          // Clear localStorage after successful save
           localStorage.removeItem('bookedAppointments');
           localStorage.removeItem('selectedServices');
           localStorage.removeItem('selectedProfessional');
@@ -129,11 +157,9 @@ const ConfirmationPage = () => {
           localStorage.removeItem('isGroupBooking');
           localStorage.removeItem('groupMembers');
         } else {
-          console.error("❌ Failed to save group appointments:", result.message);
           setSaveStatus("error");
         }
       } catch (error) {
-        console.error("❌ Error saving group appointments:", error);
         setSaveStatus("error");
       } finally {
         setIsSaving(false);
@@ -141,17 +167,49 @@ const ConfirmationPage = () => {
     };
 
     saveAppointmentsToBackend();
-  }, [appointmentDetails, isGroupBooking, customerName, user, salon, bookingId]);
+  }, [appointmentDetails, isGroupBooking, customerName, user, salon, bookingId, orderId]);
+
+  // Fetch appointment details if returned from PayHere
+  useEffect(() => {
+    if (orderId && !location.state) {
+      const fetchAppointmentDetails = async () => {
+        setIsSaving(true);
+        setSaveStatus("verifying");
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/appointments/${orderId}`);
+          const result = await response.json();
+
+          if (result.success) {
+            // Normalize the data structure
+            const appointmentData = result.data || result.appointment;
+            console.log("✅ Fetched appointment details:", appointmentData);
+            setFetchedAppointment(appointmentData);
+            setSaveStatus("success");
+          } else {
+            console.error("❌ Failed to fetch appointment:", result.message);
+            setSaveStatus("error");
+          }
+        } catch (error) {
+          console.error("❌ Error fetching appointment:", error);
+          setSaveStatus("error");
+        } finally {
+          setIsSaving(false);
+        }
+      };
+
+      fetchAppointmentDetails();
+    }
+  }, [orderId, location.state]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date not specified";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
     } catch (error) {
       return "Invalid date";
@@ -176,10 +234,10 @@ const ConfirmationPage = () => {
       const duration = appointment.duration || "0 minutes";
       const hoursMatch = duration.match(/(\d+)\s*hour/);
       const minutesMatch = duration.match(/(\d+)\s*min/);
-      
+
       const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
       const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
-      
+
       return total + (hours * 60) + minutes;
     }, 0);
   };
@@ -187,7 +245,7 @@ const ConfirmationPage = () => {
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    
+
     if (hours > 0 && mins > 0) {
       return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins > 1 ? 's' : ''}`;
     } else if (hours > 0) {
@@ -200,6 +258,7 @@ const ConfirmationPage = () => {
   // Get status message for saving appointments
   const getStatusMessage = () => {
     if (isSaving) return "Saving your appointments...";
+    if (saveStatus === "verifying") return "Verifying payment status...";
     if (saveStatus === "success") return "✅ Appointments saved successfully!";
     if (saveStatus === "skipped") return "✅ Booking confirmed!";
     if (saveStatus === "error") return "There was an issue saving your appointments. Please check your bookings page.";
@@ -231,7 +290,7 @@ const ConfirmationPage = () => {
           <p className="thank-you-message">
             {getThankYouMessage()}
           </p>
-          
+
           {/* Status indicator */}
           <div className={`save-status ${saveStatus}`}>
             {getStatusMessage()}
@@ -241,7 +300,7 @@ const ConfirmationPage = () => {
         <div className="confirmation-details">
           <div className="booking-summary">
             <h2>Booking Summary</h2>
-            
+
             <div className="summary-grid">
               <div className="summary-item">
                 <span>Customer Name:</span>
@@ -373,14 +432,14 @@ const ConfirmationPage = () => {
         </div>
 
         <div className="confirmation-actions">
-          <button 
+          <button
             className="btn-primary"
             onClick={handleBackToHome}
             disabled={isSaving}
           >
             {isSaving ? "Processing..." : "Back to Home"}
           </button>
-          <button 
+          <button
             className="btn-secondary"
             onClick={handleViewBookings}
             disabled={isSaving}

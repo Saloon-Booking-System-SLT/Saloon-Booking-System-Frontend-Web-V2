@@ -57,9 +57,9 @@ const PayHereButton = ({
             // Step 2: Add return and cancel URLs
             const formData = {
                 ...payhereData,
-                return_url: `${window.location.origin}/payment/success`,
+                return_url: `${window.location.origin}/confirmationpage?order_id=${appointmentId}`,
                 cancel_url: `${window.location.origin}/payment/cancel`,
-                notify_url: payhereData.notify_url || `${API_BASE_URL.replace('/api', '')}/api/payments/payhere/notify`
+                notify_url: 'https://saloon-booking-system-backend-v2.onrender.com/api/payments/payhere/notify'
             };
 
             // Step 3: Determine PayHere checkout URL
@@ -108,7 +108,7 @@ const PayHereButton = ({
             className="payhere-button"
             style={{
                 padding: '12px 24px',
-                backgroundColor: loading ? '#ccc' : '#FF6B00',
+                backgroundColor: loading ? '#ccc' : '#1251af',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
