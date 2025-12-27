@@ -1,245 +1,221 @@
-// src/pages/CheckoutPage.js
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { CreditCardIcon, BanknotesIcon } from '@heroicons/react/24/outline';
-import "./CheckoutPage.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import './CheckoutPage.css';
 
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const appointmentData = location.state;
-  
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("card");
-  const [phone, setPhone] = useState(appointmentData?.phone || "");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
-  const [cardName, setCardName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!appointmentData) {
+  // Safety check for missing state
+  if (!location.state) {
     return (
-      <div className="checkout-container">
-        <h2>No appointment data found</h2>
-        <button onClick={() => navigate("/")}>Go Home</button>
+      <div className="checkout-error">
+        <h2>No booking details found</h2>
+        <button onClick={() => navigate('/')}>Return to Home</button>
       </div>
     );
   }
 
-  const handlePayment = async () => {
-    if (!phone.trim()) {
-      alert("Please enter your phone number");
-      return;
-    }
+  const {
+    appointmentId,
+    service,
+    professional,
+    selectedDate,
+    selectedTime,
+    salon,
+    customerName,
+    customerPhone,
+    customerEmail,
+    // Group booking props
+    isGroupBooking,
+    appointmentDetails,
+    bookingId,
+    totalAmount
+  } = location.state;
 
-    if (paymentMethod === "card" && (!cardNumber || !expiry || !cvc || !cardName)) {
-      alert("Please fill in all card details");
-      return;
-    }
+  // Use environment variable or production fallback
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
 
-    setLoading(true);
-
+  const handlePayHereCheckout = async () => {
+    setIsLoading(true);
     try {
-      // For rescheduling
-      if (appointmentData.isReschedule) {
-        const res = await fetch(`${API_BASE_URL}/api/appointments/${appointmentData.appointmentId}/reschedule`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...appointmentData.rescheduleData,
-            phone: phone
-          }),
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          alert("✅ Appointment rescheduled successfully!");
-          navigate("/appointments");
-        } else {
-          alert("❌ Failed to reschedule: " + (data.message || "Unknown error"));
-        }
-        return;
-      }
+      // Determine Identifier and Amount
+      // Use bookingId for groups, appointmentId for singles. Fallback to "TEMP_ID" safely.
+      const idToProcess = isGroupBooking ? bookingId : appointmentId;
+      const finalId = idToProcess || "TEMP_ID";
 
-      // For new booking
-      const appointment = {
-        phone,
-        email: appointmentData.email || "",
-        name: appointmentData.name || "Guest",
-        appointments: [appointmentData.appointmentDetails],
+      const finalAmount = isGroupBooking
+        ? parseFloat(totalAmount || 0).toFixed(2)
+        : parseFloat(service?.price || 0).toFixed(2);
+
+      const itemsDescription = isGroupBooking
+        ? `Group Booking (${appointmentDetails?.length || 0} services)`
+        : service?.name || "Salon Service";
+
+      // 1. Prepare Request Payload
+      const payload = {
+        appointmentId: finalId, // Backend expects 'appointmentId' key usually, but we pass bookingId for groups
+        isGroupBooking: !!isGroupBooking, // Flag for backend to handle differently if needed
+        amount: finalAmount,
+        currency: "LKR",
+        items: itemsDescription,
+        customer: {
+          first_name: customerName?.split(' ')[0] || "Guest",
+          last_name: customerName?.split(' ').slice(1).join(' ') || "User",
+          email: customerEmail || "no-email@example.com",
+          phone: customerPhone || "0000000000",
+          address: "No Address Provided",
+          city: "Colombo",
+          country: "Sri Lanka"
+        }
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(appointment),
+      // 2. Call Backend to Init Payment
+      const response = await fetch(`${API_BASE_URL}/payments/payhere/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      const result = await response.json();
 
-      if (data.success) {
-        alert("✅ Appointment booked successfully!");
-        navigate("/appointments");
+      if (result.success && result.data) {
+        // 3. Auto-Submit Form to PayHere
+        submitPayHereForm(result.data);
       } else {
-        alert("❌ Failed to book appointment: " + (data.message || "Unknown error"));
+        alert('Failed to initiate payment. Please try again.');
+        console.error('Payment init failed:', result);
       }
+
     } catch (error) {
-      console.error("Payment error:", error);
-      alert("❌ Something went wrong. Please try again.");
+      console.error('Error initiating PayHere payment:', error);
+      alert('An error occurred. Please check your connection.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const submitPayHereForm = (data) => {
+    // Append mandatory return_url and cancel_url if missing
+    const formData = {
+      ...data,
+      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
+      cancel_url: data.cancel_url || window.location.href,
+    };
+
+    const form = document.createElement('form');
+    form.setAttribute('method', 'POST');
+    form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
+    form.style.display = 'none';
+
+    Object.keys(formData).forEach(key => {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'hidden');
+      input.setAttribute('name', key);
+      input.setAttribute('value', formData[key]);
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
+  // Helper to render single item summary
+  const renderSingleSummary = () => (
+    <>
+      <div className="summary-row">
+        <span className="label">Service</span>
+        <span className="value">{service?.name || 'Unknown Service'}</span>
+      </div>
+      <div className="summary-row">
+        <span className="label">Professional</span>
+        <span className="value">{professional?.name || 'Any Professional'}</span>
+      </div>
+      <div className="summary-row">
+        <span className="label">Date & Time</span>
+        <span className="value">
+          {new Date(selectedDate).toLocaleDateString()} at {selectedTime}
+        </span>
+      </div>
+    </>
+  );
+
+  // Helper to render group summary
+  const renderGroupSummary = () => (
+    <div className="group-summary-list">
+      {appointmentDetails.map((appt, idx) => (
+        <div key={idx} className="group-item">
+          <div className="group-item-header">
+            <span className="item-name">{appt.serviceName}</span>
+            <span className="item-price">LKR {appt.price}</span>
+          </div>
+          <div className="group-item-details">
+            {appt.memberName} ({appt.memberCategory}) - {appt.startTime}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="checkout-container">
-      <div className="checkout-content">
-        <div className="checkout-left">
-          <h2>Checkout</h2>
-          
-          <div className="checkout-section">
-            <h3>Contact Information</h3>
-            <div className="form-group">
-              <label>Phone Number *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number"
-                required
-              />
-            </div>
+      <div className="checkout-card">
+        <div className="checkout-header">
+          <h1>Checkout</h1>
+          <p>Complete your {isGroupBooking ? 'group booking' : 'appointment'} with PayHere</p>
+        </div>
+
+        <div className="order-summary-box">
+          <h3>Order Summary</h3>
+
+          {isGroupBooking ? renderGroupSummary() : renderSingleSummary()}
+
+          <div className="summary-row">
+            <span className="label">Salon</span>
+            <span className="value">{salon?.name || 'Salon detail unavailable'}</span>
           </div>
 
-          <div className="checkout-section">
-            <h3>Payment Method</h3>
-            <div className="payment-options">
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  value="card"
-                  checked={paymentMethod === "card"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span className="flex items-center gap-2">
-                  <CreditCardIcon className="h-5 w-5" />
-                  Credit/Debit Card
-                </span>
-              </label>
-              
-              <label className="payment-option">
-                <input
-                  type="radio"
-                  value="cash"
-                  checked={paymentMethod === "cash"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <span className="flex items-center gap-2">
-                  <BanknotesIcon className="h-5 w-5" />
-                  Cash on Arrival
-                </span>
-              </label>
-            </div>
+          <div className="summary-divider"></div>
+
+          <div className="summary-row total">
+            <span className="label">Total Amount</span>
+            <span className="value">
+              LKR {isGroupBooking
+                ? (totalAmount || 0).toLocaleString()
+                : (service?.price ? service.price.toLocaleString() : '0.00')}
+            </span>
           </div>
+        </div>
 
-          {paymentMethod === "card" && (
-            <div className="checkout-section">
-              <h3>Card Details</h3>
-              <div className="card-input">
-                <input 
-                  type="text" 
-                  placeholder="Card Number" 
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  maxLength="16"
-                />
-                <div className="card-row">
-                  <input 
-                    type="text" 
-                    placeholder="MM/YY" 
-                    value={expiry}
-                    onChange={(e) => setExpiry(e.target.value)}
-                    maxLength="5"
-                  />
-                  <input 
-                    type="text" 
-                    placeholder="CVC" 
-                    value={cvc}
-                    onChange={(e) => setCvc(e.target.value)}
-                    maxLength="3"
-                  />
-                </div>
-                <input 
-                  type="text" 
-                  placeholder="Cardholder Name" 
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          <button 
-            className="pay-button" 
-            onClick={handlePayment}
-            disabled={loading}
+        <div className="payment-actions">
+          <button
+            className="payhere-btn"
+            onClick={handlePayHereCheckout}
+            disabled={isLoading}
           >
-            {loading ? "Processing..." : `Pay LKR ${appointmentData.service?.price || "0"}`}
+            {isLoading ? (
+              <span className="loader">Processing...</span>
+            ) : (
+              <>Pay with <span className="payhere-logo-text">PayHere</span></>
+            )}
+          </button>
+
+          <button
+            className="cancel-btn"
+            onClick={() => navigate(-1)}
+            disabled={isLoading}
+          >
+            Cancel
           </button>
         </div>
 
-        <div className="checkout-right">
-          <div className="order-summary">
-            <h3>Order Summary</h3>
-            <div className="summary-item">
-              <span>Service:</span>
-              <span>{appointmentData.service?.name}</span>
-            </div>
-            <div className="summary-item">
-              <span>Professional:</span>
-              <span>{appointmentData.professional?.name || "Any"}</span>
-            </div>
-            <div className="summary-item">
-              <span>Date:</span>
-              <span>{new Date(appointmentData.selectedDate).toLocaleDateString()}</span>
-            </div>
-            <div className="summary-item">
-              <span>Time:</span>
-              <span>{appointmentData.selectedTime}</span>
-            </div>
-            <div className="summary-item">
-              <span>Duration:</span>
-              <span>{appointmentData.service?.duration}</span>
-            </div>
-            <div className="summary-item">
-              <span>Salon:</span>
-              <span>{appointmentData.salon?.name}</span>
-            </div>
-            <div className="summary-total">
-              <span>Total Amount:</span>
-              <span>LKR {appointmentData.service?.price}</span>
-            </div>
-          </div>
+        <div className="secure-badge">
+          <span>🔒 Secure Payment via PayHere Sandbox</span>
         </div>
       </div>
-
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loader">
-            <div className="loader-dots">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-            <p>Processing your payment...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
