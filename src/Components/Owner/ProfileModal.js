@@ -4,8 +4,8 @@ import { API_BASE_URL } from '../../config/api';
 
 const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
   const [selectedAction, setSelectedAction] = useState('Actions');
-  const [statusDropdowns, setStatusDropdowns] = useState({});
   const [statuses, setStatuses] = useState({});
+  const [notification, setNotification] = useState(null);
 
   if (!isOpen || !selectedClient) return null;
 
@@ -25,42 +25,56 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
     'Delete Client',
   ];
 
-  const statusOptions = [
-    'Booked',
-    'Confirmed',
-    'Arrived',
-    'Started',
-    'Completed',
-    'Cancel',
-  ];
-
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Booked': return '#60a5fa';
-      case 'Confirmed': return '#10b981';
-      case 'Arrived': return '#f59e0b';
-      case 'Started': return '#8b5cf6';
-      case 'Completed': return '#22c55e';
-      case 'Cancel': return '#ef4444';
+      case 'confirmed': return '#10b981';
+      case 'completed': return '#22c55e';
+      case 'cancelled': return '#ef4444';
+      case 'cancel': return '#ef4444';
       default: return '#9ca3af';
     }
   };
 
-  const toggleDropdown = (id) => {
-    setStatusDropdowns(prev => ({ ...prev, [id]: !prev[id] }));
+  const formatStatusDisplay = (status) => {
+    if (!status) return 'Pending';
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (id, newStatus, event) => {
+    // Prevent triggering multiple times
+    if (event) event.stopPropagation();
+    
     try {
-      await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update appointment status');
+      }
+      
       setStatuses(prev => ({ ...prev, [id]: newStatus }));
-      setStatusDropdowns(prev => ({ ...prev, [id]: false }));
+      
+      // Show success notification
+      const statusText = formatStatusDisplay(newStatus);
+      setNotification({
+        type: 'success',
+        message: `✅ Appointment ${statusText}! Email notification sent to ${client.name}.`
+      });
+      
+      // Auto-hide notification after 4 seconds
+      setTimeout(() => setNotification(null), 4000);
+      
+      console.log(`✅ Appointment ${id} status updated to ${newStatus}. Email notification sent to customer.`);
     } catch (err) {
       console.error("❌ Failed to update status", err);
+      setNotification({
+        type: 'error',
+        message: `❌ Failed to update appointment status. Please try again.`
+      });
+      setTimeout(() => setNotification(null), 4000);
     }
   };
 
@@ -72,6 +86,13 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+
+        {/* Notification Banner */}
+        {notification && (
+          <div className={`notification-banner ${notification.type}`}>
+            {notification.message}
+          </div>
+        )}
 
         {/* Header */}
         <div className="profile-header">
@@ -99,7 +120,6 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
             <p className="no-appointments">No appointments available</p>
           ) : client.appointments.map((appt, idx) => {
             const status = statuses[appt.id] || appt.status;
-            const isOpen = statusDropdowns[appt.id];
 
             return (
               <div key={idx} className="appointment-card">
@@ -109,26 +129,8 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
                     <span className="appointment-time">{appt.time}</span>
                   </div>
 
-                  <div className="appointment-status">
-                    <div className="status-badge" style={{ backgroundColor: getStatusColor(status) }} onClick={() => toggleDropdown(appt.id)}>
-                      {status}
-                      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z" /></svg>
-                    </div>
-
-                    {isOpen && (
-                      <div className="status-dropdown-menu">
-                        {statusOptions.map(opt => (
-                          <div key={opt} className="status-dropdown-item" onClick={() => handleStatusChange(appt.id, opt)}>
-                            {opt === status && (
-                              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" className="check-icon">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                              </svg>
-                            )}
-                            {opt}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="status-badge" style={{ backgroundColor: getStatusColor(status) }}>
+                    {formatStatusDisplay(status)}
                   </div>
                 </div>
 
@@ -136,6 +138,24 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
                   <h4>{appt.service}</h4>
                   <p className="service-price">{appt.price}</p>
                 </div>
+
+                {/* Action Buttons */}
+                {status !== 'completed' && status !== 'cancelled' && (
+                  <div className="appointment-actions">
+                    <button 
+                      className="btn-complete" 
+                      onClick={(e) => handleStatusChange(appt.id, 'completed', e)}
+                    >
+                      ✓ Complete
+                    </button>
+                    <button 
+                      className="btn-cancel-appointment" 
+                      onClick={(e) => handleStatusChange(appt.id, 'cancelled', e)}
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

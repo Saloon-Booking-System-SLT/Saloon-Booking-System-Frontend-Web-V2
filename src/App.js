@@ -37,6 +37,11 @@ import SalonProfessionals from "./Components/Owner/SalonProfessionals";
 import SalonTimeSlots from "./Components/Owner/SalonTimeSlots";
 import OwnerFeedbackPage from "./Components/Owner/OwnerFeedbackPage";
 import SalonProfile from "./Components/Owner/SalonProfile";
+import ResetPassword from './Components/Owner/ResetPassword';
+import BookAnAppointment from './Components/Owner/BookAnAppointment';
+import OwnerSelectProfessional from './Components/Owner/OwnerSelectProfessional';
+import OwnerTimeSelection from './Components/Owner/OwnerTimeSelection';
+import OwnerConfirmationPage from './Components/Owner/OwnerConfirmationPage';
 
 // Admin Components
 import AdminDashboard from "./Components/Admin/AdminDashboard";
@@ -61,6 +66,7 @@ function App() {
           <Route path="/login/customer" element={<CustomerLogin />} />
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
           <Route path="/searchsalon" element={<CustomerRoute><Searchsalon /></CustomerRoute>} />
@@ -90,6 +96,10 @@ function App() {
           <Route path="/timeslots" element={<ApprovedOwnerRoute><SalonTimeSlots /></ApprovedOwnerRoute>} />
           <Route path="/feedbacks" element={<ApprovedOwnerRoute><OwnerFeedbackPage /></ApprovedOwnerRoute>} />
           <Route path="/profile/:id" element={<ApprovedOwnerRoute><SalonProfile /></ApprovedOwnerRoute>} />
+          <Route path="/book-appointment" element={<ApprovedOwnerRoute><BookAnAppointment /></ApprovedOwnerRoute>} />
+          <Route path="/owner-select-professional/:salonId?" element={<ApprovedOwnerRoute><OwnerSelectProfessional /></ApprovedOwnerRoute>} />
+          <Route path="/owner-select-time" element={<ApprovedOwnerRoute><OwnerTimeSelection /></ApprovedOwnerRoute>} />
+          <Route path="/owner-confirmation" element={<ApprovedOwnerRoute><OwnerConfirmationPage /></ApprovedOwnerRoute>} />
 
           {/* Admin Protected Routes */}
           <Route path="/AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
