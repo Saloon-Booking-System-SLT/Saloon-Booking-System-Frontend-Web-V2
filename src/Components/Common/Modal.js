@@ -50,6 +50,6 @@ const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
     </div>
   );
 };
-};
+
 
 export default Modal;

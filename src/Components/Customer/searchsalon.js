@@ -156,12 +156,25 @@ const fetchSalons = useCallback(async () => {
     fetchSalons();
   }, [fetchSalons]);
 
+  // Helper function to check if salon location matches query
+  const matchesLocationQuery = (location, searchQuery) => {
+    if (!searchQuery) return true;
+    if (!location) return false;
+    
+    let locationStr = location;
+    if (typeof location === 'object') {
+      locationStr = (location.district || '') + ' ' + (location.address || '');
+    }
+    
+    return locationStr.toLowerCase().includes(searchQuery.toLowerCase());
+  };
+
   // Unified filter effect
   useEffect(() => {
     // If "All" is selected, always show all salons from database, not just nearby
     if (genderFilter === "All") {
       let filtered = allSalons;
-      if (query) filtered = filtered.filter((s) => s.location.toLowerCase().includes(query.toLowerCase()));
+      if (query) filtered = filtered.filter((s) => matchesLocationQuery(s.location, query));
       setFilteredSalons(filtered);
       // Reset nearby mode when "All" is selected
       setIsNearbyMode(false);
@@ -172,7 +185,7 @@ const fetchSalons = useCallback(async () => {
       setFilteredSalons(filtered);
     } else {
       let filtered = allSalons;
-      if (query) filtered = filtered.filter((s) => s.location.toLowerCase().includes(query.toLowerCase()));
+      if (query) filtered = filtered.filter((s) => matchesLocationQuery(s.location, query));
       filtered = filtered.filter((s) => s.salonType === genderFilter);
       setFilteredSalons(filtered);
     }
@@ -181,7 +194,7 @@ const fetchSalons = useCallback(async () => {
   const applyFilters = (salons, locationQuery, gender) => {
     let filtered = salons;
     if (locationQuery) filtered = filtered.filter((s) =>
-      s.location.toLowerCase().includes(locationQuery.toLowerCase())
+      matchesLocationQuery(s.location, locationQuery)
     );
     if (gender !== "All") filtered = filtered.filter((s) => s.salonType === gender);
     setFilteredSalons(filtered);
@@ -233,6 +246,11 @@ const fetchNearbySalons = async (lat, lng, manual = false) => {
 const getCityFromLocation = (location) => {
   if (!location) return "";
 
+  let locationStr = location;
+  if (typeof location === 'object') {
+    locationStr = location.district || location.address || "";
+  }
+
   // Common Sri Lankan districts (you can add or remove as needed)
   const districts = [
     "Colombo", "Kandy", "Galle", "Matara", "Kurunegala", "Gampaha", "Jaffna",
@@ -243,7 +261,7 @@ const getCityFromLocation = (location) => {
 
   // Try to find any known district name in the address (case-insensitive)
   const found = districts.find((d) =>
-    location.toLowerCase().includes(d.toLowerCase())
+    locationStr.toLowerCase().includes(d.toLowerCase())
   );
 
   return found || "Unknown";

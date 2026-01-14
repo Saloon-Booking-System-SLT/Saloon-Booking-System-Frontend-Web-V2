@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
+const maleIcon =
+  "https://cdn-icons-png.flaticon.com/512/921/921089.png";
+const femaleIcon =
+  "https://cdn-icons-png.flaticon.com/512/921/921071.png";
 
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();
@@ -19,9 +23,9 @@ const SalonProfessionalsV2 = () => {
     gender: "",
     service: "",
     serviceAvailability: "Both",
+    selectedIcon: "",
   });
 
-  const [fileImage, setFileImage] = useState(null);
   const [fileCertificate, setFileCertificate] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState(null);
@@ -29,20 +33,17 @@ const SalonProfessionalsV2 = () => {
   const Sidebar = () => {
     return (
       <aside className="modern-sidebar">
-  <img src={logo} alt="Brand Logo" className="modern-logo" />
-
-  <i className="fas fa-home" title="Home" onClick={() => navigate("/dashboard")}></i>
-  <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate("/calendar")}></i>
-  <i className="fas fa-cut" title="Services" onClick={() => navigate("/services")}></i>
-  <i className="fas fa-comment-alt" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
-  <i className="fas fa-users active" title="Professionals"></i> 
-  <i className="fas fa-clock" title="Time Slots" onClick={() => navigate("/timeslots")}></i>
-</aside>
-
+        <img src={logo} alt="Brand Logo" className="modern-logo" />
+        <i className="fas fa-home" title="Home" onClick={() => navigate("/dashboard")}></i>
+        <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate("/calendar")}></i>
+        <i className="fas fa-cut" title="Services" onClick={() => navigate("/services")}></i>
+        <i className="fas fa-comment-alt" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
+        <i className="fas fa-users active" title="Professionals"></i>
+        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate("/timeslots")}></i>
+      </aside>
     );
   };
 
-  // Fetch professionals
   const fetchProfessionals = async () => {
     if (!salon?.id) return;
     try {
@@ -61,7 +62,6 @@ const SalonProfessionalsV2 = () => {
   const handleInput = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Add or Update professional
   const handleAddOrUpdate = async () => {
     if (!formData.name || !formData.service || !formData.gender)
       return alert("Please fill all fields.");
@@ -73,7 +73,9 @@ const SalonProfessionalsV2 = () => {
     form.append("serviceAvailability", formData.serviceAvailability);
     form.append("salonId", salon.id);
 
-    if (fileImage) form.append("image", fileImage);
+    // ICON saved as IMAGE to backend
+    form.append("imageUrl", formData.selectedIcon);
+
     if (fileCertificate) form.append("certificate", fileCertificate);
 
     const url = editingProfessional
@@ -88,16 +90,19 @@ const SalonProfessionalsV2 = () => {
         fetchProfessionals();
         setShowPopup(false);
         setEditingProfessional(null);
-        setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
-        setFileImage(null);
+        setFormData({
+          name: "",
+          gender: "",
+          service: "",
+          serviceAvailability: "Both",
+          selectedIcon: "",
+        });
         setFileCertificate(null);
       } else {
         const error = await res.json();
-        console.error(error);
         alert("Save failed: " + (error.message || "Unknown error"));
       }
     } catch (err) {
-      console.error(err);
       alert("Save failed: " + err.message);
     }
   };
@@ -108,7 +113,9 @@ const SalonProfessionalsV2 = () => {
       gender: pro.gender || "",
       service: pro.service,
       serviceAvailability: pro.serviceAvailability || "Both",
+      selectedIcon: pro.gender === "Male" ? maleIcon : femaleIcon,
     });
+
     setEditingProfessional(pro);
     setShowPopup(true);
   };
@@ -119,12 +126,10 @@ const SalonProfessionalsV2 = () => {
       await fetch(`${API_BASE_URL}/professionals/${id}`, { method: "DELETE" });
       fetchProfessionals();
     } catch (err) {
-      console.error(err);
       alert("Delete failed");
     }
   };
 
-  // View certificate as base64 PDF
   const handleViewCertificate = (base64) => {
     if (!base64) return alert("No certificate uploaded.");
     const newWindow = window.open();
@@ -133,7 +138,6 @@ const SalonProfessionalsV2 = () => {
     );
   };
 
-  // Filter logic
   const filteredProfessionals = professionals.filter((pro) => {
     const genderMatch = genderFilter === "All" || pro.gender === genderFilter;
     const availabilityMatch =
@@ -143,11 +147,9 @@ const SalonProfessionalsV2 = () => {
 
   return (
     <div className="pro-v2-container">
-      {/* Sidebar */}
       <Sidebar />
 
       <div className="pro-v2-main">
-        {/* Filters */}
         <div className="filter-section">
           <h3>Filters</h3>
           <div className="filter-controls">
@@ -157,10 +159,7 @@ const SalonProfessionalsV2 = () => {
               <option value="Female">Female</option>
             </select>
 
-            <select
-              value={availabilityFilter}
-              onChange={(e) => setAvailabilityFilter(e.target.value)}
-            >
+            <select value={availabilityFilter} onChange={(e) => setAvailabilityFilter(e.target.value)}>
               <option value="All">Filter by Service Availability</option>
               <option value="Male">Male Only</option>
               <option value="Female">Female Only</option>
@@ -176,39 +175,48 @@ const SalonProfessionalsV2 = () => {
             onClick={() => {
               setShowPopup(true);
               setEditingProfessional(null);
-              setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
+              setFormData({
+                name: "",
+                gender: "",
+                service: "",
+                serviceAvailability: "Both",
+                selectedIcon: "",
+              });
             }}
           >
             Add Professional
           </button>
         </header>
 
-        {/* Professional cards */}
         <div className="pro-v2-grid">
           {filteredProfessionals.map((pro) => (
             <div key={pro._id} className="pro-v2-card">
               <img
                 src={
-                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "https://via.placeholder.com/100"
+                  pro.image
+                    ? `data:image/jpeg;base64,${pro.image}`
+                    : pro.gender === "Male"
+                    ? maleIcon
+                    : femaleIcon
                 }
                 alt={pro.name}
                 className="pro-v2-image"
               />
+
               <div className="pro-v2-info">
                 <strong>{pro.name}</strong>
                 <p>Gender: {pro.gender}</p>
                 <p>Service: {pro.service}</p>
                 <p>Service Availability: {pro.serviceAvailability}</p>
+
                 {pro.certificate ? (
-                  <button
-                    className="pro-v2-cert-btn"
-                    onClick={() => handleViewCertificate(pro.certificate)}
-                  >
+                  <button className="pro-v2-cert-btn" onClick={() => handleViewCertificate(pro.certificate)}>
                     View Certificate
                   </button>
                 ) : (
                   <p className="no-cert">No Certificate</p>
                 )}
+
                 <div className="pro-v2-actions">
                   <button onClick={() => handleEdit(pro)}>Edit</button>
                   <button onClick={() => handleDelete(pro._id)}>Delete</button>
@@ -219,24 +227,54 @@ const SalonProfessionalsV2 = () => {
         </div>
       </div>
 
-      {/* Popup form */}
       {showPopup && (
         <div className="pro-v2-popup-overlay">
           <div className="pro-v2-popup">
             <h2>{editingProfessional ? "Edit Professional" : "Add Professional"}</h2>
 
-            <input
-              name="name"
-              value={formData.name}
-              onChange={handleInput}
-              placeholder="Name"
-            />
+            <input name="name" value={formData.name} onChange={handleInput} placeholder="Name" />
 
-            <select name="gender" value={formData.gender} onChange={handleInput}>
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+            {/* Gender Selector with Icons */}
+            <div className="gender-icon-section">
+              <label>Select Gender</label>
+              <div className="gender-options">
+                <label className="gender-card">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="Male"
+                    checked={formData.gender === "Male"}
+                    onChange={() =>
+                      setFormData({
+                        ...formData,
+                        gender: "Male",
+                        selectedIcon: maleIcon,
+                      })
+                    }
+                  />
+                  <img src={maleIcon} alt="Male" className="gender-icon" />
+                  <p>Male</p>
+                </label>
+
+                <label className="gender-card">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="Female"
+                    checked={formData.gender === "Female"}
+                    onChange={() =>
+                      setFormData({
+                        ...formData,
+                        gender: "Female",
+                        selectedIcon: femaleIcon,
+                      })
+                    }
+                  />
+                  <img src={femaleIcon} alt="Female" className="gender-icon" />
+                  <p>Female</p>
+                </label>
+              </div>
+            </div>
 
             <input
               name="service"
@@ -245,18 +283,11 @@ const SalonProfessionalsV2 = () => {
               placeholder="Service Provided"
             />
 
-            <select
-              name="serviceAvailability"
-              value={formData.serviceAvailability}
-              onChange={handleInput}
-            >
+            <select name="serviceAvailability" value={formData.serviceAvailability} onChange={handleInput}>
               <option value="Male">Male Only</option>
               <option value="Female">Female Only</option>
               <option value="Both">Both</option>
             </select>
-
-            <label>Upload Image</label>
-            <input type="file" onChange={(e) => setFileImage(e.target.files[0])} />
 
             <label>Upload Certificate</label>
             <input type="file" onChange={(e) => setFileCertificate(e.target.files[0])} />
