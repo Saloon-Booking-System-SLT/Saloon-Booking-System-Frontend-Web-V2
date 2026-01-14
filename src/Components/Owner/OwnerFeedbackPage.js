@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./OwnerFeedbackPage.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../config/api';
 
 const OwnerFeedbackPage = () => {
   const navigate = useNavigate();
   const salon = JSON.parse(localStorage.getItem("salonUser"));
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const didFetch = useRef(false);
 
   const Sidebar = () => {
     return (
@@ -28,19 +29,30 @@ const OwnerFeedbackPage = () => {
 
   const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/feedback/with-feedbacks/${salon.id}`);
+      const salonId = salon?.id || salon?._id;
+      if (!salonId) return;
+      setError("");
+      const res = await fetch(`${API_BASE_URL}/feedback/with-feedbacks/${salonId}`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+      }
       const data = await res.json();
       setProfessionals(data);
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch professionals with feedbacks", err);
+      setError("Failed to load feedbacks. Please try again.");
       setLoading(false);
     }
-  }, [salon.id]);
+  }, [salon?.id, salon?._id]);
 
   useEffect(() => {
-    if (salon?.id) fetchProfessionalsWithFeedbacks();
-  }, [salon?.id, fetchProfessionalsWithFeedbacks]);
+    if (didFetch.current) return;
+    didFetch.current = true;
+    const salonId = salon?.id || salon?._id;
+    if (salonId) fetchProfessionalsWithFeedbacks();
+  }, [salon?.id, salon?._id, fetchProfessionalsWithFeedbacks]);
 
   const getAverageRating = (feedbacks) => {
     if (!feedbacks || feedbacks.length === 0) return 0;
@@ -67,6 +79,9 @@ const OwnerFeedbackPage = () => {
         </header>
 
         <div className="services-body">
+          {error && (
+            <div className="empty-state" style={{ color: '#b91c1c', background: '#fee2e2' }}>{error}</div>
+          )}
           {loading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>

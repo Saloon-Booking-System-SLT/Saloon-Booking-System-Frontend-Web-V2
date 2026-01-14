@@ -1,10 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../Assets/logo.png';
 import './SalonServices.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+import { API_BASE_URL, UPLOADS_URL } from '../../config/api';
 
 const SalonServices = () => {
   const navigate = useNavigate();
@@ -20,6 +18,9 @@ const SalonServices = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const didFetch = useRef(false);
 
   // Updated Sidebar Component
   const Sidebar = () => {
@@ -39,17 +40,29 @@ const SalonServices = () => {
   };
 
   const fetchServices = useCallback(async () => {
-    if (!salon?.id) return;
+    const salonId = salon?.id || salon?._id;
+    if (!salonId) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/services/${salon.id}`);
+      setLoading(true);
+      setError('');
+      const res = await fetch(`${API_BASE_URL}/services/${salonId}`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+      }
       const data = await res.json();
       setServices(data);
+      setLoading(false);
     } catch (err) {
       console.error("Failed to fetch services", err);
+      setError('Failed to load services. Please try again.');
+      setLoading(false);
     }
-  }, [salon?.id]);
+  }, [salon?.id, salon?._id]);
 
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
     fetchServices();
   }, [fetchServices]);
 
@@ -80,7 +93,7 @@ const SalonServices = () => {
     data.append("price", formData.price);
     data.append("duration", formData.duration);
     data.append("gender", formData.gender);
-    data.append("salonId", salon.id);
+    data.append("salonId", salon?.id || salon?._id);
     if (file) {
       data.append("image", file);
     } else if (formData.image) {
@@ -167,7 +180,14 @@ const SalonServices = () => {
             </div>
 
             <div className="service-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {services.map((service) => (
+              {error && (
+                <div className="service-card bg-red-50 text-red-700 p-4 rounded">{error}</div>
+              )}
+              {loading ? (
+                <div className="service-card bg-white p-4 rounded shadow-sm">Loading services...</div>
+              ) : services.length === 0 ? (
+                <div className="service-card bg-white p-4 rounded shadow-sm">No services found.</div>
+              ) : services.map((service) => (
                 <div key={service._id} className="service-card bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                   <img
                     src={

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL } from "../../config/api";
 
 const maleIcon =
   "https://cdn-icons-png.flaticon.com/512/921/921089.png";
@@ -15,6 +14,9 @@ const SalonProfessionalsV2 = () => {
   const salon = JSON.parse(localStorage.getItem("salonUser"));
 
   const [professionals, setProfessionals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const didFetch = useRef(false);
   const [genderFilter, setGenderFilter] = useState("All");
   const [availabilityFilter, setAvailabilityFilter] = useState("All");
 
@@ -40,7 +42,7 @@ const SalonProfessionalsV2 = () => {
 
   <i className="fas fa-home" title="Home" onClick={() => navigate("/dashboard")}></i>
   <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate("/calendar")}></i>
-  <i className="fas fa-smile" title="Services" onClick={() => navigate("/services")}></i>
+  <i className="fas fa-cut" title="Services" onClick={() => navigate("/services")}></i>
   <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
   <i className="fas fa-users active" title="Professionals"></i> 
   <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
@@ -50,19 +52,32 @@ const SalonProfessionalsV2 = () => {
   };
 
   const fetchProfessionals = async () => {
-    if (!salon?.id) return;
+    const salonId = salon?.id || salon?._id;
+    if (!salonId) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/professionals/${salon.id}`);
+      setLoading(true);
+      setError("");
+      const res = await fetch(`${API_BASE_URL}/professionals/${salonId}`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+      }
       const data = await res.json();
       setProfessionals(data);
+      setLoading(false);
     } catch (err) {
       console.error("Fetch failed", err);
+      setError("Failed to load professionals. Please try again.");
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
     fetchProfessionals();
-  }, [salon?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salon?.id, salon?._id]);
 
   const handleInput = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -76,7 +91,7 @@ const SalonProfessionalsV2 = () => {
     form.append("gender", formData.gender);
     form.append("service", formData.service);
     form.append("serviceAvailability", formData.serviceAvailability);
-    form.append("salonId", salon.id);
+    form.append("salonId", salon?.id || salon?._id);
 
     // ICON saved as IMAGE to backend
     form.append("imageUrl", formData.selectedIcon);
@@ -193,8 +208,13 @@ const SalonProfessionalsV2 = () => {
           </button>
         </header>
 
+        {error && <div className="error-banner">{error}</div>}
         <div className="pro-v2-grid">
-          {filteredProfessionals.map((pro) => (
+          {loading ? (
+            <div className="pro-v2-card skeleton">Loading professionals...</div>
+          ) : filteredProfessionals.length === 0 ? (
+            <div className="pro-v2-card empty">No professionals found.</div>
+          ) : filteredProfessionals.map((pro) => (
             <div key={pro._id} className="pro-v2-card">
               <img
                 src={
