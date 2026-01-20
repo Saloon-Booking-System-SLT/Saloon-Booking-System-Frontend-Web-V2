@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
+import maleIcon from "../../Assets/man.png";
+import femaleIcon from "../../Assets/feee.png";
 import "./SalonProfessionals.css";
 import { API_BASE_URL } from "../../config/api";
-
-const maleIcon =
-  "https://cdn-icons-png.flaticon.com/512/921/921089.png";
-const femaleIcon =
-  "https://cdn-icons-png.flaticon.com/512/921/921071.png";
 
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();
@@ -165,31 +162,23 @@ const SalonProfessionalsV2 = () => {
     return genderMatch && availabilityMatch;
   });
 
+  const totalProfessionals = professionals.length;
+  const maleCount = professionals.filter((pro) => pro.gender === "Male").length;
+  const femaleCount = professionals.filter((pro) => pro.gender === "Female").length;
+  const bothAvailabilityCount = professionals.filter(
+    (pro) => pro.serviceAvailability === "Both"
+  ).length;
+
   return (
     <div className="pro-v2-container">
       <Sidebar />
 
       <div className="pro-v2-main">
-        <div className="filter-section">
-          <h3>Filters</h3>
-          <div className="filter-controls">
-            <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
-              <option value="All">Filter by Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-
-            <select value={availabilityFilter} onChange={(e) => setAvailabilityFilter(e.target.value)}>
-              <option value="All">Filter by Service Availability</option>
-              <option value="Male">Male Only</option>
-              <option value="Female">Female Only</option>
-              <option value="Both">Both</option>
-            </select>
-          </div>
-        </div>
-
         <header className="pro-v2-header">
-          <h1>Salon Professionals</h1>
+          <div className="pro-v2-header-content">
+            <h1 className="pro-v2-header-title">Salon Professionals</h1>
+            <div className="pro-v2-header-decoration"></div>
+          </div>
           <button
             className="pro-v2-add-btn"
             onClick={() => {
@@ -208,114 +197,259 @@ const SalonProfessionalsV2 = () => {
           </button>
         </header>
 
+        <div className="pro-v2-stats">
+          <div className="pro-v2-stat-card">
+            <div className="pro-v2-stat-icon total">
+              <i className="fas fa-users"></i>
+            </div>
+            <div className="pro-v2-stat-copy">
+              <span className="pro-v2-stat-label">Total Professionals</span>
+              <span className="pro-v2-stat-value">{totalProfessionals}</span>
+            </div>
+          </div>
+
+          <div className="pro-v2-stat-card">
+            <div className="pro-v2-stat-icon male">
+              <i className="fas fa-mars"></i>
+            </div>
+            <div className="pro-v2-stat-copy">
+              <span className="pro-v2-stat-label">Male Specialists</span>
+              <span className="pro-v2-stat-value">{maleCount}</span>
+            </div>
+          </div>
+
+          <div className="pro-v2-stat-card">
+            <div className="pro-v2-stat-icon female">
+              <i className="fas fa-venus"></i>
+            </div>
+            <div className="pro-v2-stat-copy">
+              <span className="pro-v2-stat-label">Female Specialists</span>
+              <span className="pro-v2-stat-value">{femaleCount}</span>
+            </div>
+          </div>
+
+          <div className="pro-v2-stat-card">
+            <div className="pro-v2-stat-icon both">
+              <i className="fas fa-user-friends"></i>
+            </div>
+            <div className="pro-v2-stat-copy">
+              <span className="pro-v2-stat-label">Serving Both</span>
+              <span className="pro-v2-stat-value">{bothAvailabilityCount}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <h3>Filters</h3>
+          <div className="filter-controls">
+            <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
+              <option value="All">Filter by Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+
+            <select value={availabilityFilter} onChange={(e) => setAvailabilityFilter(e.target.value)}>
+              <option value="All">Filter by Service Availability</option>
+              <option value="Male">Male Only</option>
+              <option value="Female">Female Only</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+        </div>
+
         {error && <div className="error-banner">{error}</div>}
         <div className="pro-v2-grid">
           {loading ? (
             <div className="pro-v2-card skeleton">Loading professionals...</div>
           ) : filteredProfessionals.length === 0 ? (
             <div className="pro-v2-card empty">No professionals found.</div>
-          ) : filteredProfessionals.map((pro) => (
-            <div key={pro._id} className="pro-v2-card">
-              <img
-                src={
-                  pro.image
-                    ? `data:image/jpeg;base64,${pro.image}`
-                    : pro.gender === "Male"
-                    ? maleIcon
-                    : femaleIcon
-                }
-                alt={pro.name}
-                className="pro-v2-image"
-              />
+          ) :
+          filteredProfessionals.map((pro) => {
+            const genderBadgeClass =
+              pro.gender === "Male"
+                ? "badge-male"
+                : pro.gender === "Female"
+                ? "badge-female"
+                : "badge-muted";
+            const genderIconClass =
+              pro.gender === "Male"
+                ? "fa-mars"
+                : pro.gender === "Female"
+                ? "fa-venus"
+                : "fa-user";
+            const genderLabel = pro.gender || "Not specified";
+            const serviceLabel = pro.service || "Service not set";
+            const availabilityLabel = pro.serviceAvailability || "Not set";
+            const profileFallback =
+              pro.gender === "Male"
+                ? maleIcon
+                : pro.gender === "Female"
+                ? femaleIcon
+                : maleIcon;
 
-              <div className="pro-v2-info">
-                <strong>{pro.name}</strong>
-                <p>Gender: {pro.gender}</p>
-                <p>Service: {pro.service}</p>
-                <p>Service Availability: {pro.serviceAvailability}</p>
+            return (
+              <div key={pro._id} className="pro-v2-card">
+                <div className="pro-v2-card-media">
+                  <img
+                    src={pro.image ? `data:image/jpeg;base64,${pro.image}` : profileFallback}
+                    alt={pro.name}
+                    className="pro-v2-image"
+                  />
+                </div>
+                <div className="pro-v2-info">
+                  <div className="pro-v2-info-header">
+                    <strong>{pro.name}</strong>
+                    <span className="pro-v2-service-tag">
+                      <i className="fas fa-cut"></i>
+                      {serviceLabel}
+                    </span>
+                  </div>
 
-                {pro.certificate ? (
-                  <button className="pro-v2-cert-btn" onClick={() => handleViewCertificate(pro.certificate)}>
-                    View Certificate
-                  </button>
-                ) : (
-                  <p className="no-cert">No Certificate</p>
-                )}
+                  <div className="pro-v2-badge-row">
+                    <span className={`pro-v2-badge ${genderBadgeClass}`}>
+                      <i className={`fas ${genderIconClass}`}></i>
+                      {genderLabel}
+                    </span>
+                    <span className="pro-v2-badge badge-availability">
+                      <i className="fas fa-user-check"></i>
+                      {availabilityLabel}
+                    </span>
+                  </div>
 
-                <div className="pro-v2-actions">
-                  <button onClick={() => handleEdit(pro)}>Edit</button>
-                  <button onClick={() => handleDelete(pro._id)}>Delete</button>
+                  {pro.certificate ? (
+                    <button
+                      className="pro-v2-cert-btn"
+                      onClick={() => handleViewCertificate(pro.certificate)}
+                    >
+                      <i className="fas fa-file-alt"></i>
+                      View Certificate
+                    </button>
+                  ) : (
+                    <span className="pro-v2-badge badge-muted">
+                      <i className="fas fa-info-circle"></i>
+                      No Certificate
+                    </span>
+                  )}
+
+                  <div className="pro-v2-actions">
+                    <button onClick={() => handleEdit(pro)}>Edit</button>
+                    <button onClick={() => handleDelete(pro._id)}>Delete</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {showPopup && (
         <div className="pro-v2-popup-overlay">
           <div className="pro-v2-popup">
-            <h2>{editingProfessional ? "Edit Professional" : "Add Professional"}</h2>
-
-            <input name="name" value={formData.name} onChange={handleInput} placeholder="Name" />
-
-            {/* Gender Selector with Icons */}
-            <div className="gender-icon-section">
-              <label>Select Gender</label>
-              <div className="gender-options">
-                <label className="gender-card">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="Male"
-                    checked={formData.gender === "Male"}
-                    onChange={() =>
-                      setFormData({
-                        ...formData,
-                        gender: "Male",
-                        selectedIcon: maleIcon,
-                      })
-                    }
-                  />
-                  <img src={maleIcon} alt="Male" className="gender-icon" />
-                  <p>Male</p>
-                </label>
-
-                <label className="gender-card">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="Female"
-                    checked={formData.gender === "Female"}
-                    onChange={() =>
-                      setFormData({
-                        ...formData,
-                        gender: "Female",
-                        selectedIcon: femaleIcon,
-                      })
-                    }
-                  />
-                  <img src={femaleIcon} alt="Female" className="gender-icon" />
-                  <p>Female</p>
-                </label>
-              </div>
+            <div className="pro-v2-popup-header">
+              <h2>{editingProfessional ? "Edit Professional" : "Add Professional"}</h2>
+              <p className="pro-v2-popup-subtitle">
+                Keep your salon roster vibrant by sharing a few quick details.
+              </p>
             </div>
 
-            <input
-              name="service"
-              value={formData.service}
-              onChange={handleInput}
-              placeholder="Service Provided"
-            />
+            <div className="pro-v2-form-grid">
+              <div className="pro-v2-field">
+                <label htmlFor="pro-name">Professional Name</label>
+                <input
+                  id="pro-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInput}
+                  placeholder="E.g. Alex Perera"
+                />
+              </div>
 
-            <select name="serviceAvailability" value={formData.serviceAvailability} onChange={handleInput}>
-              <option value="Male">Male Only</option>
-              <option value="Female">Female Only</option>
-              <option value="Both">Both</option>
-            </select>
+              <div className="pro-v2-field">
+                <label htmlFor="pro-service">Primary Service</label>
+                <input
+                  id="pro-service"
+                  name="service"
+                  value={formData.service}
+                  onChange={handleInput}
+                  placeholder="E.g. Hair Coloring"
+                />
+              </div>
 
-            <label>Upload Certificate</label>
-            <input type="file" onChange={(e) => setFileCertificate(e.target.files[0])} />
+              <div className="pro-v2-field">
+                <label htmlFor="pro-availability">Service Availability</label>
+                <select
+                  id="pro-availability"
+                  name="serviceAvailability"
+                  value={formData.serviceAvailability}
+                  onChange={handleInput}
+                >
+                  <option value="Male">Male Only</option>
+                  <option value="Female">Female Only</option>
+                  <option value="Both">Both</option>
+                </select>
+              </div>
+
+              <div className="pro-v2-field pro-v2-field--full">
+                <div className="gender-icon-section">
+                  <span className="pro-v2-section-title">Select Gender</span>
+                  <div className="gender-options">
+                    <label
+                      className={`gender-card ${formData.gender === "Male" ? "selected" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="Male"
+                        checked={formData.gender === "Male"}
+                        onChange={() =>
+                          setFormData({
+                            ...formData,
+                            gender: "Male",
+                            selectedIcon: maleIcon,
+                          })
+                        }
+                      />
+                      <img src={maleIcon} alt="Male" className="gender-icon" />
+                      <span>Male</span>
+                    </label>
+
+                    <label
+                      className={`gender-card ${formData.gender === "Female" ? "selected" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="Female"
+                        checked={formData.gender === "Female"}
+                        onChange={() =>
+                          setFormData({
+                            ...formData,
+                            gender: "Female",
+                            selectedIcon: femaleIcon,
+                          })
+                        }
+                      />
+                      <img src={femaleIcon} alt="Female" className="gender-icon" />
+                      <span>Female</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pro-v2-field pro-v2-field--full">
+                <label htmlFor="pro-certificate">Upload Certificate (optional)</label>
+                <div className="pro-v2-file-input">
+                  <input
+                    id="pro-certificate"
+                    type="file"
+                    onChange={(e) => setFileCertificate(e.target.files[0])}
+                  />
+                  <span className="pro-v2-field-note">
+                    Certificates build client trust and highlight professional expertise.
+                  </span>
+                </div>
+              </div>
+            </div>
 
             <div className="pro-v2-popup-actions">
               <button className="pro-v2-save-btn" onClick={handleAddOrUpdate}>

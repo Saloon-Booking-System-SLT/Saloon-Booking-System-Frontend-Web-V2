@@ -4,19 +4,25 @@ import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
 const ApprovedOwnerRoute = ({ children }) => {
-  const { user } = useAuth();
-  
-  // First check if user is authenticated and is an owner
-  if (!user || user.role !== 'owner') {
-    return <Navigate to="/OwnerLogin" replace />;
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
   }
-  
-  // If owner is not approved, redirect to dashboard where they'll see the pending message
-  if (user.approvalStatus !== 'approved') {
+
+  if (user?.role === 'owner' && user.approvalStatus !== 'approved') {
     return <Navigate to="/dashboard" replace />;
   }
-  
-  // If approved, show the protected content
+
   return <ProtectedRoute requiredRole="owner">{children}</ProtectedRoute>;
 };
 
