@@ -288,52 +288,99 @@ const SalonProfessionalsV2 = () => {
                 : maleIcon;
 
             return (
-              <div key={pro._id} className="pro-v2-card">
-                <div className="pro-v2-card-media">
-                  <img
-                    src={pro.image ? `data:image/jpeg;base64,${pro.image}` : profileFallback}
-                    alt={pro.name}
-                    className="pro-v2-image"
-                  />
+              <div key={pro._id} className="pro-v2-card-enhanced">
+                <div className="pro-v2-card-header">
+                  <div className="pro-v2-professional-avatar">
+                    <div className="pro-v2-avatar-container">
+                      <img
+                        src={pro.image ? `data:image/jpeg;base64,${pro.image}` : profileFallback}
+                        alt={pro.name}
+                        className="pro-v2-avatar"
+                      />
+                      <div className="pro-v2-status-indicator active"></div>
+                    </div>
+                    <div className="pro-v2-rating-badge">
+                      <i className="fas fa-star"></i>
+                      <span>4.8</span>
+                    </div>
+                  </div>
+                  <div className="pro-v2-header-info">
+                    <h3 className="pro-v2-name">{pro.name}</h3>
+                    <div className="pro-v2-title-row">
+                      <span className="pro-v2-primary-service">
+                        <i className="fas fa-scissors"></i>
+                        {serviceLabel} Specialist
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="pro-v2-info">
-                  <div className="pro-v2-info-header">
-                    <strong>{pro.name}</strong>
-                    <span className="pro-v2-service-tag">
-                      <i className="fas fa-cut"></i>
-                      {serviceLabel}
-                    </span>
+
+                <div className="pro-v2-professional-details">
+                  <div className="pro-v2-detail-section">
+                    <div className="pro-v2-detail-row">
+                      <div className="pro-v2-detail-item">
+                        <i className={`fas ${genderIconClass} pro-v2-detail-icon`}></i>
+                        <div className="pro-v2-detail-content">
+                          <span className="pro-v2-detail-label">Gender</span>
+                          <span className={`pro-v2-detail-value ${genderBadgeClass}`}>{genderLabel}</span>
+                        </div>
+                      </div>
+                      <div className="pro-v2-detail-item">
+                        <i className="fas fa-users pro-v2-detail-icon"></i>
+                        <div className="pro-v2-detail-content">
+                          <span className="pro-v2-detail-label">Serves</span>
+                          <span className="pro-v2-detail-value badge-availability">{availabilityLabel}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="pro-v2-badge-row">
-                    <span className={`pro-v2-badge ${genderBadgeClass}`}>
-                      <i className={`fas ${genderIconClass}`}></i>
-                      {genderLabel}
-                    </span>
-                    <span className="pro-v2-badge badge-availability">
-                      <i className="fas fa-user-check"></i>
-                      {availabilityLabel}
-                    </span>
+                  <div className="pro-v2-certification-section">
+                    {pro.certificate ? (
+                      <div className="pro-v2-cert-verified" onClick={() => handleViewCertificate(pro.certificate)}>
+                        <div className="pro-v2-cert-icon">
+                          <i className="fas fa-certificate"></i>
+                        </div>
+                        <div className="pro-v2-cert-info">
+                          <span className="pro-v2-cert-title">Verified Professional</span>
+                          <span className="pro-v2-cert-subtitle">Certificate available</span>
+                        </div>
+                        <i className="fas fa-external-link-alt pro-v2-cert-link"></i>
+                      </div>
+                    ) : (
+                      <div className="pro-v2-cert-pending">
+                        <div className="pro-v2-cert-icon">
+                          <i className="fas fa-clock"></i>
+                        </div>
+                        <div className="pro-v2-cert-info">
+                          <span className="pro-v2-cert-title">Pending Verification</span>
+                          <span className="pro-v2-cert-subtitle">Certificate not uploaded</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  {pro.certificate ? (
-                    <button
-                      className="pro-v2-cert-btn"
-                      onClick={() => handleViewCertificate(pro.certificate)}
-                    >
-                      <i className="fas fa-file-alt"></i>
-                      View Certificate
-                    </button>
-                  ) : (
-                    <span className="pro-v2-badge badge-muted">
-                      <i className="fas fa-info-circle"></i>
-                      No Certificate
-                    </span>
-                  )}
-
+                <div className="pro-v2-card-footer">
+                  <div className="pro-v2-quick-stats">
+                    <div className="pro-v2-stat">
+                      <i className="fas fa-thumbs-up"></i>
+                      <span>98% Rating</span>
+                    </div>
+                    <div className="pro-v2-stat">
+                      <i className="fas fa-clock"></i>
+                      <span>Available</span>
+                    </div>
+                  </div>
                   <div className="pro-v2-actions">
-                    <button onClick={() => handleEdit(pro)}>Edit</button>
-                    <button onClick={() => handleDelete(pro._id)}>Delete</button>
+                    <button className="pro-v2-action-btn pro-v2-edit-btn" onClick={() => handleEdit(pro)}>
+                      <i className="fas fa-edit"></i>
+                      Edit
+                    </button>
+                    <button className="pro-v2-action-btn pro-v2-delete-btn" onClick={() => handleDelete(pro._id)}>
+                      <i className="fas fa-trash-alt"></i>
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
