@@ -1,0 +1,442 @@
+/* CreateAccount.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+}
+
+.create-account-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.form-section {
+  flex: 1;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #f5faff;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.create-account-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #0069B4;
+  margin-bottom: 40px;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.create-account-form {
+  width: 100%;
+  max-width: 600px; /* Increased from 450px */
+  background-color: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 24px; /* Slightly more spacing */
+  width: 100%;
+}
+
+.form-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 20px; /* Increased padding for larger fields */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px; /* Slightly larger font */
+  color: #333;
+  background-color: white;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.form-input::placeholder {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0069B4;
+  box-shadow: 0 0 0 3px rgba(0, 105, 180, 0.1);
+}
+
+.form-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.input-error {
+  border-color: #dc3545;
+}
+
+.input-error:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.error-message {
+  display: block;
+  color: #dc3545;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.terms-group {
+  margin: 30px 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  cursor: pointer;
+  accent-color: #0069B4;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.checkbox-wrapper input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.terms-label {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.terms-link {
+  color: #0069B4;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+.checkbox-error {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.create-account-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #0069B4;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+.create-account-btn:hover:not(:disabled) {
+  background-color: #0056a3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 105, 180, 0.25);
+}
+
+.create-account-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.login-link {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  margin-top: 25px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.sign-in-link {
+  color: #0069B4;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 5px;
+  font-size: 16px;
+}
+
+.sign-in-link:hover {
+  text-decoration: underline;
+}
+
+.image-section {
+  flex: 1;
+  background: linear-gradient(to right, #eaf5ff, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-image {
+  width: 85%;
+  height: 85%;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .create-account-form {
+    max-width: 550px;
+    padding: 35px;
+  }
+  
+  .create-account-title {
+    font-size: 32px;
+    max-width: 550px;
+  }
+  
+  .login-link {
+    max-width: 550px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .form-section {
+    padding: 50px 30px;
+  }
+  
+  .image-section {
+    padding: 30px;
+  }
+  
+  .create-account-form {
+    max-width: 500px;
+    padding: 30px;
+  }
+  
+  .create-account-title {
+    font-size: 30px;
+    max-width: 500px;
+  }
+  
+  .login-link {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .create-account-container {
+    flex-direction: column;
+  }
+  
+  .image-section {
+    display: none;
+  }
+  
+  .form-section {
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  
+  .create-account-form {
+    max-width: 100%;
+    padding: 30px 25px;
+  }
+  
+  .create-account-title {
+    font-size: 28px;
+    margin-bottom: 30px;
+    max-width: 100%;
+  }
+  
+  .login-link {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section {
+    padding: 30px 15px;
+  }
+  
+  .create-account-title {
+    font-size: 26px;
+    margin-bottom: 25px;
+  }
+  
+  .create-account-form {
+    padding: 25px 20px;
+  }
+  
+  .form-input {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+  
+  .create-account-btn {
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  .terms-label {
+    font-size: 14px;
+  }
+  
+  .login-link {
+    font-size: 15px;
+  }
+  
+  .sign-in-link {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .form-section {
+    padding: 20px 12px;
+  }
+  
+  .create-account-title {
+    font-size: 24px;
+  }
+  
+  .create-account-form {
+    padding: 20px 15px;
+  }
+  
+  .form-input {
+    padding: 12px 14px;
+  }
+}
+
+/* Alerts */
+.success-alert {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.error-alert {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.alert-icon {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.success-alert .alert-icon {
+  color: #28a745;
+}
+
+.error-alert .alert-icon {
+  color: #dc3545;
+}
+
+.alert-message {
+  flex: 1;
+}
+
+.alert-message strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.alert-message p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Disable form when successful */
+.create-account-form:has(~ .success-alert) .form-input,
+.create-account-form:has(~ .success-alert) .checkbox-wrapper input,
+.create-account-form:has(~ .success-alert) .create-account-btn {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .alert-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .alert-icon {
+    align-self: center;
+  }
+}

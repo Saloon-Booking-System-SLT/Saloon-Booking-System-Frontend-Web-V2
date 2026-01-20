@@ -1,10 +1,78 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import "./BookAnAppointment.css";
+import logo from '../../Assets/logo.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
   'https://saloon-booking-system-backend-v2.onrender.com';
+
+// ✅ Sidebar Component (same as dashboard)
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine active item based on current path
+  const getActiveItem = () => {
+    if (location.pathname === '/dashboard') return 'dashboard';
+    if (location.pathname === '/calendar') return 'calendar';
+    if (location.pathname === '/services') return 'services';
+    if (location.pathname === '/feedbacks') return 'feedbacks';
+    if (location.pathname === '/professionals') return 'professionals';
+    if (location.pathname === '/book-appointment') return 'book-appointment';
+    if (location.pathname === '/timeslots') return 'timeslots';
+    return 'dashboard';
+  };
+
+  const [activeItem, setActiveItem] = useState(getActiveItem());
+
+  const menuItems = [
+    { icon: 'fas fa-home', path: '/dashboard', key: 'dashboard', title: 'Home' },
+    { icon: 'fas fa-calendar-alt', path: '/calendar', key: 'calendar', title: 'Calendar' },
+    { icon: 'fas fa-cut', path: '/services', key: 'services', title: 'Services' },
+    { icon: 'fas fa-comment-alt', path: '/feedbacks', key: 'feedbacks', title: 'Feedbacks' },
+    { icon: 'fas fa-users', path: '/professionals', key: 'professionals', title: 'Professionals' },
+    { icon: 'fas fa-calendar-check', path: '/book-appointment', key: 'book-appointment', title: 'Book An Appointment' },
+    { icon: 'fas fa-clock', path: '/timeslots', key: 'timeslots', title: 'Time Slots' },
+  ];
+
+  const handleNavigation = (path, key) => {
+    setActiveItem(key);
+    navigate(path);
+  };
+
+  return (
+    <aside className="modern-sidebar">
+      {/* Logo */}
+      <img src={logo} alt="Brand Logo" className="modern-logo" />
+      
+      {/* Navigation Menu - Icon Only */}
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
+          <div
+            key={item.key}
+            className={`nav-icon ${activeItem === item.key ? 'active' : ''}`}
+            onClick={() => handleNavigation(item.path, item.key)}
+            title={item.title}
+          >
+            <i className={item.icon}></i>
+          </div>
+        ))}
+      </nav>
+
+      {/* Sidebar Footer */}
+      <div className="sidebar-footer">
+        <div 
+          className="nav-icon" 
+          onClick={() => navigate('/help')}
+          title="Help & Support"
+        >
+          <i className="fas fa-question-circle"></i>
+        </div>
+      </div>
+    </aside>
+  );
+};
 
 const BookAnAppointment = () => {
   const location = useLocation();
@@ -282,7 +350,7 @@ const BookAnAppointment = () => {
 
   const handleBack = () => {
     if (isOwnerMode) {
-      navigate("/owner/dashboard");
+      navigate("/dashboard");
     } else {
       navigate(-1);
     }
@@ -292,12 +360,31 @@ const BookAnAppointment = () => {
     navigate("/login");
   };
 
+  // ✅ Logout function for owner mode
+  const handleLogout = () => {
+    const confirmLogout = window.confirm("Do you really want to logout?");
+    if (confirmLogout) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
+      navigate("/OwnerLogin");
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
-      <div className="loading-fullscreen">
-        <div className="spinner"></div>
-        <p>Loading salon information...</p>
+      <div className="modern-full-page">
+        <div className="modern-layout">
+          <Sidebar />
+          <main className="modern-main-content">
+            <div className="loading-fullscreen">
+              <div className="spinner"></div>
+              <p>Loading salon information...</p>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -305,29 +392,36 @@ const BookAnAppointment = () => {
   // Show error if no salon or other errors
   if (error || !salon) {
     return (
-      <div className="error-fullscreen">
-        <div className="error-icon">⚠️</div>
-        <h2>{error || "No Salon Found"}</h2>
-        <p>
-          {isOwnerMode 
-            ? "Please make sure you have an approved salon registered to your account."
-            : "Please select a salon first to book an appointment."}
-        </p>
-        <div className="error-actions">
-          <button 
-            className="back-button"
-            onClick={handleBack}
-          >
-            {isOwnerMode ? "Go to Dashboard" : "Go Back"}
-          </button>
-          {!isOwnerMode && !localStorage.getItem("token") && (
-            <button 
-              className="login-button"
-              onClick={handleLogin}
-            >
-              Login
-            </button>
-          )}
+      <div className="modern-full-page">
+        <div className="modern-layout">
+          <Sidebar />
+          <main className="modern-main-content">
+            <div className="error-fullscreen">
+              <div className="error-icon">⚠️</div>
+              <h2>{error || "No Salon Found"}</h2>
+              <p>
+                {isOwnerMode 
+                  ? "Please make sure you have an approved salon registered to your account."
+                  : "Please select a salon first to book an appointment."}
+              </p>
+              <div className="error-actions">
+                <button 
+                  className="back-button"
+                  onClick={handleBack}
+                >
+                  {isOwnerMode ? "Go to Dashboard" : "Go Back"}
+                </button>
+                {!isOwnerMode && !localStorage.getItem("token") && (
+                  <button 
+                    className="login-button"
+                    onClick={handleLogin}
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -336,224 +430,281 @@ const BookAnAppointment = () => {
   const isUnisex = salon?.salonType?.toLowerCase() === "unisex";
 
   return (
-    <div className="select-services-container">
-      {/* Owner mode indicator */}
-      {isOwnerMode && (
-        <div className="owner-mode-banner">
-          <span className="owner-badge">👤 Owner Mode</span>
-          <span>Booking for: <strong>{salon.name}</strong></span>
-          <span className="user-info">
-            Logged in as: {localStorage.getItem("userEmail") || "Owner"}
-          </span>
-        </div>
-      )}
+    <div className="modern-full-page">
+      <div className="modern-layout">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Customer/Guest mode indicator */}
-      {!isOwnerMode && userRole && (
-        <div className={`user-mode-banner ${userRole}`}>
-          <span className="user-badge">
-            {userRole === "customer" ? "🛍️ Customer" : "👋 Guest"} Mode
-          </span>
-          <span>Booking at: <strong>{salon.name}</strong></span>
-          {userRole === "customer" && (
-            <span className="user-info">
-              Logged in as: {localStorage.getItem("userEmail") || "Customer"}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="left-column">
-        {/* Customer Information Form */}
-        <div className="customer-info-form">
-          <h3 className="form-title">
-            {isOwnerMode ? "📋 Walk-in Customer Details" : "📅 Book An Appointment"}
-          </h3>
-          
-          <div className="form-group">
-            <label className="form-label">Customer Name *</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter customer name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              autoFocus
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Phone Number / Email *</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter phone number or email"
-              value={contactInfo}
-              onChange={(e) => setContactInfo(e.target.value)}
-            />
-          </div>
-          
-          {!isOwnerMode && userRole === "guest" && (
-            <div className="form-checkbox">
-              <input
-                type="checkbox"
-                id="createAccount"
-                checked={createAccount}
-                onChange={(e) => setCreateAccount(e.target.checked)}
-              />
-              <label htmlFor="createAccount" className="checkbox-label">
-                Create an account for faster bookings
-              </label>
+        {/* Main Content */}
+        <main className="modern-main-content">
+          {/* Header (similar to dashboard) */}
+          <header className="modern-header">
+            <div className="header-left">
+              <h2>Book An Appointment</h2>
+              <p className="welcome-message">
+                {isOwnerMode 
+                  ? `Booking for walk-in customer at ${salon.name}`
+                  : `Booking appointment at ${salon.name}`
+                }
+              </p>
             </div>
-          )}
-        </div>
+            
+            <div className="modern-header-right">
+              {/* Profile section for owner mode */}
+              {isOwnerMode && salon && (
+                <Link to={`/profile/${salon._id}`} className="profile-link">
+                  <img
+                    src={
+                      salon.image
+                        ? salon.image.startsWith("http")
+                          ? salon.image
+                          : `${API_BASE_URL}/uploads/${salon.image}`
+                        : "https://ui-avatars.com/api/?name=User&background=random&size=40"
+                    }
+                    alt="Profile"
+                    className="modern-profile"
+                  />
+                  <span className="profile-name">{salon.name}</span>
+                </Link>
+              )}
 
-        <p className="breadcrumb">
-          <b>Services</b> &gt; Professional &gt; Time &gt; Confirm
-        </p>
-
-        <div className="heading-with-search">
-          <h2>Select Services</h2>
-          <input
-            type="text"
-            className="service-search-input"
-            placeholder="🔍 Search service..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* Gender Switch for Unisex salons */}
-        {isUnisex && (
-          <div className="gender-switch">
-            <button
-              className={selectedGender === "Male" ? "active" : ""}
-              onClick={() => setSelectedGender("Male")}
-            >
-              Male 👨‍🦱
-            </button>
-            <button
-              className={selectedGender === "Female" ? "active" : ""}
-              onClick={() => setSelectedGender("Female")}
-            >
-              Female 👩‍🦰
-            </button>
-          </div>
-        )}
-
-        {/* Services List */}
-        <div className="select-services-list">
-          {filteredServices.length === 0 ? (
-            <div className="no-services-message">
-              {services.length === 0 ? (
-                <p>No services available for this salon.</p>
-              ) : (
-                <div>
-                  <p>No services match your search.</p>
-                  <button 
-                    onClick={() => setSearchQuery("")}
-                    className="clear-search-button"
-                  >
-                    Clear Search
-                  </button>
-                </div>
+              {/* Logout Button for owner mode */}
+              {isOwnerMode && (
+                <button
+                  className="logout-btn"
+                  onClick={handleLogout}
+                  title="Logout"
+                >
+                  <i className="fas fa-sign-out-alt"></i>
+                  Logout
+                </button>
               )}
             </div>
-          ) : (
-            filteredServices.map((service) => (
-              <div
-                key={service._id}
-                className={`select-services-card ${
-                  selectedServiceIds.includes(service._id) ? "selected" : ""
-                }`}
-                onClick={() => toggleService(service._id)}
-              >
-                <img
-                  src={
-                    service.image
-                      ? service.image.startsWith("http")
-                        ? service.image
-                        : `${API_BASE_URL}/uploads/${service.image}`
-                      : "https://via.placeholder.com/100"
-                  }
-                  alt={service.name}
-                  className="select-services-image"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/100";
-                  }}
-                />
+          </header>
 
-                <div className="select-services-details">
-                  <h4>{service.name}</h4>
-                  <p>⏱️ {service.duration}</p>
-                  <p className="price">LKR {service.price}</p>
+          {/* Main booking container - FIXED LAYOUT */}
+          <div className="booking-main-container">
+            {/* Owner mode banner - Moved here to be inside content area */}
+            {isOwnerMode && (
+              <div className="owner-mode-content-banner">
+                <span className="owner-badge">👤 Owner Mode</span>
+                <span>Booking for: <strong>{salon.name}</strong></span>
+                <span className="user-info">
+                  Logged in as: {localStorage.getItem("userEmail") || "Owner"}
+                </span>
+              </div>
+            )}
+
+            {/* Customer/Guest mode indicator */}
+            {!isOwnerMode && userRole && (
+              <div className={`user-mode-content-banner ${userRole}`}>
+                <span className="user-badge">
+                  {userRole === "customer" ? "🛍️ Customer" : "👋 Guest"} Mode
+                </span>
+                <span>Booking at: <strong>{salon.name}</strong></span>
+                {userRole === "customer" && (
+                  <span className="user-info">
+                    Logged in as: {localStorage.getItem("userEmail") || "Customer"}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="booking-content-wrapper">
+              <div className="booking-left-panel">
+                {/* Customer Information Form */}
+                <div className="customer-info-form">
+                  <h3 className="form-title">
+                    {isOwnerMode ? "📋 Walk-in Customer Details" : "📅 Book An Appointment"}
+                  </h3>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Customer Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter customer name"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Phone Number / Email *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter phone number or email"
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                    />
+                  </div>
+                  
+                  {!isOwnerMode && userRole === "guest" && (
+                    <div className="form-checkbox">
+                      <input
+                        type="checkbox"
+                        id="createAccount"
+                        checked={createAccount}
+                        onChange={(e) => setCreateAccount(e.target.checked)}
+                      />
+                      <label htmlFor="createAccount" className="checkbox-label">
+                        Create an account for faster bookings
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <div className="checkbox-icon">
-                  {selectedServiceIds.includes(service._id) ? "✔" : "☐"}
+
+                <p className="breadcrumb">
+                  <b>Services</b> &gt; Professional &gt; Time &gt; Confirm
+                </p>
+
+                <div className="heading-with-search">
+                  <h2>Select Services</h2>
+                  <input
+                    type="text"
+                    className="service-search-input"
+                    placeholder="🔍 Search service..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                {/* Gender Switch for Unisex salons */}
+                {isUnisex && (
+                  <div className="gender-switch">
+                    <button
+                      className={selectedGender === "Male" ? "active" : ""}
+                      onClick={() => setSelectedGender("Male")}
+                    >
+                      Male 👨‍🦱
+                    </button>
+                    <button
+                      className={selectedGender === "Female" ? "active" : ""}
+                      onClick={() => setSelectedGender("Female")}
+                    >
+                      Female 👩‍🦰
+                    </button>
+                  </div>
+                )}
+
+                {/* Services List */}
+                <div className="select-services-list">
+                  {filteredServices.length === 0 ? (
+                    <div className="no-services-message">
+                      {services.length === 0 ? (
+                        <p>No services available for this salon.</p>
+                      ) : (
+                        <div>
+                          <p>No services match your search.</p>
+                          <button 
+                            onClick={() => setSearchQuery("")}
+                            className="clear-search-button"
+                          >
+                            Clear Search
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    filteredServices.map((service) => (
+                      <div
+                        key={service._id}
+                        className={`select-services-card ${
+                          selectedServiceIds.includes(service._id) ? "selected" : ""
+                        }`}
+                        onClick={() => toggleService(service._id)}
+                      >
+                        <img
+                          src={
+                            service.image
+                              ? service.image.startsWith("http")
+                                ? service.image
+                                : `${API_BASE_URL}/uploads/${service.image}`
+                              : "https://via.placeholder.com/100"
+                          }
+                          alt={service.name}
+                          className="select-services-image"
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/100";
+                          }}
+                        />
+
+                        <div className="select-services-details">
+                          <h4>{service.name}</h4>
+                          <p>⏱️ {service.duration}</p>
+                          <p className="price">LKR {service.price}</p>
+                        </div>
+                        <div className="checkbox-icon">
+                          {selectedServiceIds.includes(service._id) ? "✔" : "☐"}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
 
-      <div className="right-column">
-        <div className="summary-box">
-          <img
-            src={
-              salon?.image
-                ? salon.image.startsWith("http")
-                  ? salon.image
-                  : `${API_BASE_URL}/uploads/${salon.image}`
-                : "https://via.placeholder.com/150"
-            }
-            alt="Salon"
-            className="salon-image"
-            onError={(e) => {
-              e.target.src = "https://via.placeholder.com/150";
-            }}
-          />
+              <div className="booking-right-panel">
+                <div className="summary-box">
+                  <img
+                    src={
+                      salon?.image
+                        ? salon.image.startsWith("http")
+                          ? salon.image
+                          : `${API_BASE_URL}/uploads/${salon.image}`
+                        : "https://via.placeholder.com/150"
+                    }
+                    alt="Salon"
+                    className="salon-image"
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/150";
+                    }}
+                  />
 
-          <div className="salon-info">
-            <h4>{salon?.name}</h4>
-            <p>📍 {salon?.location}</p>
-            {isOwnerMode && (
-              <p className="owner-notice">
-                <small>💼 Booking for walk-in customer</small>
-              </p>
-            )}
+                  <div className="salon-info">
+                    <h4>{salon?.name}</h4>
+                    <p>📍 {salon?.location}</p>
+                    {isOwnerMode && (
+                      <p className="owner-notice">
+                        <small>💼 Booking for walk-in customer</small>
+                      </p>
+                    )}
 
-            {selectedServices.length === 0 ? (
-              <p className="no-selection">No service selected</p>
-            ) : (
-              <ul className="selected-list">
-                {selectedServices.map((s) => (
-                  <li key={s._id}>
-                    {s.name}
-                    <span className="service-price">LKR {s.price}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    {selectedServices.length === 0 ? (
+                      <p className="no-selection">No service selected</p>
+                    ) : (
+                      <ul className="selected-list">
+                        {selectedServices.map((s) => (
+                          <li key={s._id}>
+                            {s.name}
+                            <span className="service-price">LKR {s.price}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="total-section">
+                    <p>Total</p>
+                    <p>
+                      <strong>
+                        {totalPrice === 0 ? "Free" : `LKR ${totalPrice}`}
+                      </strong>
+                    </p>
+                  </div>
+                  <button
+                    className="continue-button"
+                    onClick={handleContinue}
+                    disabled={selectedServiceIds.length === 0 || isLoading}
+                  >
+                    Continue to Professional Selection →
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="total-section">
-            <p>Total</p>
-            <p>
-              <strong>
-                {totalPrice === 0 ? "Free" : `LKR ${totalPrice}`}
-              </strong>
-            </p>
-          </div>
-          <button
-            className="continue-button"
-            onClick={handleContinue}
-            disabled={selectedServiceIds.length === 0 || isLoading}
-          >
-            Continue to Professional Selection →
-          </button>
-          
-        </div>
+        </main>
       </div>
     </div>
   );
