@@ -25,31 +25,14 @@ const FinancialInsights = () => {
       try {
         setLoading(true);
         // TODO: Backend route /admin/payments needs to be deployed to Render
-        // Temporarily return empty array until backend is updated
+        // Temporarily using empty array until backend is updated
         setPayments([]);
-        setLoading(false);
-        return;
-        
-        const response = await axios.get('/admin/payments');
-        const data = response.data;
-        
-        // Transform data to match UI format
-        const transformedData = data.map(payment => ({
-          id: payment._id,
-          salon: payment.salonId?.name || payment.salon || 'Unknown',
-          date: payment.createdAt?.split('T')[0] || payment.paymentDate,
-          amount: payment.amount || 0,
-          method: payment.method || payment.paymentMethod || 'N/A',
-          status: payment.status || 'pending'
-        }));
-        
-        setPayments(transformedData);
         setError(null);
+        setLoading(false);
       } catch (err) {
         console.error('Failed to fetch payments:', err);
         setError('Failed to load payment data');
         setPayments([]);
-      } finally {
         setLoading(false);
       }
     };
