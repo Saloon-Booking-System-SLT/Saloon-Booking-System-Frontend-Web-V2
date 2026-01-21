@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
-import axios from '../../Api/axios';
 import './FinancialInsights.css';
 
 const FinancialInsights = () => {
