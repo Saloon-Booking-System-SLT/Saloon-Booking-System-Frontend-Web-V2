@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
+import axios from '../../Api/axios';
 import './FinancialInsights.css';
 
 const FinancialInsights = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const paymentsPerPage = 10;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // NEW: Add these filter states
   const [selectedSalon, setSelectedSalon] = useState('all');
@@ -13,105 +16,46 @@ const FinancialInsights = () => {
   const [maxAmount, setMaxAmount] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  // Sample payment data
-  const [payments] = useState([
-    {
-      id: 1,
-      salon: 'Glam Studio',
-      date: '2024-11-16',
-      amount: 1250.00,
-      method: 'Credit Card',
-      status: 'success'
-    },
-    {
-      id: 2,
-      salon: 'Nail Paradise',
-      date: '2024-11-16',
-      amount: 890.50,
-      method: 'PayPal',
-      status: 'success'
-    },
-    {
-      id: 3,
-      salon: 'Beauty Bar',
-      date: '2024-11-15',
-      amount: 1575.00,
-      method: 'Bank Transfer',
-      status: 'success'
-    },
-    {
-      id: 4,
-      salon: 'Spa Serenity',
-      date: '2024-11-15',
-      amount: 2100.00,
-      method: 'Credit Card',
-      status: 'pending'
-    },
-    {
-      id: 5,
-      salon: 'Style Studio',
-      date: '2024-11-14',
-      amount: 450.00,
-      method: 'Debit Card',
-      status: 'failed'
-    },
-    {
-      id: 6,
-      salon: 'Color Me Beautiful',
-      date: '2024-11-14',
-      amount: 1820.00,
-      method: 'Credit Card',
-      status: 'success'
-    },
-    {
-      id: 7,
-      salon: 'Luxury Spa & Salon',
-      date: '2024-11-13',
-      amount: 3200.00,
-      method: 'Bank Transfer',
-      status: 'success'
-    },
-    {
-      id: 8,
-      salon: 'Quick Cuts',
-      date: '2024-11-13',
-      amount: 320.00,
-      method: 'Credit Card',
-      status: 'failed'
-    },
-    {
-      id: 9,
-      salon: 'Glam Studio',
-      date: '2024-11-12',
-      amount: 1450.00,
-      method: 'PayPal',
-      status: 'success'
-    },
-    {
-      id: 10,
-      salon: 'Nail Paradise',
-      date: '2024-11-12',
-      amount: 950.00,
-      method: 'Credit Card',
-      status: 'success'
-    },
-    {
-      id: 11,
-      salon: 'Beauty Bar',
-      date: '2024-11-11',
-      amount: 1680.00,
-      method: 'Bank Transfer',
-      status: 'success'
-    },
-    {
-      id: 12,
-      salon: 'Spa Serenity',
-      date: '2024-11-11',
-      amount: 2250.00,
-      method: 'Credit Card',
-      status: 'success'
-    }
-  ]);
+  // Payments data from backend
+  const [payments, setPayments] = useState([]);
+
+  // Fetch payment data from backend
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        // TODO: Backend route /admin/payments needs to be deployed to Render
+        // Temporarily return empty array until backend is updated
+        setPayments([]);
+        setLoading(false);
+        return;
+        
+        const response = await axios.get('/admin/payments');
+        const data = response.data;
+        
+        // Transform data to match UI format
+        const transformedData = data.map(payment => ({
+          id: payment._id,
+          salon: payment.salonId?.name || payment.salon || 'Unknown',
+          date: payment.createdAt?.split('T')[0] || payment.paymentDate,
+          amount: payment.amount || 0,
+          method: payment.method || payment.paymentMethod || 'N/A',
+          status: payment.status || 'pending'
+        }));
+        
+        setPayments(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch payments:', err);
+        setError('Failed to load payment data');
+        setPayments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, []);
 
   // Failed payments
   const failedPayments = payments.filter(p => p.status === 'failed');

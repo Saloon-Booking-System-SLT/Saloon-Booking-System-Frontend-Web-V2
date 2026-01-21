@@ -1,114 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
+import axios from '../../Api/axios';
 import './PromotionsPage.css';
 
 const PromotionsPage = () => {
   const [activeTab, setActiveTab] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample promotions data
-  const [promotions] = useState([
-    {
-      _id: 1,
-      name: '50% Off First Visit',
-      salon: 'Glam Studio',
-      type: 'Discount',
-      status: 'active',
-      startDate: '2024-11-01',
-      endDate: '2024-12-31',
-      category: 'active'
-    },
-    {
-      _id: 2,
-      name: 'Buy 2 Get 1 Free Manicure',
-      salon: 'Nail Paradise',
-      type: 'Bundle',
-      status: 'active',
-      startDate: '2024-11-10',
-      endDate: '2024-12-15',
-      category: 'active'
-    },
-    {
-      _id: 3,
-      name: 'Holiday Special - 30% Off',
-      salon: 'Beauty Bar',
-      type: 'Seasonal',
-      status: 'active',
-      startDate: '2024-11-15',
-      endDate: '2024-12-25',
-      category: 'active'
-    },
-    {
-      _id: 4,
-      name: 'New Customer Welcome',
-      salon: 'Spa Serenity',
-      type: 'Referral',
-      status: 'active',
-      startDate: '2024-10-01',
-      endDate: '2024-12-31',
-      category: 'active'
-    },
-    {
-      _id: 5,
-      name: 'Summer Sale 2024',
-      salon: 'Color Me Beautiful',
-      type: 'Seasonal',
-      status: 'expired',
-      startDate: '2024-06-01',
-      endDate: '2024-08-31',
-      category: 'expired'
-    },
-    {
-      _id: 6,
-      name: 'Back to School Special',
-      salon: 'Style Studio',
-      type: 'Discount',
-      status: 'expired',
-      startDate: '2024-08-01',
-      endDate: '2024-09-30',
-      category: 'expired'
-    },
-    {
-      _id: 7,
-      name: 'Black Friday Mega Sale',
-      salon: 'Luxury Spa & Salon',
-      type: 'Flash Sale',
-      status: 'expired',
-      startDate: '2024-11-24',
-      endDate: '2024-11-25',
-      category: 'expired'
-    },
-    {
-      _id: 8,
-      name: 'New Year Special 2025',
-      salon: 'Glam Studio',
-      type: 'Seasonal',
-      status: 'scheduled',
-      startDate: '2024-12-26',
-      endDate: '2025-01-15',
-      category: 'scheduled'
-    },
-    {
-      _id: 9,
-      name: 'Valentine\'s Day Romance Package',
-      salon: 'Spa Serenity',
-      type: 'Bundle',
-      status: 'scheduled',
-      startDate: '2025-02-01',
-      endDate: '2025-02-14',
-      category: 'scheduled'
-    },
-    {
-      _id: 10,
-      name: 'Spring Renewal Sale',
-      salon: 'Beauty Bar',
-      type: 'Seasonal',
-      status: 'scheduled',
-      startDate: '2025-03-01',
-      endDate: '2025-04-30',
-      category: 'scheduled'
-    }
-  ]);
+  // Promotions data from backend
+  const [promotions, setPromotions] = useState([]);
+
+  // Fetch promotions from backend
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/promotions');
+        const data = response.data;
+        
+        // Transform data to match UI format
+        const transformedData = data.map(promo => ({
+          _id: promo._id,
+          name: promo.title || promo.name,
+          salon: promo.salonId?.name || 'All Salons',
+          type: promo.type || 'Discount',
+          status: new Date(promo.endDate) < new Date() ? 'expired' : 'active',
+          startDate: promo.startDate?.split('T')[0] || promo.startDate,
+          endDate: promo.endDate?.split('T')[0] || promo.endDate,
+          category: new Date(promo.endDate) < new Date() ? 'expired' : 'active',
+          description: promo.description,
+          discount: promo.discount
+        }));
+        
+        setPromotions(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch promotions:', err);
+        setError('Failed to load promotions');
+        setPromotions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotions();
+  }, []);
 
   // Filter promotions by tab and search
   const filteredPromotions = promotions.filter(promo => {
