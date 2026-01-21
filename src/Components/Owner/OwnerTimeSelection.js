@@ -106,6 +106,7 @@ const OwnerSelectTimePage = () => {
   const [selectedDates, setSelectedDates] = useState({});
   const [selectedTimes, setSelectedTimes] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [error] = useState(null);
   const [dates, setDates] = useState([]);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0); // Track current service being scheduled
 
