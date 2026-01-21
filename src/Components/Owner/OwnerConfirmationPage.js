@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, ArrowPathIcon, PencilIcon, SparklesIcon, BuildingStorefrontIcon, IdentificationIcon } from '@heroicons/react/24/outline';
+import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, SparklesIcon, BuildingStorefrontIcon, IdentificationIcon } from '@heroicons/react/24/outline';
 import "./OwnerConfirmationPage.css";
 import logo from '../../Assets/logo.png';
 
@@ -81,8 +81,6 @@ const Sidebar = () => {
 const OwnerConfirmationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("success"); // Owner bookings are immediate
   
   const {
     salonName = "Your Salon",
@@ -93,7 +91,6 @@ const OwnerConfirmationPage = () => {
     isGroupBooking = false,
     salonLocation = "",
     professionalName = "Any Professional",
-    services = [],
     salon,
     customerInfo = {},
     isReschedule = false,
