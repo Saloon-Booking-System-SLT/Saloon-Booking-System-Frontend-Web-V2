@@ -99,15 +99,13 @@ const OwnerSelectTimePage = () => {
     selectedServices,
     selectedProfessional,
     customerInfo,
-    isOwnerMode = true,
-    userRole = "owner"
+    isOwnerMode = true
   } = location.state || {};
   
   const [availableSlots, setAvailableSlots] = useState({});
   const [selectedDates, setSelectedDates] = useState({});
   const [selectedTimes, setSelectedTimes] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [dates, setDates] = useState([]);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0); // Track current service being scheduled
 
@@ -210,16 +208,16 @@ const OwnerSelectTimePage = () => {
   
   // Get slots for current service
   const slotKey = professionalId && selectedDate ? `${serviceName}-${professionalId}-${selectedDate}` : null;
-  const rawSlots = slotKey ? availableSlots[slotKey] : [];
-  const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
 
   // Filter out past time slots from displayed slots
   const displaySlots = useMemo(() => {
+    const rawSlots = slotKey ? availableSlots[slotKey] : [];
+    const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
     return safeSlots.filter(slot => {
       if (!slot.startTime) return false;
       return !isPastTimeSlot(selectedDate, slot.startTime);
     });
-  }, [safeSlots, selectedDate, isPastTimeSlot]);
+  }, [slotKey, availableSlots, selectedDate, isPastTimeSlot]);
 
   // Calculate total amount
   const totalAmount = useMemo(() => {
@@ -560,9 +558,6 @@ const OwnerSelectTimePage = () => {
 
   // Get customer name
   const customerName = customerInfo?.name || "Walk-in Customer";
-
-  // Progress indicator
-  const progressPercentage = ((currentServiceIndex + 1) / selectedServices.length) * 100;
 
   return (
     <div className="modern-full-page">

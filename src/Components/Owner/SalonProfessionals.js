@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
 
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();
@@ -44,7 +43,7 @@ const SalonProfessionalsV2 = () => {
   };
 
   // Fetch professionals
-  const fetchProfessionals = async () => {
+  const fetchProfessionals = useCallback(async () => {
     if (!salon?.id) return;
     try {
       const res = await fetch(`${API_BASE_URL}/professionals/${salon.id}`);
@@ -53,11 +52,11 @@ const SalonProfessionalsV2 = () => {
     } catch (err) {
       console.error("Fetch failed", err);
     }
-  };
+  }, [salon?.id]);
 
   useEffect(() => {
     fetchProfessionals();
-  }, [salon?.id]);
+  }, [fetchProfessionals]);
 
   const handleInput = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });

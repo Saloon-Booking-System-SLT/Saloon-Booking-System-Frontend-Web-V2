@@ -160,6 +160,7 @@ const SelectProfessionalPage = () => {
     };
     
     initializePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debug: Log professional images when they're loaded
