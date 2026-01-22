@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CalendarDaysIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import "./searchsaloon.css";
 import fallbackImage from "../../Assets/searchsalonimg.png";
+import salonLogo from "../../Assets/salonlogo.png";
 import LocationPickerModal from "./LocationPickerModal";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
@@ -307,7 +308,10 @@ const SearchSalon = () => {
   return (
     <div className="search-wrapper">
       <header className="navbar">
-        <div className="logo logo-lowered" onClick={() => navigate("/")}>Salon</div>
+        <div className="logo logo-lowered" onClick={() => navigate("/")}>
+          <img src={salonLogo} alt="Salon Logo" className="salon-logo" />
+          Salon
+        </div>
         <nav className="nav-menu">
           
           {!user ? (
@@ -335,7 +339,7 @@ const SearchSalon = () => {
               {isGuest ? (
                 // Guest user icon
                 <div 
-                  className="guest-profile-icon flex items-center justify-center bg-gray-200 text-gray-700 rounded-full cursor-pointer"
+                  className="flex items-center justify-center text-gray-700 bg-gray-200 rounded-full cursor-pointer guest-profile-icon"
                   onClick={toggleMenu}
                   style={{
                     width: '40px',
@@ -344,7 +348,7 @@ const SearchSalon = () => {
                     fontWeight: 'bold'
                   }}
                 >
-                  <UserCircleIcon className="h-8 w-8 text-gray-600" />
+                  <UserCircleIcon className="w-8 h-8 text-gray-600" />
                 </div>
               ) : (
                 // Regular user profile image
@@ -367,7 +371,7 @@ const SearchSalon = () => {
                       <>
                         <li onClick={() => navigate("/profile")}>👤 Profile</li>
                         <li onClick={() => navigate("/appointments")}>
-                          <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments
+                          <CalendarDaysIcon className="inline w-4 h-4 mr-1" /> Appointments
                         </li>
                       </>
                     )}

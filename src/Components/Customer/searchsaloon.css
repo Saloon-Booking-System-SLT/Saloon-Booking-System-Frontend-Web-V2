@@ -36,11 +36,20 @@ body, html {
 
 .logo {
   font-family: 'Playfair Display', serif;
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 700;
   color: #0069B4;
   cursor: pointer;
   text-shadow: 0 0 6px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.salon-logo {
+  height: 55px;
+  width: auto;
+  object-fit: contain;
 }
 
 .logo-lowered {
