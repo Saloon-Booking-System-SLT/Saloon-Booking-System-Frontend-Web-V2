@@ -170,7 +170,18 @@ const Home = () => {
             Your journey to self-care starts here. Elite salons & spas at your fingertips.
           </p>
           <div className="cta-buttons flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="cta-primary w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-base md:text-lg" onClick={() => navigate("/searchsalon")}>Find a Salon</button>
+            <button 
+              className="cta-primary w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-base md:text-lg" 
+              onClick={() => {
+                if (user || isGuest) {
+                  navigate("/searchsalon");
+                } else {
+                  navigate("/login/customer");
+                }
+              }}
+            >
+              Find a Salon
+            </button>
             <button className="cta-secondary w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-base md:text-lg flex items-center justify-center gap-2">
               Download App 
               <DevicePhoneMobileIcon className="h-5 w-5" />

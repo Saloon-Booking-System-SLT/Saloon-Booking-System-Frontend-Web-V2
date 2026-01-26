@@ -1,7 +1,7 @@
 // ConfirmationPage.jsx - PayHere Integrated Version
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, ArrowPathIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import "./ConfirmationPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';

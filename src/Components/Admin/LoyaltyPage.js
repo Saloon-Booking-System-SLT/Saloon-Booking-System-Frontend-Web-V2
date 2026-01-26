@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
+import axios from '../../Api/axios';
 import './LoyaltyPage.css';
 
 const LoyaltyPage = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Global configuration state
   const [globalConfig, setGlobalConfig] = useState({
@@ -16,83 +19,35 @@ const LoyaltyPage = () => {
   const [revokeEmail, setRevokeEmail] = useState('');
   const [revokePoints, setRevokePoints] = useState('');
 
-  // Sample most loyal customers
-  const [loyalCustomers] = useState([
-    {
-      id: 1,
-      name: 'Emma Wilson',
-      email: 'emma.wilson@email.com',
-      points: 2450,
-      lastVisit: '2024-11-16'
-    },
-    {
-      id: 2,
-      name: 'Isabella Davis',
-      email: 'isabella.davis@email.com',
-      points: 2180,
-      lastVisit: '2024-11-15'
-    },
-    {
-      id: 3,
-      name: 'Sophia Clark',
-      email: 'sophia.clark@email.com',
-      points: 1890,
-      lastVisit: '2024-11-14'
-    },
-    {
-      id: 4,
-      name: 'Ava Martinez',
-      email: 'ava.martinez@email.com',
-      points: 1650,
-      lastVisit: '2024-11-13'
-    },
-    {
-      id: 5,
-      name: 'Olivia Martinez',
-      email: 'olivia.m@email.com',
-      points: 1420,
-      lastVisit: '2024-11-12'
-    }
-  ]);
+  // Loyal customers from backend
+  const [loyalCustomers, setLoyalCustomers] = useState([]);
+  const [salonSettings, setSalonSettings] = useState([]);
 
-  // Sample salon loyalty settings
-  const [salonSettings, setSalonSettings] = useState([
-    {
-      id: 1,
-      salonName: 'Glam Studio',
-      status: 'active',
-      pointsThreshold: 100,
-      conversionRate: 10
-    },
-    {
-      id: 2,
-      salonName: 'Nail Paradise',
-      status: 'active',
-      pointsThreshold: 150,
-      conversionRate: 15
-    },
-    {
-      id: 3,
-      salonName: 'Beauty Bar',
-      status: 'inactive',
-      pointsThreshold: 100,
-      conversionRate: 10
-    },
-    {
-      id: 4,
-      salonName: 'Spa Serenity',
-      status: 'active',
-      pointsThreshold: 200,
-      conversionRate: 20
-    },
-    {
-      id: 5,
-      salonName: 'Style Studio',
-      status: 'active',
-      pointsThreshold: 100,
-      conversionRate: 12
-    }
-  ]);
+  // Fetch loyalty data from backend
+  useEffect(() => {
+    const fetchLoyaltyData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch top customers
+        const customersResponse = await axios.get('/loyalty/customers/top');
+        setLoyalCustomers(customersResponse.data);
+        
+        // Fetch salon settings
+        const configResponse = await axios.get('/loyalty/config');
+        setSalonSettings(configResponse.data);
+        
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch loyalty data:', err);
+        setError('Failed to load loyalty data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLoyaltyData();
+  }, []);
 
   // Handle global config save
   const handleSaveConfig = () => {

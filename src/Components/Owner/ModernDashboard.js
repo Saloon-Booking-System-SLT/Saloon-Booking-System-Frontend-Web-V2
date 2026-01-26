@@ -189,6 +189,7 @@ const ModernDashboard = () => {
     };
 
     fetchAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
 
   // ✅ Check approval status - show pending screen if not approved

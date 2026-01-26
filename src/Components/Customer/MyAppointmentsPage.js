@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import "./MyAppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
