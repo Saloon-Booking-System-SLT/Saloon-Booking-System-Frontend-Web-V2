@@ -187,13 +187,3 @@ export default {
   mockAlert,
   mockConfirm
 };
-
-// Dummy test to satisfy Jest requirement
-describe('Test Utilities', () => {
-  test('exports are defined', () => {
-    expect(renderWithProviders).toBeDefined();
-    expect(renderWithRouter).toBeDefined();
-    expect(mockCustomerUser).toBeDefined();
-    expect(mockOwnerUser).toBeDefined();
-  });
-});
