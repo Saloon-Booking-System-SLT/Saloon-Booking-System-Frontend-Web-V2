@@ -43,6 +43,7 @@ import BookAnAppointment from './Components/Owner/BookAnAppointment';
 import OwnerSelectProfessional from './Components/Owner/OwnerSelectProfessional';
 import OwnerTimeSelection from './Components/Owner/OwnerTimeSelection';
 import OwnerConfirmationPage from './Components/Owner/OwnerConfirmationPage';
+import RevenueReport from './Components/Owner/RevenueReport';
 
 // Admin Components
 import AdminDashboard from "./Components/Admin/AdminDashboard";
@@ -96,6 +97,7 @@ function App() {
           <Route path="/services" element={<ApprovedOwnerRoute><SalonServices /></ApprovedOwnerRoute>} />
           <Route path="/professionals" element={<ApprovedOwnerRoute><SalonProfessionals /></ApprovedOwnerRoute>} />
           <Route path="/timeslots" element={<ApprovedOwnerRoute><SalonTimeSlots /></ApprovedOwnerRoute>} />
+          <Route path="/revenue-report" element={<ApprovedOwnerRoute><RevenueReport /></ApprovedOwnerRoute>} />
           <Route path="/feedbacks" element={<ApprovedOwnerRoute><OwnerFeedbackPage /></ApprovedOwnerRoute>} />
           <Route path="/profile/:id" element={<ApprovedOwnerRoute><SalonProfile /></ApprovedOwnerRoute>} />
           <Route path="/book-appointment" element={<ApprovedOwnerRoute><BookAnAppointment /></ApprovedOwnerRoute>} />

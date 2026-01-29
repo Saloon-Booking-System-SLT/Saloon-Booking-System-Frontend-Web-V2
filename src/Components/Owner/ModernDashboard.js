@@ -24,6 +24,7 @@ const Sidebar = () => {
     { icon: 'fas fa-users', path: '/professionals', key: 'professionals', title: 'Professionals' },
    { icon: 'fas fa-calendar-check', path: '/book-appointment', key: 'book-appointment', title: 'Book An Appointment' },
     { icon: 'fas fa-clock', path: '/timeslots', key: 'timeslots', title: 'Time Slots' },
+    { icon: 'fas fa-chart-bar', path: '/revenue-report', key: 'revenue-report', title: 'Revenue Report' },
   ];
 
   const handleNavigation = (path, key) => {

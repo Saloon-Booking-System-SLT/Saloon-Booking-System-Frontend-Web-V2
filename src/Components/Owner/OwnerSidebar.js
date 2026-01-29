@@ -9,7 +9,8 @@ import {
   ChatBubbleBottomCenterTextIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import logo from '../../Assets/logo.png';
 
@@ -42,6 +43,11 @@ const OwnerSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
       title: 'Time Slots',
       icon: ClockIcon,
       path: '/timeslots',
+    },
+    {
+      title: 'Revenue Report',
+      icon: ChartBarIcon,
+      path: '/revenue-report',
     },
     {
       title: 'Feedback',
