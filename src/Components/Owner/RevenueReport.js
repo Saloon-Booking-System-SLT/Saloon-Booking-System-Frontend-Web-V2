@@ -86,11 +86,6 @@ const RevenueReport = () => {
   const [selectedService, setSelectedService] = useState('all');
   const [selectedProfessional, setSelectedProfessional] = useState('all');
 
-  useEffect(() => {
-    fetchRevenueData();
-    fetchServicesAndProfessionals();
-  }, [dateRange, selectedService, selectedProfessional, fetchRevenueData]);
-
   const fetchServicesAndProfessionals = useCallback(async () => {
     try {
       const salonData = JSON.parse(localStorage.getItem('salonUser'));

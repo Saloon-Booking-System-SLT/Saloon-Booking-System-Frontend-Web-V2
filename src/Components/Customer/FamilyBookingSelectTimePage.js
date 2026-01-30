@@ -194,7 +194,8 @@ const SelectTimePage = () => {
 
   const currentService = useMemo(() => {
     return selectedServices[currentServiceIndex.current] || {};
-  }, [selectedServices, currentServiceIndex.current]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedServices]);
 
   const serviceKey = currentService.name || "service";
   const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);

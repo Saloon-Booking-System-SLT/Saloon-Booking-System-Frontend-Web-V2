@@ -225,7 +225,7 @@ const ReportsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, reportType]);
+  }, [dateRange]);
 
   useEffect(() => {
     const salonData = JSON.parse(localStorage.getItem("salonUser"));

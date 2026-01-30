@@ -82,7 +82,7 @@ const OwnerConfirmationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   // const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus] = useState("success"); // Owner bookings are immediate
+  // const [saveStatus] = useState("success"); // Owner bookings are immediate
   
   const {
     salonName = "Your Salon",
