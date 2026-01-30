@@ -147,7 +147,9 @@ const BookAnAppointment = () => {
       }
     };
     
-    initializeBooking();  // eslint-disable-next-line react-hooks/exhaustive-deps  }, []);
+    initializeBooking();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Function to fetch owner's salon
   const fetchOwnerSalon = async (token) => {
