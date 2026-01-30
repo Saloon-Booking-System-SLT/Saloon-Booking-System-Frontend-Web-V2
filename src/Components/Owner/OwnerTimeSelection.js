@@ -100,14 +100,14 @@ const OwnerSelectTimePage = () => {
     selectedProfessional,
     customerInfo,
     isOwnerMode = true,
-    userRole = "owner"
+    // userRole = "owner"
   } = location.state || {};
   
   const [availableSlots, setAvailableSlots] = useState({});
   const [selectedDates, setSelectedDates] = useState({});
   const [selectedTimes, setSelectedTimes] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [dates, setDates] = useState([]);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0); // Track current service being scheduled
 
@@ -219,7 +219,8 @@ const OwnerSelectTimePage = () => {
       if (!slot.startTime) return false;
       return !isPastTimeSlot(selectedDate, slot.startTime);
     });
-  }, [safeSlots, selectedDate, isPastTimeSlot]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeSlots, selectedDate]);
 
   // Calculate total amount
   const totalAmount = useMemo(() => {
@@ -562,7 +563,7 @@ const OwnerSelectTimePage = () => {
   const customerName = customerInfo?.name || "Walk-in Customer";
 
   // Progress indicator
-  const progressPercentage = ((currentServiceIndex + 1) / selectedServices.length) * 100;
+  // const progressPercentage = ((currentServiceIndex + 1) / selectedServices.length) * 100;
 
   return (
     <div className="modern-full-page">

@@ -8,46 +8,46 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
 
-// Simple Stat Card Component
-const StatCard = ({ title, value }) => (
-  <div className="stat-card">
-    <div className="stat-title">{title}</div>
-    <div className="stat-value">{value}</div>
-  </div>
-);
+// Simple Stat Card Component - Commented out as unused
+// const StatCard = ({ title, value }) => (
+//   <div className="stat-card">
+//     <div className="stat-title">{title}</div>
+//     <div className="stat-value">{value}</div>
+//   </div>
+// );
 
-const SummaryChart = ({ data }) => {
-  if (!data || data.length === 0) {
-    return <div className="no-data">No data available for chart</div>;
-  }
+// const SummaryChart = ({ data }) => {
+//   if (!data || data.length === 0) {
+//     return <div className="no-data">No data available for chart</div>;
+//   }
 
-  return (
-    <div className="summary-chart">
-      <h3 className="chart-title">Monthly Summary</h3>
-      <div style={{ width: '100%', height: 300, minHeight: 300 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
-            <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="summary-chart">
+//       <h3 className="chart-title">Monthly Summary</h3>
+//       <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+//         <ResponsiveContainer width="100%" height="100%">
+//           <BarChart
+//             data={data}
+//             margin={{
+//               top: 5,
+//               right: 30,
+//               left: 20,
+//               bottom: 5,
+//             }}
+//           >
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis dataKey="name" />
+//             <YAxis />
+//             <Tooltip />
+//             <Legend />
+//             <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
+//             <Bar dataKey="revenue" fill="#82ca9d" name="Revenue (Rs)" />
+//           </BarChart>
+//         </ResponsiveContainer>
+//       </div>
+//     </div>
+//   );
+// };
 
 // Main Admin Dashboard Component
 const AdminDashboard = () => {

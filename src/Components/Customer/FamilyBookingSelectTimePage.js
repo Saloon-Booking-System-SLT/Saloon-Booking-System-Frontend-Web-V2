@@ -210,7 +210,8 @@ const SelectTimePage = () => {
       if (!slot.startTime) return false;
       return !isPastTimeSlot(selectedDate, slot.startTime);
     });
-  }, [filteredSlots, selectedDate, isPastTimeSlot]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredSlots, selectedDate]);
 
   const handleDateClick = (serviceName, profId, fullDate) => {
     setSelectedDates(prev => ({ ...prev, [serviceName]: fullDate }));

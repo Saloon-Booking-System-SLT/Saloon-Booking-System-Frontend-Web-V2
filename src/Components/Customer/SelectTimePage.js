@@ -251,7 +251,8 @@ const SelectTimePage = () => {
       setSelectedTimes(prev => ({ ...prev, [currentService._id]: null }));
       fetchTimeSlots(professionalId, defaultDate);
     }
-  }, [selectedServices, currentServiceIndex.current, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, resolveProfessionalForService]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, resolveProfessionalForService]);
 
   // Initialize reschedule data
   useEffect(() => {
@@ -283,7 +284,8 @@ const SelectTimePage = () => {
   // Build derived values for current service
   const currentService = useMemo(() => {
     return selectedServices[currentServiceIndex.current] || {};
-  }, [selectedServices, currentServiceIndex.current]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedServices]);
 
   const serviceKey = currentService._id || "service";
   const professional = resolveProfessionalForService(serviceKey);
@@ -300,7 +302,8 @@ const SelectTimePage = () => {
       if (!slot.startTime) return false;
       return !isPastTimeSlot(selectedDate, slot.startTime);
     });
-  }, [filteredSlots, selectedDate, isPastTimeSlot]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredSlots, selectedDate]);
 
   // Handlers
   const handleDateClick = (serviceId, profId, fullDate) => {
@@ -390,7 +393,8 @@ const SelectTimePage = () => {
       phone: user?.phone || "",
       email: user?.email || "",
     };
-  }, [selectedTimes, selectedDates, displaySlots, selectedServices, currentServiceIndex.current, salon, user, resolveProfessionalForService]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTimes, selectedDates, displaySlots, selectedServices, salon, user, resolveProfessionalForService]);
 
   // Check if user is authorized to book
   const isUserAuthorized = !isGuest && (user?.id !== 'guest');
@@ -741,7 +745,7 @@ const SelectTimePage = () => {
 
         {isGuest && (
           <div className="guest-notice">
-            <p>⚠️ You're browsing as a guest. <a onClick={() => setShowGuestAlert(true)} style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}>Sign in to book</a></p>
+            <p>⚠️ You're browsing as a guest. <button onClick={() => setShowGuestAlert(true)} style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Sign in to book</button></p>
           </div>
         )}
 

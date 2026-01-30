@@ -190,7 +190,7 @@ const ModernDashboard = () => {
     };
 
     fetchAppointments();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isAuthenticated, navigate]);
 
   // ✅ Check approval status - show pending screen if not approved
   if (salon && salon.approvalStatus !== 'approved') {

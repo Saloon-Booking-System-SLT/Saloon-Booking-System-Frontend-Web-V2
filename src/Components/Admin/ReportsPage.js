@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './ReportsPage.css';
 import logo from '../../Assets/logo.png';
 import { useNavigate } from 'react-router-dom';
@@ -48,17 +48,7 @@ const ReportsPage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const salonData = JSON.parse(localStorage.getItem("salonUser"));
-    if (!salonData?.id) {
-      navigate("/");
-      return;
-    }
-
-    fetchReportData();
-  }, [dateRange, reportType, fetchReportData, navigate]);
-
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     setLoading(true);
     try {
       const salonData = JSON.parse(localStorage.getItem("salonUser"));
@@ -68,11 +58,11 @@ const ReportsPage = () => {
       const appointments = appointmentsRes.data;
       
       // Fetch services data
-      const servicesRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/services/salon/${salonData.id}`);
+      await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/services/salon/${salonData.id}`);
       // const services = servicesRes.data; // Commented out unused variable
       
       // Fetch professionals data
-      const professionalsRes = await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/professionals/salon/${salonData.id}`);
+      await axios.get(`https://saloon-booking-system-backend-v2.onrender.com/api/professionals/salon/${salonData.id}`);
       // const professionals = professionalsRes.data; // Commented out unused variable
 
       // Filter data by date range
@@ -235,7 +225,17 @@ const ReportsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange, reportType]);
+
+  useEffect(() => {
+    const salonData = JSON.parse(localStorage.getItem(\"salonUser\"));
+    if (!salonData?.id) {
+      navigate(\"/\");
+      return;
+    }
+
+    fetchReportData();
+  }, [fetchReportData, navigate]);
 
   const generateReport = () => {
     // Implement report generation

@@ -147,8 +147,7 @@ const BookAnAppointment = () => {
       }
     };
     
-    initializeBooking();
-  }, []);
+    initializeBooking();  // eslint-disable-next-line react-hooks/exhaustive-deps  }, []);
 
   // Function to fetch owner's salon
   const fetchOwnerSalon = async (token) => {
@@ -274,6 +273,7 @@ const BookAnAppointment = () => {
     if (salon && services.length > 0) {
       filterServices(services, searchQuery, selectedGender);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedGender, services, salon]);
 
   const filterServices = (all, search, gender) => {

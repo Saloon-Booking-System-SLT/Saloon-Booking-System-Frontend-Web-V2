@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
@@ -20,6 +20,20 @@ const SelectServicesPage = () => {
   // ✅ updated based on your backend schema
   const isUnisex = salon?.salonType?.toLowerCase() === "unisex";
 
+  const filterServices = useCallback((all, search, gender) => {
+    let result = all.filter((s) =>
+      s.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (isUnisex) {
+      result = result.filter(
+        (s) => s.gender?.toLowerCase() === gender.toLowerCase()
+      );
+    }
+
+    setFilteredServices(result);
+  }, [isUnisex]);
+
   useEffect(() => {
     if (!salon) return;
     fetch(`${API_BASE_URL}/api/services/${salon._id}`)
@@ -32,22 +46,11 @@ const SelectServicesPage = () => {
         console.error("Failed to load services", err);
         alert("Failed to load services");
       });
-  }, [salon]);
+  }, [salon, filterServices, searchQuery, selectedGender]);
 
   useEffect(() => {
     filterServices(services, searchQuery, selectedGender);
-  }, [searchQuery, selectedGender, services]);
-
-  const filterServices = (all, search, gender) => {
-    let result = all.filter((s) =>
-      s.name.toLowerCase().includes(search.toLowerCase())
-    );
-
-    if (isUnisex) {
-      result = result.filter(
-        (s) => s.gender?.toLowerCase() === gender.toLowerCase()
-      );
-    }
+  }, [searchQuery, selectedGender, services, filterServices]);
 
     setFilteredServices(result);
   };

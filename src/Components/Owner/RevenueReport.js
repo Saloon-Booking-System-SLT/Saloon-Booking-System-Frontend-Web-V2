@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './RevenueReport.css';
 import logo from '../../Assets/logo.png';
 import { useNavigate } from 'react-router-dom';
@@ -89,9 +89,9 @@ const RevenueReport = () => {
   useEffect(() => {
     fetchRevenueData();
     fetchServicesAndProfessionals();
-  }, [dateRange, selectedService, selectedProfessional]);
+  }, [dateRange, selectedService, selectedProfessional, fetchRevenueData]);
 
-  const fetchServicesAndProfessionals = async () => {
+  const fetchServicesAndProfessionals = useCallback(async () => {
     try {
       const salonData = JSON.parse(localStorage.getItem('salonUser'));
       if (!salonData?.id) return;
@@ -115,9 +115,9 @@ const RevenueReport = () => {
       setServices([]);
       setProfessionals([]);
     }
-  };
+  }, []);
 
-  const fetchRevenueData = async () => {
+  const fetchRevenueData = useCallback(async () => {
   setLoading(true);
   setError('');
   try {
@@ -178,7 +178,13 @@ const RevenueReport = () => {
   } finally {
     setLoading(false);
   }
-};
+}, [dateRange, selectedService, selectedProfessional]);
+
+  useEffect(() => {
+    fetchRevenueData();
+    fetchServicesAndProfessionals();
+  }, [dateRange, selectedService, selectedProfessional, fetchRevenueData, fetchServicesAndProfessionals]);
+
   const handleDateRangeChange = (e) => {
     const { name, value } = e.target;
     setDateRange(prev => ({

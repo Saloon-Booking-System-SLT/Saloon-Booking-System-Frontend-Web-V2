@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './SalonsManagement.css';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -6,8 +6,7 @@ import {
   ChevronDownIcon,
   CheckIcon,
   XMarkIcon,
-  EyeIcon,
-  BuildingStorefrontIcon
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import axios from '../../Api/axios';
 import AdminLayout from './AdminLayout';
@@ -24,7 +23,7 @@ const SalonsManagement = () => {
   const navigate = useNavigate();
 
   // Fetch salons data
-  const fetchSalons = async () => {
+  const fetchSalons = useCallback(async () => {
     setLoading(true);
     try {
       // LOG THE URL for debugging
@@ -50,11 +49,11 @@ const SalonsManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchSalons();
-  }, []);
+  }, [fetchSalons]);
 
   // Filter salons based on search and filters
   useEffect(() => {
