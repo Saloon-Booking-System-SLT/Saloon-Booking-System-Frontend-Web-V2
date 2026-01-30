@@ -269,13 +269,6 @@ const BookAnAppointment = () => {
     }
   };
 
-  useEffect(() => {
-    if (salon && services.length > 0) {
-      filterServices(services, searchQuery, selectedGender);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedGender, services, salon]);
-
   const filterServices = (all, search, gender) => {
     let result = all.filter((s) =>
       s.name.toLowerCase().includes(search.toLowerCase())
@@ -291,6 +284,13 @@ const BookAnAppointment = () => {
 
     setFilteredServices(result);
   };
+
+  useEffect(() => {
+    if (salon && services.length > 0) {
+      filterServices(services, searchQuery, selectedGender);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, selectedGender, services, salon]);
 
   const toggleService = (id) => {
     setSelectedServiceIds((prev) =>

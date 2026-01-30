@@ -52,9 +52,6 @@ const SelectServicesPage = () => {
     filterServices(services, searchQuery, selectedGender);
   }, [searchQuery, selectedGender, services, filterServices]);
 
-    setFilteredServices(result);
-  };
-
   const toggleService = (id) => {
     setSelectedServiceIds((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]

@@ -159,7 +159,9 @@ const SelectProfessionalPage = () => {
       await fetchProfessionals(salonFromState._id);
     };
     
-    initializePage();  // eslint-disable-next-line react-hooks/exhaustive-deps  }, []);
+    initializePage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Debug: Log professional images when they're loaded
   useEffect(() => {

@@ -228,9 +228,9 @@ const ReportsPage = () => {
   }, [dateRange, reportType]);
 
   useEffect(() => {
-    const salonData = JSON.parse(localStorage.getItem(\"salonUser\"));
+    const salonData = JSON.parse(localStorage.getItem("salonUser"));
     if (!salonData?.id) {
-      navigate(\"/\");
+      navigate("/");
       return;
     }
 

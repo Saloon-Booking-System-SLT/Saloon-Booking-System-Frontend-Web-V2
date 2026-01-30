@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, SparklesIcon, BuildingStorefrontIcon, IdentificationIcon } from '@heroicons/react/24/outline';
+import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, ArrowPathIcon, PencilIcon, SparklesIcon, BuildingStorefrontIcon, IdentificationIcon } from '@heroicons/react/24/outline';
 import "./OwnerConfirmationPage.css";
 import logo from '../../Assets/logo.png';
 
