@@ -148,7 +148,6 @@ const BookAnAppointment = () => {
     };
     
     initializeBooking();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to fetch owner's salon
@@ -270,6 +269,12 @@ const BookAnAppointment = () => {
       setServices([]);
     }
   };
+
+  useEffect(() => {
+    if (salon && services.length > 0) {
+      filterServices(services, searchQuery, selectedGender);
+    }
+  }, [searchQuery, selectedGender, services, salon]);
 
   const filterServices = (all, search, gender) => {
     let result = all.filter((s) =>

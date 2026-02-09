@@ -4,7 +4,7 @@ import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-// const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
 
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();

@@ -36,21 +36,29 @@ export default function CustomerLogin() {
         }),
       });
 
-      if (!res.ok) return alert("Failed to save user");
+      if (!res.ok) {
+        alert("Failed to save user");
+        setLoading(false);
+        return;
+      }
       
       const responseData = await res.json();
       const { token, user: savedUser } = responseData;
       
-      login(token, { 
+      // Call login and wait for it to complete
+      await login(token, { 
         ...savedUser, 
         role: 'customer'
       });
       
-      navigate("/searchsalon");
+      // Navigate after login state is set
+      setTimeout(() => {
+        navigate("/searchsalon");
+        setLoading(false);
+      }, 200);
     } catch (error) {
       console.error("Google login failed:", error);
       alert("Google login failed");
-    } finally {
       setLoading(false);
     }
   };
