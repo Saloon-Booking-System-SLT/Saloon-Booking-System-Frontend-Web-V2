@@ -1,11 +1,7 @@
 import axios from "axios";
 
-// Multiple backend URLs for failover
-const BACKEND_URLS = [
-  "https://saloon-booking-system-backend-v2.onrender.com/api",
-  "https://salon-backend-production.railway.app/api",
-  // Add more backup URLs as needed
-];
+// Backend URL - SLT VMS
+const PRODUCTION_BACKEND_URL = "https://dpdlab1.slt.lk:8447/salon-api/api";
 
 // Determine the API URL based on environment
 const getApiUrl = () => {
@@ -23,33 +19,28 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Return primary backend URL
-  return BACKEND_URLS[0];
+  // Return SLT VMS backend URL
+  return PRODUCTION_BACKEND_URL;
 };
 
-// Test backend connectivity and switch to working URL
-const findWorkingBackend = async () => {
-  for (const url of BACKEND_URLS) {
-    try {
-      console.log(`Testing backend: ${url}`);
-      const response = await fetch(url.replace('/api', '/health'), {
-        method: 'GET',
-        mode: 'cors',
-        timeout: 10000
-      });
-      
-      if (response.ok) {
-        console.log(`✅ Backend working: ${url}`);
-        return url;
-      }
-    } catch (error) {
-      console.log(`❌ Backend failed: ${url}`, error.message);
+// Test backend connectivity
+const testBackend = async (url) => {
+  try {
+    console.log(`Testing backend: ${url}`);
+    const response = await fetch(url.replace('/api', '/health'), {
+      method: 'GET',
+      mode: 'cors',
+      timeout: 10000
+    });
+    
+    if (response.ok) {
+      console.log(`✅ Backend working: ${url}`);
+      return true;
     }
+  } catch (error) {
+    console.log(`❌ Backend failed: ${url}`, error.message);
   }
-  
-  // If all fail, return primary URL
-  console.log('All backends failed, using primary URL');
-  return BACKEND_URLS[0];
+  return false;
 };
 
 // Initialize with working backend
@@ -67,13 +58,13 @@ const instance = axios.create({
 
 console.log('Axios instance created with baseURL:', workingBackendUrl);
 
-// Update instance baseURL when backend changes
-const updateBackendUrl = async () => {
-  const newUrl = await findWorkingBackend();
-  if (newUrl !== workingBackendUrl) {
-    workingBackendUrl = newUrl;
-    instance.defaults.baseURL = newUrl;
-    console.log('🔄 Backend URL updated to:', newUrl);
+// Test backend connectivity on initialization (only in production)
+const initializeBackend = async () => {
+  const isDevelopment = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1';
+  
+  if (!isDevelopment) {
+    await testBackend(PRODUCTION_BACKEND_URL);
   }
 };
 
@@ -93,7 +84,7 @@ instance.interceptors.request.use(
   }
 );
 
-// Add response interceptor for better error handling with failover
+// Add response interceptor for better error handling
 instance.interceptors.response.use(
   (response) => {
     console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
@@ -108,31 +99,6 @@ instance.interceptors.response.use(
       method: error.config?.method,
       baseURL: error.config?.baseURL
     });
-    
-    // Handle CORS and network errors with automatic failover
-    if (error.code === 'ERR_NETWORK' || 
-        error.message === 'Network Error' ||
-        error.message.includes('CORS') ||
-        error.response?.status >= 500) {
-      
-      console.error('❌ Backend Error - Attempting failover...');
-      
-      if (!error.config?._retry) {
-        error.config._retry = true;
-        
-        // Try to find a working backend
-        const newBackendUrl = await findWorkingBackend();
-        
-        // Update the config with new backend URL
-        error.config.baseURL = newBackendUrl;
-        instance.defaults.baseURL = newBackendUrl;
-        
-        console.log('🔄 Retrying request with new backend:', newBackendUrl);
-        
-        // Retry the original request
-        return instance(error.config);
-      }
-    }
     
     if (error.response?.status === 401) {
       // Token expired or invalid
@@ -149,7 +115,7 @@ instance.interceptors.response.use(
   }
 );
 
-// Initialize backend connectivity check
-updateBackendUrl();
+// Initialize backend connectivity check (only in production)
+initializeBackend();
 
 export default instance;

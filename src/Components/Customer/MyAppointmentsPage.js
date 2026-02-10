@@ -5,7 +5,7 @@ import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  'https://dpdlab1.slt.lk:8447/salon-api';
 
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);

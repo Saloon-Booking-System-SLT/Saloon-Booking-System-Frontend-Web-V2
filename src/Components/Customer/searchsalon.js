@@ -7,7 +7,7 @@ import LocationPickerModal from "./LocationPickerModal";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
   process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  'https://dpdlab1.slt.lk:8447/salon-api';
 
 const districtSuggestions = [
   "Colombo", "Kandy", "Galle", "Jaffna", "Matara",

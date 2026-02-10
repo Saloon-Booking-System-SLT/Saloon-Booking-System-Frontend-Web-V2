@@ -84,7 +84,7 @@ const CheckoutForm = () => {
       });
 
       // Step 1: Create payment intent
-      const response = await fetch('https://saloon-booking-system-backend-v2.onrender.com/api/payments/create-payment-intent', {
+      const response = await fetch('https://dpdlab1.slt.lk:8447/salon-api/api/payments/create-payment-intent', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ const CheckoutForm = () => {
     try {
       if (isReschedule) {
         // Handle rescheduling
-        const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/appointments/${appointmentId}/reschedule`, {
+        const res = await fetch(`https://dpdlab1.slt.lk:8447/salon-api/api/appointments/${appointmentId}/reschedule`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -222,7 +222,7 @@ const CheckoutForm = () => {
 
         console.log('📤 Sending booking data to backend:', bookingData);
 
-        const res = await fetch("https://saloon-booking-system-backend-v2.onrender.com/api/appointments", {
+        const res = await fetch("https://dpdlab1.slt.lk:8447/salon-api/api/appointments", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bookingData),

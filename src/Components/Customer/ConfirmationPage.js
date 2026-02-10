@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import "./ConfirmationPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dpdlab1.slt.lk:8447/salon-api/api';
 
 const ConfirmationPage = () => {
   const location = useLocation();
