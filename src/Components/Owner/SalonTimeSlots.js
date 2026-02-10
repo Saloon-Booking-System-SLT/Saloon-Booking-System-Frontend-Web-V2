@@ -4,7 +4,7 @@ import axios from 'axios';
 import logo from '../../Assets/logo.png';
 import './SalonTimeSlots.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dpdlab1.slt.lk:8447/salon-api/api';
 
 const SalonTimeSlots = () => {
   const navigate = useNavigate();
