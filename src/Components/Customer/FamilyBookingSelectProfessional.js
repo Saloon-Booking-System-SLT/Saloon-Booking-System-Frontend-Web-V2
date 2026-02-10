@@ -136,7 +136,7 @@ const SelectProfessionalPage = () => {
                           ? pro.image.startsWith("http")
                             ? pro.image
                             : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                          : "https://via.placeholder.com/150"
+                          : "/image_icon.png"
                       }
                       alt={pro.name}
                       className="select-services-image"
@@ -191,7 +191,7 @@ const SelectProfessionalPage = () => {
       ? salon.image.startsWith("http")
         ? salon.image // already a full URL
         : `${API_BASE_URL}/uploads/${salon.image}` // uploaded file
-      : "https://via.placeholder.com/150"
+      : "/image_icon.png"
   }
   alt="Salon"
   className="salon-image"
@@ -233,7 +233,7 @@ const SelectProfessionalPage = () => {
                   >
                     <div className="professional-info">
                       <img
-                        src={pro.image || "https://via.placeholder.com/50"}
+                        src={pro.image || "/image_icon.png"}
                         alt={pro.name}
                       />
                       <div>

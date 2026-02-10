@@ -123,7 +123,7 @@ const SelectServicesPage = () => {
       ? service.image.startsWith("http")
         ? service.image // already a full URL
         : `${API_BASE_URL}/uploads/${service.image}` // uploaded file
-      : "https://via.placeholder.com/100"
+      : "/image_icon.png"
   }
   alt={service.name}
   className="select-services-image"
@@ -150,7 +150,7 @@ const SelectServicesPage = () => {
       ? salon.image.startsWith("http")
         ? salon.image // already a full URL
         : `${API_BASE_URL}/uploads/${salon.image}` // uploaded file
-      : "https://via.placeholder.com/150"
+      : "/image_icon.png"
   }
   alt="Salon"
   className="salon-image"

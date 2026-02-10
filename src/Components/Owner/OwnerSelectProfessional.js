@@ -85,8 +85,8 @@ const SelectProfessionalPage = () => {
   const getImageUrl = (image, type = 'default') => {
     if (!image) {
       return type === 'popup' 
-        ? 'https://via.placeholder.com/50'
-        : 'https://via.placeholder.com/150';
+        ? '/image_icon.png'
+        : '/image_icon.png';
     }
     
     // If it's already a full URL
@@ -543,7 +543,7 @@ const SelectProfessionalPage = () => {
                                   onError={(e) => {
                                     console.error(`Failed to load image for ${pro.name}:`, e.target.src);
                                     e.target.onerror = null;
-                                    e.target.src = "https://via.placeholder.com/150";
+                                    e.target.src = "/image_icon.png";
                                   }}
                                 />
                                 <div className="professional-details">
@@ -631,7 +631,7 @@ const SelectProfessionalPage = () => {
                     onError={(e) => {
                       console.error('Failed to load salon image:', e.target.src);
                       e.target.onerror = null;
-                      e.target.src = "https://via.placeholder.com/150";
+                      e.target.src = "/image_icon.png";
                     }}
                   />
                   
@@ -754,7 +754,7 @@ const SelectProfessionalPage = () => {
                               onError={(e) => {
                                 console.error(`Failed to load popup image for ${pro.name}:`, e.target.src);
                                 e.target.onerror = null;
-                                e.target.src = "https://via.placeholder.com/50";
+                                e.target.src = "/image_icon.png";
                               }}
                             />
                             <div className="pro-details-popup">

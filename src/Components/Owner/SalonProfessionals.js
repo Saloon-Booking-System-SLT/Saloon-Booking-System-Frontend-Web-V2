@@ -189,7 +189,7 @@ const SalonProfessionalsV2 = () => {
             <div key={pro._id} className="pro-v2-card">
               <img
                 src={
-                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "https://via.placeholder.com/100"
+                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "/image_icon.png"
                 }
                 alt={pro.name}
                 className="pro-v2-image"

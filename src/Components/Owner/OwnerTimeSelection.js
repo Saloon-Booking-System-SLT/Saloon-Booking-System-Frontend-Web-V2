@@ -742,12 +742,12 @@ const OwnerSelectTimePage = () => {
                         ? salon.image.startsWith("http")
                           ? salon.image
                           : `${API_BASE_URL}/uploads/${salon.image}`
-                        : "https://via.placeholder.com/150"
+                        : "/image_icon.png"
                     }
                     alt="Salon"
                     className="salon-image"
                     onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/150";
+                      e.target.src = "/image_icon.png";
                     }}
                   />
                   

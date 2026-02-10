@@ -76,9 +76,14 @@ const SearchSalon = () => {
       if (res.ok) {
         const data = await res.json();
         setUserFavorites(data.favorites.map(salon => salon._id));
+      } else if (res.status === 403) {
+        console.warn('⚠️ Favorites access denied. User may need to re-login.');
+        // Silently fail - don't break the app
+        setUserFavorites([]);
       }
     } catch (error) {
       console.error('Error fetching favorites:', error);
+      setUserFavorites([]);
     }
   };
 

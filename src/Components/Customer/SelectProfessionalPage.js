@@ -206,7 +206,7 @@ const SelectProfessionalPage = () => {
                         ? pro.image.startsWith("http")
                           ? pro.image
                           : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                        : "https://via.placeholder.com/150"
+                        : "/image_icon.png"
                     }
                     alt={pro.name}
                     className="service-image"
@@ -267,7 +267,7 @@ const SelectProfessionalPage = () => {
                 ? salon.image.startsWith("http")
                   ? salon.image
                   : `${API_BASE_URL}/uploads/${salon.image}`
-                : "https://via.placeholder.com/150"
+                : "/image_icon.png"
             }
             alt="Salon"
             className="salon-image"
