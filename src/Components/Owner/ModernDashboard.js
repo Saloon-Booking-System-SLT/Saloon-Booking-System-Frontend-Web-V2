@@ -83,6 +83,9 @@ const ModernDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [revenueData, setRevenueData] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('monthly');
+  const [loadingRevenue, setLoadingRevenue] = useState(false);
   const notifRef = useRef();
   const navigate = useNavigate();
   const { user, logout: authLogout, loading: authLoading, isAuthenticated } = useAuth();
@@ -191,6 +194,35 @@ const ModernDashboard = () => {
     fetchAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
+
+  // ✅ Fetch revenue statistics
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      if (!salon || !salon.id) return;
+      
+      try {
+        setLoadingRevenue(true);
+        console.log('🔍 Fetching revenue data for salon:', salon.id);
+        
+        const response = await axiosInstance.get(`/salons/${salon.id}/revenue/stats`);
+        console.log('✅ Revenue data fetched:', response.data);
+        setRevenueData(response.data);
+      } catch (err) {
+        console.error("❌ Failed to fetch revenue data:", err);
+        // Gracefully handle 404 - endpoint not deployed yet
+        if (err.response?.status === 404) {
+          console.log('ℹ️ Revenue endpoint not available on server yet');
+          setRevenueData(null);
+        }
+      } finally {
+        setLoadingRevenue(false);
+      }
+    };
+
+    if (salon && salon.id) {
+      fetchRevenueData();
+    }
+  }, [salon]);
 
   // ✅ Check approval status - show pending screen if not approved
   if (salon && salon.approvalStatus !== 'approved') {
@@ -600,6 +632,187 @@ const ModernDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Revenue Tracking Section */}
+            {revenueData && (
+              <div className="revenue-section mb-6 md:mb-8">
+                <div className="section-header mb-4">
+                  <h3><i className="fas fa-chart-line"></i> Revenue Tracking</h3>
+                  <div className="period-tabs">
+                    <button 
+                      className={`period-tab ${selectedPeriod === 'daily' ? 'active' : ''}`}
+                      onClick={() => setSelectedPeriod('daily')}
+                    >
+                      Daily
+                    </button>
+                    <button 
+                      className={`period-tab ${selectedPeriod === 'weekly' ? 'active' : ''}`}
+                      onClick={() => setSelectedPeriod('weekly')}
+                    >
+                      Weekly
+                    </button>
+                    <button 
+                      className={`period-tab ${selectedPeriod === 'monthly' ? 'active' : ''}`}
+                      onClick={() => setSelectedPeriod('monthly')}
+                    >
+                      Monthly
+                    </button>
+                    <button 
+                      className={`period-tab ${selectedPeriod === 'annual' ? 'active' : ''}`}
+                      onClick={() => setSelectedPeriod('annual')}
+                    >
+                      Annual
+                    </button>
+                  </div>
+                </div>
+
+                {/* Revenue Stats Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                  <div className="revenue-card">
+                    <div className="revenue-icon daily-revenue">
+                      <i className="fas fa-calendar-day"></i>
+                    </div>
+                    <div className="revenue-info">
+                      <p className="revenue-label">Today's Revenue</p>
+                      <h3 className="revenue-amount">LKR {revenueData.periods?.daily?.revenue?.toLocaleString() || '0'}</h3>
+                      <small className="revenue-detail">{revenueData.periods?.daily?.appointments || 0} appointments</small>
+                    </div>
+                  </div>
+
+                  <div className="revenue-card">
+                    <div className="revenue-icon weekly-revenue">
+                      <i className="fas fa-calendar-week"></i>
+                    </div>
+                    <div className="revenue-info">
+                      <p className="revenue-label">Weekly Revenue</p>
+                      <h3 className="revenue-amount">LKR {revenueData.periods?.weekly?.revenue?.toLocaleString() || '0'}</h3>
+                      <small className="revenue-detail">{revenueData.periods?.weekly?.appointments || 0} appointments</small>
+                    </div>
+                  </div>
+
+                  <div className="revenue-card">
+                    <div className="revenue-icon monthly-revenue">
+                      <i className="fas fa-calendar-alt"></i>
+                    </div>
+                    <div className="revenue-info">
+                      <p className="revenue-label">Monthly Revenue</p>
+                      <h3 className="revenue-amount">LKR {revenueData.periods?.monthly?.revenue?.toLocaleString() || '0'}</h3>
+                      <small className="revenue-detail">{revenueData.periods?.monthly?.appointments || 0} appointments</small>
+                    </div>
+                  </div>
+
+                  <div className="revenue-card">
+                    <div className="revenue-icon annual-revenue">
+                      <i className="fas fa-chart-bar"></i>
+                    </div>
+                    <div className="revenue-info">
+                      <p className="revenue-label">Annual Revenue</p>
+                      <h3 className="revenue-amount">LKR {revenueData.periods?.annual?.revenue?.toLocaleString() || '0'}</h3>
+                      <small className="revenue-detail">{revenueData.periods?.annual?.appointments || 0} appointments</small>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Revenue Chart - Monthly Breakdown */}
+                <div className="revenue-chart-container">
+                  <h4 className="chart-title">
+                    <i className="fas fa-chart-area"></i> Monthly Revenue Breakdown ({new Date().getFullYear()})
+                  </h4>
+                  <div className="revenue-chart">
+                    {revenueData.monthlyBreakdown && revenueData.monthlyBreakdown.map((monthData, index) => {
+                      const maxRevenue = Math.max(...revenueData.monthlyBreakdown.map(m => m.revenue));
+                      const barHeight = maxRevenue > 0 ? (monthData.revenue / maxRevenue) * 100 : 0;
+                      
+                      return (
+                        <div key={index} className="chart-bar-container">
+                          <div className="chart-bar-wrapper">
+                            <div 
+                              className="chart-bar" 
+                              style={{ height: `${barHeight}%` }}
+                              title={`LKR ${monthData.revenue.toLocaleString()}`}
+                            >
+                              {monthData.revenue > 0 && (
+                                <span className="bar-value">
+                                  {monthData.revenue >= 1000 
+                                    ? `${(monthData.revenue / 1000).toFixed(1)}k`
+                                    : monthData.revenue
+                                  }
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="chart-label">{monthData.month}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Revenue Summary */}
+                <div className="revenue-summary grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  <div className="summary-card">
+                    <div className="summary-header">
+                      <i className="fas fa-money-bill-wave"></i>
+                      <h4>Total Revenue Summary</h4>
+                    </div>
+                    <div className="summary-details">
+                      <div className="summary-row">
+                        <span>Total Earned:</span>
+                        <strong className="text-success">LKR {revenueData.summary?.totalRevenue?.toLocaleString() || '0'}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Pending Payments:</span>
+                        <strong className="text-warning">LKR {revenueData.summary?.pendingRevenue?.toLocaleString() || '0'}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Completed Jobs:</span>
+                        <strong>{revenueData.summary?.totalCompletedAppointments || 0}</strong>
+                      </div>
+                      <div className="summary-row">
+                        <span>Pending Jobs:</span>
+                        <strong>{revenueData.summary?.pendingAppointments || 0}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Transactions */}
+                  <div className="summary-card">
+                    <div className="summary-header">
+                      <i className="fas fa-receipt"></i>
+                      <h4>Recent Transactions</h4>
+                    </div>
+                    <div className="transactions-list">
+                      {revenueData.recentTransactions && revenueData.recentTransactions.length > 0 ? (
+                        revenueData.recentTransactions.slice(0, 5).map((transaction, index) => (
+                          <div key={index} className="transaction-item">
+                            <div className="transaction-details">
+                              <strong>{transaction.customerName}</strong>
+                              <small>{transaction.services}</small>
+                              <small className="transaction-date">{dayjs(transaction.date).format('MMM DD, YYYY')}</small>
+                            </div>
+                            <div className="transaction-amount">
+                              <strong>LKR {transaction.amount?.toLocaleString()}</strong>
+                              <span className={`payment-status ${transaction.paymentStatus === 'Paid' ? 'paid' : 'pending'}`}>
+                                {transaction.paymentStatus}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="no-transactions">No transactions yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {loadingRevenue && (
+              <div className="revenue-loading">
+                <i className="fas fa-spinner fa-spin"></i>
+                <span>Loading revenue data...</span>
+              </div>
+            )}
 
             {/* Main Content Grid */}
             <div className="dashboard-grid grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">

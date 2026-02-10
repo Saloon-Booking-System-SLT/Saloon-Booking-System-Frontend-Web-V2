@@ -772,3 +772,417 @@
 .loading-spinner {
   animation: spin 1s linear infinite;
 }
+
+/* ===== REVENUE TRACKING SECTION ===== */
+.revenue-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.revenue-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.revenue-section .section-header h3 {
+  font-size: 1.4rem;
+  color: #072a63;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.period-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.period-tab:hover {
+  background: rgba(0, 174, 239, 0.1);
+  color: #00AEEF;
+}
+
+.period-tab.active {
+  background: #00AEEF;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 174, 239, 0.3);
+}
+
+/* Revenue Cards */
+.revenue-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.revenue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-color: #00AEEF;
+}
+
+.revenue-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.revenue-icon.daily-revenue {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.revenue-icon.weekly-revenue {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.revenue-icon.monthly-revenue {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.revenue-icon.annual-revenue {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.revenue-info {
+  flex: 1;
+}
+
+.revenue-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.revenue-amount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #072a63;
+  margin-bottom: 3px;
+}
+
+.revenue-detail {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Revenue Chart */
+.revenue-chart-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  color: #072a63;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.revenue-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  height: 250px;
+  padding: 20px 0;
+}
+
+.chart-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-bar-wrapper {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 50px;
+  background: linear-gradient(135deg, #00AEEF 0%, #0084FF 100%);
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 5px;
+  min-height: 20px;
+}
+
+.chart-bar:hover {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  transform: scaleY(1.05);
+}
+
+.bar-value {
+  font-size: 0.7rem;
+  color: white;
+  font-weight: 600;
+}
+
+.chart-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Revenue Summary */
+.revenue-summary {
+  margin-top: 20px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: #072a63;
+}
+
+.summary-header i {
+  font-size: 1.2rem;
+  color: #00AEEF;
+}
+
+.summary-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row span {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.summary-row strong {
+  font-size: 1rem;
+  color: #072a63;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Transactions List */
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.transaction-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.transaction-details strong {
+  font-size: 0.95rem;
+  color: #072a63;
+}
+
+.transaction-details small {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.transaction-date {
+  color: #999 !important;
+}
+
+.transaction-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.transaction-amount strong {
+  font-size: 1rem;
+  color: #072a63;
+}
+
+.payment-status {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.payment-status.paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.payment-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.no-transactions {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-size: 0.9rem;
+}
+
+.revenue-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: #00AEEF;
+}
+
+.revenue-loading i {
+  font-size: 1.2rem;
+}
+
+/* Responsive Revenue Section */
+@media (max-width: 768px) {
+  .revenue-section {
+    padding: 16px;
+  }
+
+  .period-tabs {
+    flex-wrap: wrap;
+  }
+
+  .period-tab {
+    flex: 1;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .revenue-card {
+    padding: 15px;
+  }
+
+  .revenue-amount {
+    font-size: 1.2rem;
+  }
+
+  .revenue-chart {
+    height: 200px;
+    gap: 4px;
+  }
+
+  .chart-bar-wrapper {
+    height: 150px;
+  }
+
+  .chart-bar {
+    max-width: 30px;
+  }
+
+  .bar-value {
+    font-size: 0.6rem;
+  }
+
+  .chart-label {
+    font-size: 0.65rem;
+  }
+
+  .transaction-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .transaction-amount {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 10px;
+  }
+}
