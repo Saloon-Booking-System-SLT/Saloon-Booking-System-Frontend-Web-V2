@@ -60,6 +60,8 @@ const CheckoutPage = () => {
         amount: finalAmount,
         currency: "LKR",
         items: itemsDescription,
+        return_url: `${window.location.origin}/confirmationpage?order_id=${finalId}`,
+        cancel_url: window.location.href,
         customer: {
           first_name: customerName?.split(' ')[0] || "Guest",
           last_name: customerName?.split(' ').slice(1).join(' ') || "User",
@@ -71,6 +73,8 @@ const CheckoutPage = () => {
         }
       };
 
+      console.log('🔵 Initiating PayHere payment with payload:', payload);
+
       // 2. Call Backend to Init Payment
       const response = await fetch(`${API_BASE_URL}/payments/payhere/initiate`, {
         method: 'POST',
@@ -81,45 +85,66 @@ const CheckoutPage = () => {
       });
 
       const result = await response.json();
+      console.log('🔵 PayHere initiate response:', result);
 
       if (result.success && result.data) {
+        console.log('🟢 Submitting form to PayHere with data:', result.data);
         // 3. Auto-Submit Form to PayHere
         submitPayHereForm(result.data);
       } else {
-        alert('Failed to initiate payment. Please try again.');
+        alert('Failed to initiate payment: ' + (result.error || 'Unknown error'));
         console.error('Payment init failed:', result);
       }
 
     } catch (error) {
       console.error('Error initiating PayHere payment:', error);
-      alert('An error occurred. Please check your connection.');
+      alert('An error occurred. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const submitPayHereForm = (data) => {
-    // Append mandatory return_url and cancel_url if missing
+    console.log('📝 Creating PayHere form with data:', data);
+    
+    // Validate required PayHere fields
+    const requiredFields = ['merchant_id', 'order_id', 'amount', 'currency', 'hash'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('❌ Missing required PayHere fields:', missingFields);
+      alert('Payment configuration error. Missing: ' + missingFields.join(', '));
+      return;
+    }
+
+    // Ensure return_url and cancel_url are set
     const formData = {
       ...data,
       return_url: data.return_url || `${window.location.origin}/confirmationpage`,
       cancel_url: data.cancel_url || window.location.href,
     };
 
+    console.log('📝 Final form data to be submitted:', formData);
+
     const form = document.createElement('form');
     form.setAttribute('method', 'POST');
     form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
+    form.setAttribute('target', '_self'); // Submit in same window
     form.style.display = 'none';
 
     Object.keys(formData).forEach(key => {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'hidden');
-      input.setAttribute('name', key);
-      input.setAttribute('value', formData[key]);
-      form.appendChild(input);
+      if (formData[key] !== undefined && formData[key] !== null) {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'hidden');
+        input.setAttribute('name', key);
+        input.setAttribute('value', String(formData[key]));
+        form.appendChild(input);
+        console.log(`  ✓ Added field: ${key} = ${formData[key]}`);
+      }
     });
 
     document.body.appendChild(form);
+    console.log('🚀 Submitting form to PayHere...');
     form.submit();
   };
 

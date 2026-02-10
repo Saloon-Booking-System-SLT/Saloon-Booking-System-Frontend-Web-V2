@@ -64,7 +64,26 @@ const SearchSalon = () => {
   const fetchUserFavorites = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      const storedUser = localStorage.getItem("user");
+      
+      // Only fetch favorites if user is authenticated and is a customer
+      if (!token || !storedUser) {
+        setUserFavorites([]);
+        return;
+      }
+
+      // Verify user role to prevent unnecessary 403 errors
+      try {
+        const userData = JSON.parse(storedUser);
+        if (userData.role && userData.role !== 'customer') {
+          setUserFavorites([]);
+          return;
+        }
+      } catch (parseError) {
+        console.warn('Unable to parse user data');
+        setUserFavorites([]);
+        return;
+      }
 
       const res = await fetch(`${API_BASE_URL}/api/users/favorites`, {
         headers: {
@@ -76,10 +95,12 @@ const SearchSalon = () => {
       if (res.ok) {
         const data = await res.json();
         setUserFavorites(data.favorites.map(salon => salon._id));
-      } else if (res.status === 403) {
-        console.warn('⚠️ Favorites access denied. User may need to re-login.');
-        // Silently fail - don't break the app
+      } else if (res.status === 403 || res.status === 401) {
+        // Token expired or invalid - clear it and set empty favorites
+        console.warn('⚠️ Session expired. Please log in again for full features.');
         setUserFavorites([]);
+        // Optionally clear invalid token
+        // localStorage.removeItem("token");
       }
     } catch (error) {
       console.error('Error fetching favorites:', error);
