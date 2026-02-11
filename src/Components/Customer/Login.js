@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { auth, googleProvider } from "../../firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import axios from "../../Api/axios";
 import haircutImage from "../../Assets/hairdresser.jpg";
 import "./Login.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export default function CustomerLogin() {
   const [email, setEmail] = useState("");
@@ -20,45 +19,107 @@ export default function CustomerLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Handle redirect result on component mount
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          
+          const response = await axios.post('/users/google-login', {
+            name: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+          });
+
+          if (response.data.success) {
+            const { token, user: savedUser } = response.data;
+            
+            await login(token, { 
+              ...savedUser, 
+              role: 'customer'
+            });
+            
+            setTimeout(() => {
+              navigate("/searchsalon");
+            }, 200);
+          }
+        }
+      } catch (error) {
+        console.error("Redirect result error:", error);
+      }
+    };
+
+    handleRedirectResult();
+  }, [navigate, login]);
+
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      const res = await fetch(`${API_BASE_URL}/users/google-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-        }),
-      });
-
-      if (!res.ok) {
-        alert("Failed to save user");
-        setLoading(false);
+      
+      try {
+        // Try popup method first
+        const result = await signInWithPopup(auth, googleProvider);
+        await processGoogleAuthResult(result);
+      } catch (popupError) {
+        console.log("Popup failed, trying redirect method...", popupError);
+        
+        // Fallback to redirect method if popup fails
+        await signInWithRedirect(auth, googleProvider);
+        // The redirect will handle the auth result
         return;
       }
-      
-      const responseData = await res.json();
-      const { token, user: savedUser } = responseData;
-      
-      // Call login and wait for it to complete
-      await login(token, { 
-        ...savedUser, 
-        role: 'customer'
-      });
-      
-      // Navigate after login state is set
-      setTimeout(() => {
-        navigate("/searchsalon");
-        setLoading(false);
-      }, 200);
     } catch (error) {
       console.error("Google login failed:", error);
-      alert("Google login failed");
+      if (error.response?.data?.message) {
+        alert(`Google login failed: ${error.response.data.message}`);
+      } else if (error.message) {
+        alert(`Google login failed: ${error.message}`);
+      } else {
+        alert("Google login failed. Please try again.");
+      }
+      setLoading(false);
+    }
+  };
+
+  const processGoogleAuthResult = async (result) => {
+    try {
+      const user = result.user;
+
+      const response = await axios.post('/users/google-login', {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+      });
+
+      if (response.data.success) {
+        const { token, user: savedUser } = response.data;
+        
+        // Call login and wait for it to complete
+        await login(token, { 
+          ...savedUser, 
+          role: 'customer'
+        });
+        
+        // Navigate after login state is set
+        setTimeout(() => {
+          navigate("/searchsalon");
+          setLoading(false);
+        }, 200);
+      } else {
+        alert("Failed to authenticate with Google. Please try again.");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Google login processing failed:", error);
+      if (error.response?.data?.message) {
+        alert(`Google login failed: ${error.response.data.message}`);
+      } else if (error.message) {
+        alert(`Google login failed: ${error.message}`);
+      } else {
+        alert("Google login failed. Please try again.");
+      }
       setLoading(false);
     }
   };
@@ -89,18 +150,13 @@ export default function CustomerLogin() {
     setLoading(true);
     
     try {
-      const res = await fetch(`${API_BASE_URL}/users/email-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+      const response = await axios.post('/users/email-login', {
+        email: email,
+        password: password,
       });
 
-      if (res.ok) {
-        const responseData = await res.json();
-        const { token, user: savedUser } = responseData;
+      if (response.data.success) {
+        const { token, user: savedUser } = response.data;
         
         if (rememberMe) {
           localStorage.setItem('rememberedToken', token);
@@ -154,15 +210,11 @@ export default function CustomerLogin() {
     setResetLoading(true);
     
     try {
-      const res = await fetch(`${API_BASE_URL}/users/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: resetEmail,
-        }),
+      const response = await axios.post('/users/forgot-password', {
+        email: resetEmail,
       });
 
-      if (res.ok) {
+      if (response.data.success) {
         setResetSent(true);
         alert("Password reset instructions have been sent to your email");
         setTimeout(() => {
