@@ -41,7 +41,7 @@ const SalonServices = () => {
   const fetchServices = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/services/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/services/${salon.id}`);
       const data = await res.json();
       setServices(data);
     } catch (err) {
@@ -90,7 +90,7 @@ const SalonServices = () => {
     try {
       const method = editingService ? 'PUT' : 'POST';
       const url = editingService
-        ? `${API_BASE_URL}/services/${editingService._id}`
+        ? `${API_BASE_URL}/api/services/${editingService._id}`
         : `${API_BASE_URL}/services`;
 
       const res = await fetch(url, { method, body: data });
@@ -125,7 +125,7 @@ const SalonServices = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete?")) return;
     try {
-      await fetch(`${API_BASE_URL}/services/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/api/services/${id}`, { method: 'DELETE' });
       fetchServices();
     } catch (err) {
       console.error("Delete failed", err);

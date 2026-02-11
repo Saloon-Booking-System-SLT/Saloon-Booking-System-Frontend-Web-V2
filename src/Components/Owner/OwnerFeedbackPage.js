@@ -28,7 +28,7 @@ const OwnerFeedbackPage = () => {
 
   const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/feedback/with-feedbacks/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/feedback/with-feedbacks/${salon.id}`);
       const data = await res.json();
       setProfessionals(data);
       setLoading(false);

@@ -23,7 +23,7 @@ const SalonCalendar = () => {
   useEffect(() => {
     const fetchProfessionals = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/professionals/${salon.id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/professionals/${salon.id}`);
         setProfessionals(res.data);
         setSelectedProfessionalId(res.data[0]?._id || '');
       } catch (err) {

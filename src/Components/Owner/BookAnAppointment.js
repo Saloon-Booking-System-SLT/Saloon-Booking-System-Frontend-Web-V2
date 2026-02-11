@@ -625,12 +625,12 @@ const BookAnAppointment = () => {
                               ? service.image.startsWith("http")
                                 ? service.image
                                 : `${API_BASE_URL}/uploads/${service.image}`
-                              : "https://via.placeholder.com/100"
+                              : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"
                           }
                           alt={service.name}
                           className="select-services-image"
                           onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/100";
+                            e.target.src = "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff";
                           }}
                         />
 
@@ -656,12 +656,12 @@ const BookAnAppointment = () => {
                         ? salon.image.startsWith("http")
                           ? salon.image
                           : `${API_BASE_URL}/uploads/${salon.image}`
-                        : "https://via.placeholder.com/150"
+                        : "https://picsum.photos/150/150?random=1"
                     }
                     alt="Salon"
                     className="salon-image"
                     onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/150";
+                      e.target.src = "https://picsum.photos/150/150?random=1";
                     }}
                   />
 

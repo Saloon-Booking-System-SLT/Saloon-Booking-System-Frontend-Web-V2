@@ -180,7 +180,7 @@ const Profile = () => {
                 {favorites.map((salon) => (
                   <div className="favorite-item" key={salon._id}>
                     <img 
-                      src={salon.image || "https://via.placeholder.com/60x60?text=Salon"} 
+                      src={salon.image || "https://ui-avatars.com/api/?name=Salon&background=random&size=60&color=fff"} 
                       alt={salon.name}
                       className="favorite-salon-image"
                     />

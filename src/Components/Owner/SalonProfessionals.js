@@ -46,7 +46,7 @@ const SalonProfessionalsV2 = () => {
   const fetchProfessionals = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/professionals/${salon.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/professionals/${salon.id}`);
       const data = await res.json();
       setProfessionals(data);
     } catch (err) {
@@ -77,7 +77,7 @@ const SalonProfessionalsV2 = () => {
     if (fileCertificate) form.append("certificate", fileCertificate);
 
     const url = editingProfessional
-      ? `${API_BASE_URL}/professionals/${editingProfessional._id}`
+      ? `${API_BASE_URL}/api/professionals/${editingProfessional._id}`
       : `${API_BASE_URL}/professionals`;
 
     const method = editingProfessional ? "PUT" : "POST";
@@ -116,7 +116,7 @@ const SalonProfessionalsV2 = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete?")) return;
     try {
-      await fetch(`${API_BASE_URL}/professionals/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/api/professionals/${id}`, { method: "DELETE" });
       fetchProfessionals();
     } catch (err) {
       console.error(err);
@@ -189,7 +189,7 @@ const SalonProfessionalsV2 = () => {
             <div key={pro._id} className="pro-v2-card">
               <img
                 src={
-                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "https://via.placeholder.com/100"
+                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "https://ui-avatars.com/api/?name=Professional&background=random&size=100&color=fff"
                 }
                 alt={pro.name}
                 className="pro-v2-image"
