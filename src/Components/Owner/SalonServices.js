@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from '../../Api/axios';
 import logo from '../../Assets/logo.png';
 import './SalonServices.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
 
 const SalonServices = () => {
@@ -41,9 +41,8 @@ const SalonServices = () => {
   const fetchServices = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/services/${salon.id}`);
-      const data = await res.json();
-      setServices(data);
+      const res = await axios.get(`/services/${salon.id}`);
+      setServices(res.data);
     } catch (err) {
       console.error("Failed to fetch services", err);
     }
@@ -88,24 +87,18 @@ const SalonServices = () => {
     }
 
     try {
-      const method = editingService ? 'PUT' : 'POST';
-      const url = editingService
-        ? `${API_BASE_URL}/api/services/${editingService._id}`
-        : `${API_BASE_URL}/services`;
-
-      const res = await fetch(url, { method, body: data });
-      if (res.ok) {
-        fetchServices();
-        setShowPopup(false);
-        setEditingService(null);
-        setFormData({ name: '', price: '', duration: '15min', gender: 'Unisex', image: '' });
-        setFile(null);
-      } else {
-        const error = await res.json();
-        alert(error.message || "Failed to save service");
-      }
+      const res = editingService
+        ? await axios.put(`/services/${editingService._id}`, data)
+        : await axios.post('/services', data);
+      
+      fetchServices();
+      setShowPopup(false);
+      setEditingService(null);
+      setFormData({ name: '', price: '', duration: '15min', gender: 'Unisex', image: '' });
+      setFile(null);
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.message || "Failed to save service");
     }
   };
 
@@ -125,7 +118,7 @@ const SalonServices = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete?")) return;
     try {
-      await fetch(`${API_BASE_URL}/api/services/${id}`, { method: 'DELETE' });
+      await axios.delete(`/services/${id}`);
       fetchServices();
     } catch (err) {
       console.error("Delete failed", err);
