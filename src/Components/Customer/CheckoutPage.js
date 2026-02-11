@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from '../../Api/axios';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -33,9 +34,6 @@ const CheckoutPage = () => {
     bookingId,
     totalAmount
   } = location.state;
-
-  // Use environment variable or production fallback
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
 
   const handlePayHereCheckout = async () => {
     setIsLoading(true);
@@ -72,15 +70,9 @@ const CheckoutPage = () => {
       };
 
       // 2. Call Backend to Init Payment
-      const response = await fetch(`${API_BASE_URL}/payments/payhere/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await axios.post('/payments/payhere/initiate', payload);
 
-      const result = await response.json();
+      const result = response.data;
 
       if (result.success && result.data) {
         // 3. Auto-Submit Form to PayHere

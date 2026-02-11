@@ -43,6 +43,16 @@ const SearchSalon = () => {
 
   
 
+  const handleNavigateToProfile = () => {
+    navigate("/profile");
+    setMenuOpen(false);
+  };
+
+  const handleNavigateToAppointments = () => {
+    navigate("/appointments");
+    setMenuOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -514,8 +524,8 @@ const SearchSalon = () => {
                   <ul>
                     {!isGuest && (
                       <>
-                        <li onClick={() => navigate("/profile")}>👤 Profile</li>
-                        <li onClick={() => navigate("/appointments")}>
+                        <li onClick={handleNavigateToProfile}>👤 Profile</li>
+                        <li onClick={handleNavigateToAppointments}>
                           <CalendarDaysIcon className="h-4 w-4 inline mr-1" /> Appointments
                         </li>
                       </>
@@ -725,7 +735,7 @@ const SearchSalon = () => {
                     </p>
                     <button
                       className="select-btn"
-                      onClick={() => navigate("/BookSelectionPage", { state: { salon } })}
+                      onClick={() => navigate("/bookselectionpage", { state: { salon } })}
                     >
                       Select
                     </button>
@@ -794,7 +804,7 @@ const SearchSalon = () => {
                       <span> ({salon.avgRating})</span>
                     </p>
                     <button className="select-btn" onClick={() =>
-                      navigate(`/BookSelectionPage`, { state: { salon } })
+                      navigate(`/bookselectionpage`, { state: { salon } })
                     }>
                       Select
                     </button>

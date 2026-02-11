@@ -38,6 +38,16 @@ const Home = () => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  const handleNavigateToProfile = () => {
+    navigate("/profile");
+    setMenuOpen(false);
+  };
+
+  const handleNavigateToAppointments = () => {
+    navigate("/appointments");
+    setMenuOpen(false);
+  };
+
   
 
   const handleLogout = () => {
@@ -126,11 +136,11 @@ const Home = () => {
                   <ul>
                     {!isGuest && (
                       <>
-                        <li onClick={() => navigate("/profile")} className="flex items-center gap-2">
+                        <li onClick={handleNavigateToProfile} className="flex items-center gap-2">
                           <UserIcon className="h-4 w-4" />
                           Profile
                         </li>
-                        <li onClick={() => navigate("/appointments")} className="flex items-center gap-2">
+                        <li onClick={handleNavigateToAppointments} className="flex items-center gap-2">
                           <CalendarDaysIcon className="h-4 w-4" />
                           Appointments
                         </li>

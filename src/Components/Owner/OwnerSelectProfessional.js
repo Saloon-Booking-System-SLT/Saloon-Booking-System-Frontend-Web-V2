@@ -85,8 +85,8 @@ const SelectProfessionalPage = () => {
   const getImageUrl = (image, type = 'default') => {
     if (!image) {
       return type === 'popup' 
-        ? 'https://via.placeholder.com/50'
-        : 'https://via.placeholder.com/150';
+        ? 'https://ui-avatars.com/api/?name=User&background=random&size=50&color=fff'
+        : 'https://picsum.photos/150/150?random=3';
     }
     
     // If it's already a full URL
@@ -543,7 +543,7 @@ const SelectProfessionalPage = () => {
                                   onError={(e) => {
                                     console.error(`Failed to load image for ${pro.name}:`, e.target.src);
                                     e.target.onerror = null;
-                                    e.target.src = "https://via.placeholder.com/150";
+                                    e.target.src = "https://picsum.photos/150/150?random=3";
                                   }}
                                 />
                                 <div className="professional-details">
@@ -754,7 +754,7 @@ const SelectProfessionalPage = () => {
                               onError={(e) => {
                                 console.error(`Failed to load popup image for ${pro.name}:`, e.target.src);
                                 e.target.onerror = null;
-                                e.target.src = "https://via.placeholder.com/50";
+                                e.target.src = "https://ui-avatars.com/api/?name=User&background=random&size=50&color=fff";
                               }}
                             />
                             <div className="pro-details-popup">

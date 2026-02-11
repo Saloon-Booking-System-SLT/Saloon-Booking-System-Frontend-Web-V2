@@ -206,7 +206,7 @@ const SelectProfessionalPage = () => {
                         ? pro.image.startsWith("http")
                           ? pro.image
                           : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                        : "https://via.placeholder.com/150"
+                        : "https://picsum.photos/150/150?random=6"
                     }
                     alt={pro.name}
                     className="service-image"
