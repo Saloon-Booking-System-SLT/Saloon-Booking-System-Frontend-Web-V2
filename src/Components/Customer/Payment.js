@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from '../../Api/axios';
 import './Payment.css';
 
 const stripePromise = loadStripe('pk_test_51SIW1nRfqzlHRTKYypcBhcVOLjsBkCjqel4IIU8DfFajkwnUxTz7E7hVFfXHTHLTHHH7iKA7i1ARDYgMwO2Es95S00sHaLcuR1');
@@ -84,41 +85,29 @@ const CheckoutForm = () => {
       });
 
       // Step 1: Create payment intent
-      const response = await fetch('https://saloon-booking-system-backend-v2.onrender.com/api/payments/create-payment-intent', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amountInUSDCents,
-          currency: 'usd',
-          customer_email: customerEmail,
-          metadata: {
-            isGroupBooking: isGroupBooking.toString(),
-            appointmentCount: (appointments?.length || 1).toString()
-          }
-        }),
+      const response = await axios.post('/payments/stripe/create-payment-intent', {
+        amount: amountInUSDCents,
+        currency: 'usd',
+        customer_email: customerEmail,
+        metadata: {
+          isGroupBooking: isGroupBooking.toString(),
+          appointmentCount: (appointments?.length || 1).toString()
+        }
+      });
       });
 
-      let responseData;
-      try {
-        responseData = await response.json();
-        console.log('✅ Payment intent response:', responseData);
-      } catch (parseError) {
-        console.error('❌ Failed to parse response:', parseError);
-        throw new Error('Invalid response from server');
-      }
+      console.log('✅ Payment intent response:', response.data);
 
-      if (!response.ok) {
-        const errorMsg = responseData.error || responseData.details || `Payment failed: ${response.status}`;
+      if (!response.data.client_secret) {
+        const errorMsg = response.data.error || response.data.details || 'Payment failed to initialize';
         throw new Error(errorMsg);
       }
 
-      if (!responseData.success) {
-        throw new Error(responseData.error || 'Failed to create payment intent');
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to create payment intent');
       }
 
-      const { clientSecret } = responseData;
+      const { clientSecret } = response.data;
       
       if (!clientSecret) {
         throw new Error('No client secret received from server');
