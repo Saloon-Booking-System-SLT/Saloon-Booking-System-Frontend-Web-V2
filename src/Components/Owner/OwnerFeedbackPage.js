@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from '../../Api/axios';
 import logo from "../../Assets/logo.png";
 import "./OwnerFeedbackPage.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const OwnerFeedbackPage = () => {
   const navigate = useNavigate();
@@ -28,9 +27,8 @@ const OwnerFeedbackPage = () => {
 
   const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/feedback/with-feedbacks/${salon.id}`);
-      const data = await res.json();
-      setProfessionals(data);
+      const res = await axios.get(`/feedback/with-feedbacks/${salon.id}`);
+      setProfessionals(res.data);
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch professionals with feedbacks", err);

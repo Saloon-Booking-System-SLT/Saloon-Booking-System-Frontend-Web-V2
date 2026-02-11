@@ -44,8 +44,7 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext: Checking stored data', {
           hasToken: !!storedToken,
           hasUserData: !!userData,
-          hasSalonData: !!salonData,
-          hasFirebaseUser: !!firebaseUser
+          hasSalonData: !!salonData
         });
         
         // Priority 1: Salon owner authentication (backend)
@@ -82,28 +81,33 @@ export const AuthProvider = ({ children }) => {
           }
         }
         
-        // Priority 3: Firebase user (customers) - will be handled when firebaseUser changes
-        if (firebaseUser) {
-          console.log('AuthContext: Using Firebase user session');
-          // Firebase user will be converted to our user format when needed
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName,
-            role: 'customer',
-            photoURL: firebaseUser.photoURL
-          });
-        }
-        
       } catch (error) {
         console.error('AuthContext: Error during session restore', error);
       }
       setLoading(false);
     };
 
-    // Wait a bit for Firebase to initialize
-    setTimeout(restoreSession, 100);
-  }, [firebaseUser]);
+    // Restore session immediately on mount, don't wait for Firebase
+    restoreSession();
+  }, []); // Remove firebaseUser dependency
+
+  // Handle Firebase user separately for customer authentication
+  useEffect(() => {
+    if (firebaseUser && !token) { // Only use Firebase if no backend token
+      console.log('AuthContext: Using Firebase user session');
+      setUser({
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: firebaseUser.displayName,
+        role: 'customer',
+        photoURL: firebaseUser.photoURL
+      });
+      setLoading(false);
+    } else if (!firebaseUser && !token) {
+      // No authentication found
+      setLoading(false);
+    }
+  }, [firebaseUser, token]);
 
   const login = (newToken, userData) => {
     try {

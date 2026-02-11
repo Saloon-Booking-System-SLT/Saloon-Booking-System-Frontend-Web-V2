@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from '../../Api/axios';
 import logo from "../../Assets/logo.png";
 import "./SalonProfessionals.css";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const SalonProfessionalsV2 = () => {
   const navigate = useNavigate();
@@ -46,9 +45,8 @@ const SalonProfessionalsV2 = () => {
   const fetchProfessionals = useCallback(async () => {
     if (!salon?.id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/professionals/${salon.id}`);
-      const data = await res.json();
-      setProfessionals(data);
+      const res = await axios.get(`/professionals/${salon.id}`);
+      setProfessionals(res.data);
     } catch (err) {
       console.error("Fetch failed", err);
     }
@@ -76,29 +74,20 @@ const SalonProfessionalsV2 = () => {
     if (fileImage) form.append("image", fileImage);
     if (fileCertificate) form.append("certificate", fileCertificate);
 
-    const url = editingProfessional
-      ? `${API_BASE_URL}/api/professionals/${editingProfessional._id}`
-      : `${API_BASE_URL}/professionals`;
-
-    const method = editingProfessional ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, { method, body: form });
-      if (res.ok) {
-        fetchProfessionals();
-        setShowPopup(false);
-        setEditingProfessional(null);
-        setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
-        setFileImage(null);
-        setFileCertificate(null);
-      } else {
-        const error = await res.json();
-        console.error(error);
-        alert("Save failed: " + (error.message || "Unknown error"));
-      }
+      const res = editingProfessional
+        ? await axios.put(`/professionals/${editingProfessional._id}`, form)
+        : await axios.post('/professionals', form);
+      
+      fetchProfessionals();
+      setShowPopup(false);
+      setEditingProfessional(null);
+      setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
+      setFileImage(null);
+      setFileCertificate(null);
     } catch (err) {
       console.error(err);
-      alert("Save failed: " + err.message);
+      alert("Save failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -116,7 +105,7 @@ const SalonProfessionalsV2 = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete?")) return;
     try {
-      await fetch(`${API_BASE_URL}/api/professionals/${id}`, { method: "DELETE" });
+      await axios.delete(`/professionals/${id}`);
       fetchProfessionals();
     } catch (err) {
       console.error(err);

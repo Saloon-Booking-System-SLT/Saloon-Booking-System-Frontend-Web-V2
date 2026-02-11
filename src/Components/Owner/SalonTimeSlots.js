@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../Api/axios';
 import logo from '../../Assets/logo.png';
 import './SalonTimeSlots.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://saloon-booking-system-backend-v2.onrender.com/api';
 
 const SalonTimeSlots = () => {
   const navigate = useNavigate();
@@ -25,7 +23,7 @@ const SalonTimeSlots = () => {
   useEffect(() => {
     const fetchProfessionals = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/professionals/${salon.id}`);
+        const res = await axios.get(`/professionals/${salon.id}`);
         setProfessionals(res.data);
         if (res.data.length > 0) {
           setSelectedProfessionalId(res.data[0]._id);
@@ -39,7 +37,7 @@ const SalonTimeSlots = () => {
 
   const fetchTimeSlots = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/timeslots`, {
+      const res = await axios.get('/timeslots', {
         params: { professionalId: selectedProfessionalId, date: selectedDate }
       });
       setTimeSlots(res.data);
@@ -61,7 +59,7 @@ const SalonTimeSlots = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/timeslots`, {
+      await axios.post('/timeslots', {
         salonId: salon.id,
         professionalId: selectedProfessionalId,
         date: selectedDate,
@@ -94,7 +92,7 @@ const SalonTimeSlots = () => {
     }
 
     try {
-      await Promise.all(slots.map(slot => axios.post(`${API_BASE_URL}/timeslots`, slot)));
+      await Promise.all(slots.map(slot => axios.post('/timeslots', slot)));
       fetchTimeSlots();
       alert("Time slots generated successfully!");
     } catch (err) {
@@ -107,7 +105,7 @@ const SalonTimeSlots = () => {
     if (!window.confirm("Delete this time slot?")) return;
     
     try {
-      await axios.delete(`${API_BASE_URL}/timeslots/${slotId}`);
+      await axios.delete(`/timeslots/${slotId}`);
       fetchTimeSlots();
       alert("Time slot deleted successfully!");
     } catch (err) {
