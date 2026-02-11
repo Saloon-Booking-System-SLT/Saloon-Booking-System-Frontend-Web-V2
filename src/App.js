@@ -71,7 +71,7 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
-          <Route path="/searchsalon" element={<CustomerRoute><Searchsalon /></CustomerRoute>} />
+          <Route path="/searchsalon" element={<Searchsalon />} />
           <Route path="/profile" element={<CustomerRoute><Profile /></CustomerRoute>} />
           <Route path="/select-services/:salonId" element={<CustomerRoute><SelectServicesPage /></CustomerRoute>} />
           <Route path="/select-professional/:salonId" element={<CustomerRoute><SelectProfessionalPage /></CustomerRoute>} />
