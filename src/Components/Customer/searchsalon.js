@@ -725,7 +725,7 @@ const SearchSalon = () => {
                     </p>
                     <button
                       className="select-btn"
-                      onClick={() => navigate("/BookSelectionPage", { state: { salon } })}
+                      onClick={() => navigate("/bookselectionpage", { state: { salon } })}
                     >
                       Select
                     </button>
@@ -794,7 +794,7 @@ const SearchSalon = () => {
                       <span> ({salon.avgRating})</span>
                     </p>
                     <button className="select-btn" onClick={() =>
-                      navigate(`/BookSelectionPage`, { state: { salon } })
+                      navigate(`/bookselectionpage`, { state: { salon } })
                     }>
                       Select
                     </button>
