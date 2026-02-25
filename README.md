@@ -173,7 +173,7 @@ cp .env.example .env.local
 4. **Configure environment variables**
 ```env
 # API Configuration
-REACT_APP_API_URL=https://saloon-booking-system-backend-v2.onrender.com/api
+REACT_APP_API_URL=https://saloon-booking-system-backend-v2.onrender.com/api/
 
 # Firebase Configuration
 REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
