@@ -106,7 +106,7 @@ const SalonProfile = () => {
       };
 
       // Call the backend API to update salon
-      const response = await axios.put(`https://saloon-booking-system-backend-v2.onrender.com/api/salons/${salonId}`, updateData);
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/salons/${salonId}`, updateData);
       
       if (response.data) {
         // Update localStorage with new data

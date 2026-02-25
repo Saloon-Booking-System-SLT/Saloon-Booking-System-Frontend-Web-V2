@@ -44,7 +44,7 @@ const Profile = () => {
         return;
       }
 
-      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/favorites`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/favorites`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -67,7 +67,7 @@ const Profile = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/favorites/${salonId}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/favorites/${salonId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -89,7 +89,7 @@ const Profile = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/${user._id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -257,7 +257,7 @@ const AddAddressPopup = ({ user, setUser, close }) => {
     const updated = { ...user, address: [...(user.address || []), { type, text }] };
 
     try {
-      const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/users/${user._id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),
