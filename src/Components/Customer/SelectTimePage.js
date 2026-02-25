@@ -6,7 +6,7 @@ import "./SelectTimePage.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace('/api', '') :
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
   'https://saloon-booking-system-backend-v2.onrender.com';
 
 const SelectTimePage = () => {

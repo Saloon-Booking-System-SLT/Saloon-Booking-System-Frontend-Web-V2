@@ -5,7 +5,7 @@ import "./OwnerConfirmationPage.css";
 import logo from '../../Assets/logo.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
   'https://saloon-booking-system-backend-v2.onrender.com';
 
 // ✅ Sidebar Component (same as dashboard)

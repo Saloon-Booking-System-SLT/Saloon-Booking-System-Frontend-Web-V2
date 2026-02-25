@@ -6,7 +6,7 @@ import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace('/api', '') :
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
   'http://localhost:5000';
 
 const SelectTimePage = () => {

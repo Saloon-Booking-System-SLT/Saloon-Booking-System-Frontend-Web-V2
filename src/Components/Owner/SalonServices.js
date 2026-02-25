@@ -4,7 +4,7 @@ import axios from '../../Api/axios';
 import logo from '../../Assets/logo.png';
 import './SalonServices.css';
 
-const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace('/api', '/uploads') || 'http://localhost:5000/uploads';
+const UPLOADS_URL = process.env.REACT_APP_API_URL?.replace(/\/api$/, '/uploads') || 'http://localhost:5000/uploads';
 
 const SalonServices = () => {
   const navigate = useNavigate();
