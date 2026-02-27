@@ -44,6 +44,16 @@ body, html {
   text-shadow: 0 0 6px rgba(0,0,0,0.5);
   line-height: 1;
   margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-salon-logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.3));
 }
 
 .nav-menu {
