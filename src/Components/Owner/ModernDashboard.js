@@ -5,11 +5,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../Api/axios';
 import dayjs from 'dayjs';
 import { useAuth } from '../../contexts/AuthContext';
+import RevenueReport from './RevenueReport';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
+  "";
 
 // ✅ Calendar-style Sidebar component
 const Sidebar = () => {
@@ -181,6 +182,7 @@ const ModernDashboard = () => {
     };
 
     fetchAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
 
   // ✅ Check approval status - show pending screen if not approved
@@ -591,6 +593,9 @@ const ModernDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Revenue Report Section */}
+            <RevenueReport salonId={salonId} />
 
             {/* Main Content Grid */}
             <div className="dashboard-grid grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">

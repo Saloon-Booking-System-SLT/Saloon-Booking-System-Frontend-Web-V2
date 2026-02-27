@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace("/api", "")
-  : "https://saloon-booking-system-backend-v2.onrender.com";
+  ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
+  : "";
 
 const SelectProfessionalPage = () => {
   const location = useLocation();
@@ -206,7 +206,7 @@ const SelectProfessionalPage = () => {
                         ? pro.image.startsWith("http")
                           ? pro.image
                           : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                        : "https://via.placeholder.com/150"
+                        : "https://picsum.photos/150/150?random=6"
                     }
                     alt={pro.name}
                     className="service-image"

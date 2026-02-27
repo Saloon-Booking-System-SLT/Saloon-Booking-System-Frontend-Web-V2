@@ -6,8 +6,8 @@ import "./SelectTimePage.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace('/api', '') :
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
+  "";
 
 const SelectTimePage = () => {
   const location = useLocation();
@@ -859,7 +859,7 @@ const SelectTimePage = () => {
       <div className="right-column">
         <div className="summary-box">
           <img
-            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://via.placeholder.com/150"}
+            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/150/150?random=9"}
             alt="Salon"
             className="salon-image"
           />

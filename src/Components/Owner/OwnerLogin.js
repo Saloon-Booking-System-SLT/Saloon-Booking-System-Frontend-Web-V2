@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./OwnerLogin.css";
 import loginImage from "../../Assets/login-image.jpg";
-import axios from "axios";
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import axiosInstance from "../../Api/axios";
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
@@ -32,7 +30,7 @@ const OwnerLogin = () => {
 
     try {
       console.log('🔐 Attempting login...');
-      const res = await axios.post(`${API_BASE_URL}/salons/login`, formData);
+      const res = await axiosInstance.post('/salons/login', formData);
       
       const { token, salon } = res.data;
       
@@ -106,7 +104,7 @@ const OwnerLogin = () => {
     setForgotLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/salons/forgot-password`, {
+      const res = await axiosInstance.post('/salons/forgot-password', {
         email: forgotEmail
       });
 

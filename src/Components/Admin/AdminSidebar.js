@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   HomeIcon,
@@ -109,9 +109,9 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
       {/* Sidebar */}
       <div className={`
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 fixed lg:relative
+        lg:translate-x-0 fixed
         w-64 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 
-        text-white min-h-screen flex flex-col shadow-2xl border-r border-slate-700 
+        text-white h-screen flex flex-col shadow-2xl border-r border-slate-700 
         transition-transform duration-300 ease-in-out z-40
       `}>
       {/* Logo */}

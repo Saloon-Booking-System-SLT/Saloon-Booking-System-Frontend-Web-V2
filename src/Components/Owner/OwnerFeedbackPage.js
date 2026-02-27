@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../../Api/axios";
 import logo from "../../Assets/logo.png";
 import "./OwnerFeedbackPage.css";
-import { API_BASE_URL } from '../../config/api';
 
 const OwnerFeedbackPage = () => {
   const navigate = useNavigate();
@@ -16,13 +16,37 @@ const OwnerFeedbackPage = () => {
     return (
       <aside className="modern-sidebar">
         <img src={logo} alt="Brand Logo" className="modern-logo" />
-        <i className="fas fa-home" title="Home" onClick={() => navigate('/dashboard')}></i>
-        <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate('/calendar')}></i>
-        <i className="fas fa-cut" title="Services" onClick={() => navigate('/services')}></i>
+        <i
+          className="fas fa-home"
+          title="Home"
+          onClick={() => navigate("/dashboard")}
+        ></i>
+        <i
+          className="fas fa-calendar-alt"
+          title="Calendar"
+          onClick={() => navigate("/calendar")}
+        ></i>
+        <i
+          className="fas fa-cut"
+          title="Services"
+          onClick={() => navigate("/services")}
+        ></i>
         <i className="fas fa-comment-alt active" title="Feedbacks"></i>
-        <i className="fas fa-users" title="Professionals" onClick={() => navigate('/professionals')}></i>
-        <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
-        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate('/timeslots')}></i>
+        <i
+          className="fas fa-users"
+          title="Professionals"
+          onClick={() => navigate("/professionals")}
+        ></i>
+        <i
+          className="fas fa-calendar-check"
+          title="Book An Appointment"
+          onClick={() => navigate("/book-appointment")}
+        ></i>
+        <i
+          className="fas fa-clock"
+          title="Time Slots"
+          onClick={() => navigate("/timeslots")}
+        ></i>
       </aside>
     );
   };
@@ -30,15 +54,15 @@ const OwnerFeedbackPage = () => {
   const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
       const salonId = salon?.id || salon?._id;
-      if (!salonId) return;
-      setError("");
-      const res = await fetch(`${API_BASE_URL}/feedback/with-feedbacks/${salonId}`);
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+      if (!salonId) {
+        setError("Salon information not found.");
+        setLoading(false);
+        return;
       }
-      const data = await res.json();
-      setProfessionals(data);
+
+      setError("");
+      const res = await axios.get(`/feedback/with-feedbacks/${salonId}`);
+      setProfessionals(res.data || []);
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch professionals with feedbacks", err);
@@ -50,8 +74,14 @@ const OwnerFeedbackPage = () => {
   useEffect(() => {
     if (didFetch.current) return;
     didFetch.current = true;
+
     const salonId = salon?.id || salon?._id;
-    if (salonId) fetchProfessionalsWithFeedbacks();
+    if (salonId) {
+      fetchProfessionalsWithFeedbacks();
+    } else {
+      setError("Salon information not found.");
+      setLoading(false);
+    }
   }, [salon?.id, salon?._id, fetchProfessionalsWithFeedbacks]);
 
   const getAverageRating = (feedbacks) => {
@@ -61,9 +91,10 @@ const OwnerFeedbackPage = () => {
   };
 
   const getRatingColor = (rating) => {
-    if (rating >= 4) return "#27ae60"; // Green for high ratings
-    if (rating >= 3) return "#f39c12"; // Orange for medium ratings
-    return "#e74c3c"; // Red for low ratings
+    const numericRating = Number(rating);
+    if (numericRating >= 4) return "#27ae60";
+    if (numericRating >= 3) return "#f39c12";
+    return "#e74c3c";
   };
 
   return (
@@ -80,8 +111,14 @@ const OwnerFeedbackPage = () => {
 
         <div className="services-body">
           {error && (
-            <div className="empty-state" style={{ color: '#b91c1c', background: '#fee2e2' }}>{error}</div>
+            <div
+              className="empty-state"
+              style={{ color: "#b91c1c", background: "#fee2e2" }}
+            >
+              {error}
+            </div>
           )}
+
           {loading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
@@ -95,9 +132,10 @@ const OwnerFeedbackPage = () => {
             </div>
           ) : (
             professionals.map((pro) => {
-              const avgRating = getAverageRating(pro.feedbacks);
+              const feedbacks = pro.feedbacks || [];
+              const avgRating = getAverageRating(feedbacks);
               const ratingColor = getRatingColor(avgRating);
-              
+
               return (
                 <div key={pro._id} className="professional-feedback-section">
                   <div className="professional-header">
@@ -105,24 +143,28 @@ const OwnerFeedbackPage = () => {
                       <h3 className="professional-name">{pro.name}</h3>
                       <span className="professional-role">{pro.role}</span>
                     </div>
-                    <div className="rating-summary" style={{ borderLeftColor: ratingColor }}>
+
+                    <div
+                      className="rating-summary"
+                      style={{ borderLeftColor: ratingColor }}
+                    >
                       <div className="avg-rating" style={{ color: ratingColor }}>
-                        {avgRating > 0 ? `⭐ ${avgRating}/5` : "No ratings"}
+                        {Number(avgRating) > 0 ? `⭐ ${avgRating}/5` : "No ratings"}
                       </div>
                       <div className="review-count">
-                        {pro.feedbacks.length} {pro.feedbacks.length === 1 ? 'review' : 'reviews'}
+                        {feedbacks.length} {feedbacks.length === 1 ? "review" : "reviews"}
                       </div>
                     </div>
                   </div>
 
                   <div className="feedbacks-grid">
-                    {pro.feedbacks.length === 0 ? (
+                    {feedbacks.length === 0 ? (
                       <div className="no-feedback-card">
                         <i className="fas fa-comment-slash"></i>
                         <p>No feedback received yet</p>
                       </div>
                     ) : (
-                      pro.feedbacks.map((fb) => (
+                      feedbacks.map((fb) => (
                         <div key={fb._id} className="feedback-card">
                           <div className="feedback-header">
                             <div className="user-info">
@@ -140,11 +182,14 @@ const OwnerFeedbackPage = () => {
                                 </span>
                               </div>
                             </div>
+
                             <div className="rating-stars">
-                              {"★".repeat(fb.rating)}{"☆".repeat(5 - fb.rating)}
+                              {"★".repeat(fb.rating)}
+                              {"☆".repeat(5 - fb.rating)}
                               <span className="rating-number">({fb.rating})</span>
                             </div>
                           </div>
+
                           <div className="feedback-comment">
                             {fb.comment || (
                               <span className="no-comment">(No comment provided)</span>

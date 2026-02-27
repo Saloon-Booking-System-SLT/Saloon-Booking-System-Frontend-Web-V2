@@ -4,8 +4,8 @@ import "./BookAnAppointment.css";
 import logo from '../../Assets/logo.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
+  "";
 
 // ✅ Sidebar Component (same as dashboard)
 const Sidebar = () => {
@@ -148,6 +148,7 @@ const BookAnAppointment = () => {
     };
     
     initializeBooking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to fetch owner's salon
@@ -274,6 +275,7 @@ const BookAnAppointment = () => {
     if (salon && services.length > 0) {
       filterServices(services, searchQuery, selectedGender);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedGender, services, salon]);
 
   const filterServices = (all, search, gender) => {
@@ -623,12 +625,12 @@ const BookAnAppointment = () => {
                               ? service.image.startsWith("http")
                                 ? service.image
                                 : `${API_BASE_URL}/uploads/${service.image}`
-                              : "https://via.placeholder.com/100"
+                              : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"
                           }
                           alt={service.name}
                           className="select-services-image"
                           onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/100";
+                            e.target.src = "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff";
                           }}
                         />
 
@@ -654,12 +656,12 @@ const BookAnAppointment = () => {
                         ? salon.image.startsWith("http")
                           ? salon.image
                           : `${API_BASE_URL}/uploads/${salon.image}`
-                        : "https://via.placeholder.com/150"
+                        : "https://picsum.photos/150/150?random=1"
                     }
                     alt="Salon"
                     className="salon-image"
                     onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/150";
+                      e.target.src = "https://picsum.photos/150/150?random=1";
                     }}
                   />
 

@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import "./MyAppointmentsPage.css";
 import { useNavigate } from "react-router-dom";
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
+  "";
 
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);

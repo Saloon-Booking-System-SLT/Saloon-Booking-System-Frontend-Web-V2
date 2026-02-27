@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
+  "";
 
 const SelectServicesPage = () => {
   const location = useLocation();
@@ -123,7 +123,7 @@ const SelectServicesPage = () => {
       ? service.image.startsWith("http")
         ? service.image // already a full URL
         : `${API_BASE_URL}/uploads/${service.image}` // uploaded file
-      : "https://via.placeholder.com/100"
+      : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"
   }
   alt={service.name}
   className="select-services-image"
@@ -150,7 +150,7 @@ const SelectServicesPage = () => {
       ? salon.image.startsWith("http")
         ? salon.image // already a full URL
         : `${API_BASE_URL}/uploads/${salon.image}` // uploaded file
-      : "https://via.placeholder.com/150"
+      : "https://picsum.photos/150/150?random=10"
   }
   alt="Salon"
   className="salon-image"

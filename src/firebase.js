@@ -26,7 +26,14 @@ const app = initializeApp(firebaseConfig);
 // ✅ Auth and Providers
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
+googleProvider.setCustomParameters({ 
+  prompt: "select_account",
+  login_hint: "user@example.com" 
+});
+
+// Add additional scopes if needed
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
 
 // ✅ Optional: Limit login to session only (not persisted after close)
 setPersistence(auth, browserSessionPersistence)

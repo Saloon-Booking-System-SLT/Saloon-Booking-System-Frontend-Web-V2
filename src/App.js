@@ -71,9 +71,9 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
-          <Route path="/searchsalon" element={<CustomerRoute><Searchsalon /></CustomerRoute>} />
+          <Route path="/searchsalon" element={<Searchsalon />} />
           <Route path="/profile" element={<CustomerRoute><Profile /></CustomerRoute>} />
-          <Route path="/select-services/:salonId" element={<CustomerRoute><SelectServicesPage /></CustomerRoute>} />
+          <Route path="/select-services/:salonId" element={<SelectServicesPage />} />
           <Route path="/select-professional/:salonId" element={<CustomerRoute><SelectProfessionalPage /></CustomerRoute>} />
           <Route path="/select-time" element={<CustomerRoute><SelectTimePage /></CustomerRoute>} />
           <Route path="/appointments" element={<CustomerRoute><MyAppointmentsPage /></CustomerRoute>} />
@@ -81,7 +81,7 @@ function App() {
           <Route path="/familybookingselectservice/:salonId" element={<CustomerRoute><FamilyBookingSelectService /></CustomerRoute>} />
           <Route path="/familybookingselectprofessional/:salonId" element={<CustomerRoute><FamilyBookingSelectProfessional /></CustomerRoute>} />
           <Route path="/familybookingselecttimepage" element={<CustomerRoute><FamilyBookingSelectTimePage /></CustomerRoute>} />
-          <Route path="/bookselectionpage" element={<CustomerRoute><BookSelectionPage /></CustomerRoute>} />
+          <Route path="/bookselectionpage" element={<BookSelectionPage />} />
           <Route path="/checkoutpage" element={<CustomerRoute><CheckoutPage /></CustomerRoute>} />
           <Route path="/confirmationpage" element={<CustomerRoute><ConfirmationPage /></CustomerRoute>} />
 
