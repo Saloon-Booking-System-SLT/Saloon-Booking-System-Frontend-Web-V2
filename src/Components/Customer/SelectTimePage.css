@@ -455,3 +455,715 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ========== MOBILE RESPONSIVE STYLES - SelectTimePage ========== */
+
+/* Tablet Devices (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .SelectTimePage-container {
+    gap: 30px;
+    padding: 30px;
+  }
+
+  .left-column {
+    padding-right: 15px;
+  }
+
+  .salon-image {
+    height: 160px;
+  }
+}
+
+/* Small Tablets & Large Phones (576px - 768px) */
+@media screen and (max-width: 768px) {
+  .SelectTimePage-container {
+    flex-direction: column;
+    gap: 30px;
+    padding: 25px;
+  }
+
+  .left-column {
+    flex: auto;
+    padding-right: 0;
+    overflow-y: visible;
+  }
+
+  .right-column {
+    flex: auto;
+    position: static;
+    top: 0;
+    width: 100%;
+  }
+
+  .date-buttons {
+    justify-content: flex-start;
+    margin: 15px 0 25px;
+  }
+
+  .date-button {
+    width: 55px;
+    height: 55px;
+    font-size: 12px;
+  }
+
+  .SelectTimePage-card {
+    padding: 12px 18px;
+  }
+
+  .summary-box {
+    padding: 20px;
+  }
+
+  .salon-image {
+    height: 170px;
+  }
+
+  .modal {
+    width: 90%;
+    padding: 25px;
+  }
+}
+
+/* Mobile Devices (425px - 576px) */
+@media screen and (max-width: 576px) {
+  .SelectTimePage-container {
+    padding: 20px 15px;
+    gap: 25px;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  /* Date buttons - horizontal scroll on mobile */
+  .date-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin: 15px 0 20px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .date-buttons::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .date-buttons::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+  }
+
+  .date-button {
+    flex: 0 0 auto;
+    width: 65px;
+    height: 65px;
+    font-size: 13px;
+    padding: 8px 5px;
+  }
+
+  /* Time slots */
+  .SelectTimePage-list {
+    gap: 12px;
+  }
+
+  .SelectTimePage-card {
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .SelectTimePage-card > div:first-child {
+    width: 100%;
+  }
+
+  .SelectTimePage-card > div:last-child {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  /* Time warning */
+  .time-warning {
+    font-size: 0.75em;
+    margin-top: 6px;
+  }
+
+  /* Summary box */
+  .summary-box {
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .salon-image {
+    height: 160px;
+    margin-bottom: 12px;
+  }
+
+  .salon-info h4 {
+    font-size: 16px;
+  }
+
+  .salon-info p {
+    font-size: 13px;
+    margin: 3px 0;
+  }
+
+  .summary-line {
+    font-size: 13px;
+  }
+
+  .total-section {
+    font-size: 15px;
+    margin-top: 15px;
+  }
+
+  /* Buttons */
+  .continue-button,
+  .cancel-button {
+    padding: 14px 0;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  .cancel-button {
+    margin-top: 8px;
+  }
+
+  /* Modal */
+  .modal {
+    padding: 25px 20px;
+    width: 95%;
+  }
+
+  .modal h3 {
+    font-size: 18px;
+  }
+
+  .modal p {
+    font-size: 13px;
+  }
+
+  .modal .input {
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  /* Guest alert modal */
+  .guest-alert-content {
+    padding: 25px 20px;
+    width: 95%;
+  }
+
+  .guest-alert-content h3 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+
+  .guest-alert-content p {
+    font-size: 14px;
+  }
+
+  .guest-alert-buttons {
+    gap: 8px;
+    margin: 15px 0;
+  }
+
+  .guest-alert-primary,
+  .guest-alert-secondary {
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  /* Guest notice */
+  .guest-notice {
+    padding: 12px 10px;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+
+  /* Service blocks */
+  .service-time-block {
+    margin-bottom: 40px;
+  }
+
+  /* Reschedule error */
+  .reschedule-error {
+    padding: 12px 10px;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+
+  .reschedule-notice p {
+    font-size: 13px;
+    margin: 3px 0;
+  }
+
+  /* Loader */
+  .loader-dots div {
+    width: 12px;
+    height: 12px;
+  }
+
+  .loader p {
+    font-size: 0.9rem;
+  }
+
+  /* Guest disabled state */
+  .guest-disabled-btn {
+    padding: 14px 0;
+  }
+
+  .guest-action-note {
+    font-size: 0.8rem;
+  }
+
+  .guest-lock-icon {
+    font-size: 0.8rem;
+  }
+}
+
+/* Small Mobile Devices (375px - 425px) */
+@media screen and (max-width: 425px) {
+  .SelectTimePage-container {
+    padding: 15px 12px;
+  }
+
+  .date-button {
+    width: 60px;
+    height: 60px;
+    font-size: 12px;
+  }
+
+  .SelectTimePage-card {
+    padding: 12px 14px;
+  }
+
+  .salon-image {
+    height: 150px;
+  }
+
+  .salon-info h4 {
+    font-size: 15px;
+  }
+
+  .summary-box {
+    padding: 16px;
+  }
+
+  .total-section {
+    font-size: 14px;
+  }
+
+  .modal {
+    padding: 20px 15px;
+  }
+
+  .modal h3 {
+    font-size: 17px;
+  }
+
+  .modal .input {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .guest-alert-content {
+    padding: 20px 15px;
+  }
+
+  .guest-alert-content h3 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Extra Small Devices (320px - 375px) */
+@media screen and (max-width: 375px) {
+  .SelectTimePage-container {
+    padding: 12px 10px;
+  }
+
+  .breadcrumb {
+    font-size: 11px;
+  }
+
+  .date-button {
+    width: 55px;
+    height: 55px;
+    font-size: 11px;
+    padding: 6px 3px;
+  }
+
+  .SelectTimePage-card {
+    padding: 10px 12px;
+  }
+
+  .SelectTimePage-card h4 {
+    font-size: 14px;
+  }
+
+  .SelectTimePage-card p {
+    font-size: 12px;
+  }
+
+  .salon-image {
+    height: 140px;
+  }
+
+  .salon-info h4 {
+    font-size: 14px;
+  }
+
+  .salon-info p {
+    font-size: 12px;
+  }
+
+  .summary-line {
+    font-size: 12px;
+  }
+
+  .total-section {
+    font-size: 13px;
+  }
+
+  .continue-button,
+  .cancel-button {
+    padding: 12px 0;
+    font-size: 14px;
+  }
+
+  .modal h3 {
+    font-size: 16px;
+  }
+
+  .modal p {
+    font-size: 12px;
+  }
+
+  .modal .input {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .guest-alert-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .guest-alert-content p {
+    font-size: 13px;
+  }
+
+  .guest-alert-primary,
+  .guest-alert-secondary {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .service-time-block {
+    margin-bottom: 30px;
+  }
+
+  .loader-dots div {
+    width: 10px;
+    height: 10px;
+  }
+
+  @keyframes bounce {
+    to {
+      transform: translateY(-12px);
+    }
+  }
+}
+
+/* Ultra Small Devices (320px and below) */
+@media screen and (max-width: 320px) {
+  .date-button {
+    width: 50px;
+    height: 50px;
+    font-size: 10px;
+  }
+
+  .salon-image {
+    height: 130px;
+  }
+
+  .summary-box {
+    padding: 14px;
+  }
+
+  .modal {
+    padding: 18px 12px;
+  }
+
+  .guest-alert-content {
+    padding: 18px 12px;
+  }
+}
+
+/* Landscape Mode for Mobile Devices */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .SelectTimePage-container {
+    min-height: 100%;
+    padding: 20px 30px;
+  }
+
+  .left-column {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .right-column {
+    position: sticky;
+    top: 20px;
+  }
+
+  .date-buttons {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .date-button {
+    width: 55px;
+    height: 55px;
+  }
+
+  .salon-image {
+    height: 140px;
+  }
+
+  .modal,
+  .guest-alert-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ========== ADDITIONAL MOBILE OPTIMIZATIONS ========== */
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+  .date-button,
+  .SelectTimePage-card,
+  .continue-button,
+  .cancel-button,
+  .guest-alert-primary,
+  .guest-alert-secondary,
+  .modal .input,
+  .guest-alert-content button {
+    min-height: 48px;
+  }
+
+  .date-button {
+    min-width: 60px;
+    min-height: 60px;
+  }
+
+  .SelectTimePage-card {
+    padding: 16px;
+  }
+
+  .continue-button,
+  .cancel-button {
+    min-height: 50px;
+  }
+
+  .modal .input {
+    min-height: 48px;
+  }
+}
+
+/* For devices without hover capability */
+@media (hover: none) {
+  .date-button:hover,
+  .SelectTimePage-card:hover,
+  .continue-button:hover,
+  .cancel-button:hover {
+    transform: none;
+  }
+
+  .date-button:active,
+  .SelectTimePage-card:active,
+  .continue-button:active,
+  .cancel-button:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  @media (max-width: 576px) {
+    /* Keep light theme for now */
+    .SelectTimePage-container {
+      background: #f0f6fb;
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  .SelectTimePage-container {
+    display: block;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  .continue-button,
+  .cancel-button,
+  .modal-backdrop,
+  .loading-overlay,
+  .guest-alert-modal {
+    display: none !important;
+  }
+}
+
+/* ========== FLEXBOX ENHANCEMENTS FOR MOBILE ========== */
+
+/* Improve readability on small screens */
+@media screen and (max-width: 576px) {
+  /* Better text contrast */
+  .SelectTimePage-card h4 {
+    color: #1a2634;
+    font-weight: 600;
+  }
+
+  .SelectTimePage-card p {
+    color: #4a5568;
+  }
+
+  /* Better visual hierarchy */
+  .service-time-block {
+    position: relative;
+  }
+
+  .service-time-block::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #ddd, transparent);
+  }
+
+  .service-time-block:last-child::after {
+    display: none;
+  }
+
+  /* Sticky header for time slots on mobile */
+  .service-time-block h3 {
+    position: sticky;
+    top: 0;
+    background: #f0f6fb;
+    padding: 12px 0;
+    margin-top: 0;
+    z-index: 10;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #0069B4;
+  }
+
+  /* Better disabled states */
+  .SelectTimePage-card.disabled {
+    opacity: 0.5;
+    background-color: #f5f5f5;
+  }
+
+  .SelectTimePage-card.disabled h4,
+  .SelectTimePage-card.disabled p {
+    color: #999;
+  }
+
+  /* Price highlight */
+  .SelectTimePage-card div:last-child {
+    font-weight: 700;
+    color: #0069B4;
+    font-size: 15px;
+  }
+
+  /* Selected state enhancement */
+  .SelectTimePage-card.selected {
+    border-width: 2px;
+    position: relative;
+  }
+
+  .SelectTimePage-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #0069B4;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  /* Summary box enhancements */
+  .summary-box {
+    border: none;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Fixed bottom button for mobile */
+  .right-column {
+    position: sticky;
+    bottom: 0;
+    background: #f0f6fb;
+    padding-top: 10px;
+    z-index: 100;
+  }
+
+  /* Smooth scrolling */
+  .left-column {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Loading overlay enhancements */
+  .loading-overlay {
+    backdrop-filter: blur(5px);
+  }
+
+  .loader {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 16px;
+  }
+
+  .loader p {
+    color: white;
+    font-size: 1rem;
+    margin-top: 15px;
+  }
+}
+
+/* Responsive typography */
+@media screen and (max-width: 576px) {
+  .SelectTimePage-container {
+    font-size: 14px;
+  }
+
+  h2, h3 {
+    font-size: 1.2rem;
+  }
+
+  h4 {
+    font-size: 1rem;
+  }
+}
+
+/* Safe area insets for modern mobile devices */
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 576px) {
+    .SelectTimePage-container {
+      padding-left: max(15px, env(safe-area-inset-left));
+      padding-right: max(15px, env(safe-area-inset-right));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    .right-column {
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+  }
+}

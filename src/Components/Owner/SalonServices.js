@@ -80,16 +80,25 @@ const SalonServices = () => {
     data.append("duration", formData.duration);
     data.append("gender", formData.gender);
     data.append("salonId", salon.id);
+    
+    // Only append image if a new file is selected
     if (file) {
       data.append("image", file);
-    } else if (formData.image) {
-      data.append("image", formData.image);
     }
+    // Don't send the old image path when updating - backend will keep it if no new file
 
     try {
       const res = editingService
-        ? await axios.put(`/services/${editingService._id}`, data)
-        : await axios.post('/services', data);
+        ? await axios.put(`/services/${editingService._id}`, data, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+        : await axios.post('/services', data, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
       
       fetchServices();
       setShowPopup(false);
@@ -145,19 +154,10 @@ const SalonServices = () => {
         </header>
 
         <div className="services-body flex flex-col lg:flex-row gap-6 px-4 md:px-6">
-          <div className="category-panel lg:w-1/4 bg-white rounded-lg p-4 shadow-sm">
-            <h3 className="category-title text-lg font-semibold mb-4">Categories</h3>
-            <div className="category-item flex justify-between items-center py-2 px-3 bg-gray-50 rounded mb-2">
-              <span>Hair & Styling</span>
-              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">{services.length}</span>
-            </div>
-            <div className="category-link text-blue-600 cursor-pointer hover:text-blue-800 text-sm">Add Category</div>
-          </div>
+          
 
           <div className="service-panel flex-1">
-            <div className="service-panel-header mb-4">
-              <h3 className="text-lg font-semibold">Hair & Styling</h3>
-            </div>
+           
 
             <div className="service-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {services.map((service) => (

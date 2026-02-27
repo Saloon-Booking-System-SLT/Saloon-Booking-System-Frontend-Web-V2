@@ -17,6 +17,7 @@ const SalonProfessionalsV2 = () => {
     gender: "",
     service: "",
     serviceAvailability: "Both",
+    imageType: "icon", // 'icon' or 'upload'
   });
 
   const [fileImage, setFileImage] = useState(null);
@@ -24,20 +25,40 @@ const SalonProfessionalsV2 = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState(null);
 
+  // Gender icon options - diverse professional avatars
+  const genderIcons = {
+    Male: [
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male1&backgroundColor=b6e3f4&hairColor=4a5568&clothingColor=3182ce",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male2&backgroundColor=c0aede&hairColor=2d3748&clothingColor=805ad5",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male3&backgroundColor=d1d4f9&hairColor=1a202c&clothingColor=38b2ac",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male4&backgroundColor=ffd5dc&hairColor=4a5568&clothingColor=e53e3e",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male5&backgroundColor=bee3f8&hairColor=2d3748&clothingColor=667eea",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male6&backgroundColor=c6f6d5&hairColor=1a202c&clothingColor=48bb78",
+    ],
+    Female: [
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female1&backgroundColor=ffdfbf&hairColor=4a5568&clothingColor=ed64a6",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female2&backgroundColor=ffd5dc&hairColor=2d3748&clothingColor=f687b3",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female3&backgroundColor=c0aede&hairColor=1a202c&clothingColor=9f7aea",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female4&backgroundColor=b6e3f4&hairColor=4a5568&clothingColor=4299e1",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female5&backgroundColor=fbb6ce&hairColor=2d3748&clothingColor=fc8181",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female6&backgroundColor=fef5e7&hairColor=1a202c&clothingColor=fbbf24",
+    ],
+  };
+
+  const [selectedIcon, setSelectedIcon] = useState("");
+
   const Sidebar = () => {
     return (
       <aside className="modern-sidebar">
-  <img src={logo} alt="Brand Logo" className="modern-logo" />
-
-  <i className="fas fa-home" title="Home" onClick={() => navigate("/dashboard")}></i>
-  <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate("/calendar")}></i>
-  <i className="fas fa-smile" title="Services" onClick={() => navigate("/services")}></i>
-  <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
-  <i className="fas fa-users active" title="Professionals"></i> 
-  <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
-  <i className="fas fa-clock" title="Time Slots" onClick={() => navigate("/timeslots")}></i>
-</aside>
-
+        <img src={logo} alt="Brand Logo" className="modern-logo" />
+        <i className="fas fa-home" title="Home" onClick={() => navigate("/dashboard")}></i>
+        <i className="fas fa-calendar-alt" title="Calendar" onClick={() => navigate("/calendar")}></i>
+        <i className="fas fa-smile" title="Services" onClick={() => navigate("/services")}></i>
+        <i className="fas fa-comment" title="Feedbacks" onClick={() => navigate("/feedbacks")}></i>
+        <i className="fas fa-users active" title="Professionals"></i> 
+        <i className='fas fa-calendar-check' title='Book An Appointment' onClick={() => navigate('/book-appointment')}></i>
+        <i className="fas fa-clock" title="Time Slots" onClick={() => navigate("/timeslots")}></i>
+      </aside>
     );
   };
 
@@ -56,13 +77,29 @@ const SalonProfessionalsV2 = () => {
     fetchProfessionals();
   }, [fetchProfessionals]);
 
-  const handleInput = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Reset icon selection when gender changes
+    if (name === "gender") {
+      setSelectedIcon("");
+    }
+  };
 
   // Add or Update professional
   const handleAddOrUpdate = async () => {
     if (!formData.name || !formData.service || !formData.gender)
-      return alert("Please fill all fields.");
+      return alert("Please fill all required fields.");
+
+    // Validate image selection
+    if (formData.imageType === "icon" && !selectedIcon && !editingProfessional?.imageUrl) {
+      return alert("Please select a gender icon or upload an image.");
+    }
+
+    if (formData.imageType === "upload" && !fileImage && !editingProfessional?.image) {
+      return alert("Please upload an image or select a gender icon.");
+    }
 
     const form = new FormData();
     form.append("name", formData.name);
@@ -71,20 +108,37 @@ const SalonProfessionalsV2 = () => {
     form.append("serviceAvailability", formData.serviceAvailability);
     form.append("salonId", salon.id);
 
-    if (fileImage) form.append("image", fileImage);
-    if (fileCertificate) form.append("certificate", fileCertificate);
+    // Handle image based on type
+    if (formData.imageType === "upload" && fileImage) {
+      form.append("image", fileImage);
+      form.append("imageType", "upload");
+    } else if (formData.imageType === "icon" && selectedIcon) {
+      form.append("imageUrl", selectedIcon);
+      form.append("imageType", "icon");
+    }
+
+    if (fileCertificate) {
+      form.append("certificate", fileCertificate);
+    }
 
     try {
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      };
+
       const res = editingProfessional
-        ? await axios.put(`/professionals/${editingProfessional._id}`, form)
-        : await axios.post('/professionals', form);
+        ? await axios.put(`/professionals/${editingProfessional._id}`, form, config)
+        : await axios.post('/professionals', form, config);
       
       fetchProfessionals();
       setShowPopup(false);
       setEditingProfessional(null);
-      setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
+      setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both", imageType: "icon" });
       setFileImage(null);
       setFileCertificate(null);
+      setSelectedIcon("");
     } catch (err) {
       console.error(err);
       alert("Save failed: " + (err.response?.data?.message || err.message));
@@ -97,7 +151,13 @@ const SalonProfessionalsV2 = () => {
       gender: pro.gender || "",
       service: pro.service,
       serviceAvailability: pro.serviceAvailability || "Both",
+      imageType: pro.imageUrl ? "icon" : "upload",
     });
+    
+    if (pro.imageUrl) {
+      setSelectedIcon(pro.imageUrl);
+    }
+    
     setEditingProfessional(pro);
     setShowPopup(true);
   };
@@ -122,6 +182,29 @@ const SalonProfessionalsV2 = () => {
     );
   };
 
+  // SalonProfessionalsV2.js - Fixed getProfessionalImage function
+
+// Get professional image - FIXED!
+const getProfessionalImage = (pro) => {
+  // Case 1: Icon image (URL)
+  if (pro.imageUrl) {
+    return pro.imageUrl;
+  } 
+  // Case 2: Uploaded image - already stored as complete data URL from backend
+  else if (pro.image) {
+    // Check if it's already a complete data URL
+    if (pro.image.startsWith('data:image')) {
+      return pro.image; // Return as-is
+    }
+    // Fallback for legacy data (should not happen with new backend)
+    return `data:image/jpeg;base64,${pro.image}`;
+  } 
+  // Case 3: No image - generate avatar
+  else {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(pro.name)}&background=random&size=100&color=fff`;
+  }
+};
+
   // Filter logic
   const filteredProfessionals = professionals.filter((pro) => {
     const genderMatch = genderFilter === "All" || pro.gender === genderFilter;
@@ -134,8 +217,25 @@ const SalonProfessionalsV2 = () => {
     <div className="pro-v2-container">
       {/* Sidebar */}
       <Sidebar />
+      
 
       <div className="pro-v2-main">
+        <header className="pro-v2-header">
+          <h1>Salon Professionals</h1>
+          <button
+            className="pro-v2-add-btn"
+            onClick={() => {
+              setShowPopup(true);
+              setEditingProfessional(null);
+              setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both", imageType: "icon" });
+              setSelectedIcon("");
+              setFileImage(null);
+              setFileCertificate(null);
+            }}
+          >
+            Add Professional
+          </button>
+        </header>
         {/* Filters */}
         <div className="filter-section">
           <h3>Filters</h3>
@@ -158,28 +258,14 @@ const SalonProfessionalsV2 = () => {
           </div>
         </div>
 
-        <header className="pro-v2-header">
-          <h1>Salon Professionals</h1>
-          <button
-            className="pro-v2-add-btn"
-            onClick={() => {
-              setShowPopup(true);
-              setEditingProfessional(null);
-              setFormData({ name: "", gender: "", service: "", serviceAvailability: "Both" });
-            }}
-          >
-            Add Professional
-          </button>
-        </header>
+        
 
         {/* Professional cards */}
         <div className="pro-v2-grid">
           {filteredProfessionals.map((pro) => (
             <div key={pro._id} className="pro-v2-card">
               <img
-                src={
-                  pro.image ? `data:image/jpeg;base64,${pro.image}` : "https://ui-avatars.com/api/?name=Professional&background=random&size=100&color=fff"
-                }
+                src={getProfessionalImage(pro)}
                 alt={pro.name}
                 className="pro-v2-image"
               />
@@ -244,17 +330,102 @@ const SalonProfessionalsV2 = () => {
               <option value="Both">Both</option>
             </select>
 
-            <label>Upload Image</label>
-            <input type="file" onChange={(e) => setFileImage(e.target.files[0])} />
+            {/* Image selection type */}
+            <div className="image-selection-type">
+              <label>Choose Image Type:</label>
+              <div className="radio-group">
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="imageType"
+                    value="icon"
+                    checked={formData.imageType === "icon"}
+                    onChange={handleInput}
+                  />
+                  <span>Select Gender Icon</span>
+                </label>
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="imageType"
+                    value="upload"
+                    checked={formData.imageType === "upload"}
+                    onChange={handleInput}
+                  />
+                  <span>Upload Custom Image</span>
+                </label>
+              </div>
+            </div>
 
-            <label>Upload Certificate</label>
-            <input type="file" onChange={(e) => setFileCertificate(e.target.files[0])} />
+            {/* Conditional rendering based on image type */}
+            {formData.imageType === "icon" ? (
+              <div className="icon-selection">
+                {formData.gender ? (
+                  <>
+                    <label>Select a {formData.gender} Icon:</label>
+                    <div className="icon-grid">
+                      {genderIcons[formData.gender]?.map((iconUrl, index) => (
+                        <div
+                          key={index}
+                          className={`icon-option ${selectedIcon === iconUrl ? "selected" : ""}`}
+                          onClick={() => setSelectedIcon(iconUrl)}
+                        >
+                          <img src={iconUrl} alt={`${formData.gender} icon ${index + 1}`} />
+                          {selectedIcon === iconUrl && (
+                            <div className="icon-check">
+                              <i className="fas fa-check-circle"></i>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="info-text">
+                    <i className="fas fa-info-circle"></i>
+                    Please select a gender first to see icon options
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="upload-section">
+                <label>Upload Custom Image</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setFileImage(e.target.files[0])} 
+                />
+                {fileImage && (
+                  <div className="file-preview">
+                    <i className="fas fa-image"></i>
+                    <p>{fileImage.name}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="upload-section">
+              <label>Upload Certificate (Optional)</label>
+              <input 
+                type="file" 
+                accept=".pdf,application/pdf"
+                onChange={(e) => setFileCertificate(e.target.files[0])} 
+              />
+              {fileCertificate && (
+                <div className="file-preview">
+                  <i className="fas fa-file-pdf"></i>
+                  <p>{fileCertificate.name}</p>
+                </div>
+              )}
+            </div>
 
             <div className="pro-v2-popup-actions">
               <button className="pro-v2-save-btn" onClick={handleAddOrUpdate}>
-                {editingProfessional ? "Update" : "Add"}
+                <i className="fas fa-save"></i>
+                {editingProfessional ? "Update" : "Add"} Professional
               </button>
               <button className="pro-v2-cancel-btn" onClick={() => setShowPopup(false)}>
+                <i className="fas fa-times"></i>
                 Cancel
               </button>
             </div>
