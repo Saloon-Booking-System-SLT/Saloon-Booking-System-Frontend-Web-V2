@@ -152,7 +152,7 @@ const CheckoutForm = () => {
     try {
       if (isReschedule) {
         // Handle rescheduling
-        const res = await fetch(`https://saloon-booking-system-backend-v2.onrender.com/api/appointments/${appointmentId}/reschedule`, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/appointments/${appointmentId}/reschedule`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -211,7 +211,7 @@ const CheckoutForm = () => {
 
         console.log('📤 Sending booking data to backend:', bookingData);
 
-        const res = await fetch("https://saloon-booking-system-backend-v2.onrender.com/api/appointments", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/appointments`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bookingData),

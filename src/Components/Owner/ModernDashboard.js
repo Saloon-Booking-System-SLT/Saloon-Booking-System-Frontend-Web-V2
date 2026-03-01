@@ -9,8 +9,8 @@ import RevenueReport from './RevenueReport';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  process.env.REACT_APP_API_URL.replace('/api', '') : 
-  'https://saloon-booking-system-backend-v2.onrender.com';
+  process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
+  "";
 
 // ✅ Calendar-style Sidebar component
 const Sidebar = () => {
@@ -52,15 +52,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="sidebar-footer">
-        <div 
-          className="nav-icon" 
-          onClick={() => navigate('/help')}
-          title="Help & Support"
-        >
-          <i className="fas fa-question-circle"></i>
-        </div>
-      </div>
+      
     </aside>
   );
 };

@@ -9,7 +9,7 @@ const OwnerHeader = () => {
   const { user, logout: authLogout } = useAuth();
 
   const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-    process.env.REACT_APP_API_URL.replace('/api', '') : 
+    process.env.REACT_APP_API_URL.replace(/\/api$/, '') : 
     'http://localhost:5000';
 
   // Get salon data
