@@ -31,7 +31,6 @@ body, html {
   padding: 20px 60px;
   background: rgb(255, 255, 255);
   backdrop-filter: blur(18px);
-  
 }
 
 .logo {
@@ -258,10 +257,8 @@ body, html {
   transition: all 0.25s ease;
 }
 
-
 .switch-option:hover {
   background: #ddd;
-
 }
 
 .switch-option.active {
@@ -392,6 +389,7 @@ body, html {
     transform: translateY(0);
   }
 }
+
 /* Modal overlay */
 .modal-overlay {
   position: fixed;
@@ -480,11 +478,13 @@ body, html {
   border-radius: 5px;
   cursor: pointer;
 }
+
 .icon-label {
   margin-right: 6px;
   font-size: 1.1rem;
   vertical-align: middle;
 }
+
 /* Section Titles */
 .section-title {
   font-size: 20px;
@@ -494,15 +494,16 @@ body, html {
   border-left: 4px solid #007bff;
   padding-left: 10px;
 }
+
 /* Star rating style */
 .salon-info .rating-stars {
-  color: #f5b50a; /* Yellow for filled stars */
+  color: #f5b50a;
   font-size: 16px;
   font-weight: bold;
 }
 
 .salon-info .rating-stars .empty-star {
-  color: #ccc; /* Gray for empty stars */
+  color: #ccc;
 }
 
 .salon-info .rating-stars span {
@@ -546,8 +547,7 @@ body, html {
   color: #555;
 }
 
-/* Add these styles to your existing searches.css */
-
+/* Guest and Profile Styles */
 .guest-profile-icon {
   border: 2px solid #9ca3af;
   transition: all 0.3s ease;
@@ -636,4 +636,509 @@ body, html {
   height: 1px;
   background-color: #e5e7eb;
   margin: 4px 0;
+}
+
+/* ========== MOBILE RESPONSIVE STYLES ========== */
+
+/* Tablet Devices (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .search-wrapper {
+    padding: 1.5rem 2rem;
+  }
+
+  .navbar {
+    padding: 15px 30px;
+  }
+
+  .logo {
+    font-size: 26px;
+  }
+
+  .salon-card {
+    width: 280px;
+  }
+}
+
+/* Small Tablets & Large Phones (576px - 768px) */
+@media screen and (max-width: 768px) {
+  .search-wrapper {
+    padding: 1rem 1.5rem;
+  }
+
+  .navbar {
+    padding: 12px 20px;
+    height: auto;
+    min-height: 70px;
+  }
+
+  .logo {
+    font-size: 24px;
+  }
+
+  .logo-lowered {
+    margin-top: 4px;
+  }
+
+  .nav-menu {
+    gap: 10px;
+  }
+
+  .nav-link,
+  .nav-btn-light {
+    display: none; /* Hide text buttons on tablet */
+  }
+
+  .nav-menu-btn {
+    display: block;
+    padding: 8px 14px;
+  }
+
+  .profile-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    padding: 1rem;
+    margin: 1.5rem auto;
+    max-width: 100%;
+  }
+
+  .location-search {
+    width: 100%;
+  }
+
+  .location-input {
+    padding: 0.7rem 1rem;
+    font-size: 14px;
+  }
+
+  .suggestion-list {
+    max-height: 150px;
+  }
+
+  .suggestion-list li {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .gender-switch-container {
+    gap: 8px;
+  }
+
+  .switch-option {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .salon-grid {
+    gap: 20px;
+  }
+
+  .salon-card {
+    width: calc(50% - 20px);
+    min-width: 260px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    margin: 15px 0 8px 0;
+  }
+
+  .btn-nearby,
+  .btn-reset {
+    margin-left: 0;
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+/* Mobile Devices (425px - 576px) */
+@media screen and (max-width: 576px) {
+  .search-wrapper {
+    padding: 0.8rem 1rem;
+  }
+
+  .navbar {
+    padding: 10px 15px;
+  }
+
+  .logo {
+    font-size: 22px;
+  }
+
+  .nav-menu {
+    gap: 8px;
+  }
+
+  .profile-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .dropdown-menu {
+    min-width: 200px;
+    right: -10px;
+  }
+
+  .dropdown-menu li {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .search-bar {
+    padding: 0.8rem;
+    margin: 1rem auto;
+  }
+
+  .location-input {
+    padding: 0.65rem 1rem;
+    font-size: 14px;
+  }
+
+  .gender-switch-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .switch-option {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .salon-grid {
+    justify-content: center;
+  }
+
+  .salon-card {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .salon-image {
+    height: 160px;
+  }
+
+  .salon-info h4 {
+    font-size: 1rem;
+  }
+
+  .salon-info p {
+    font-size: 0.8rem;
+  }
+
+  .select-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .favorite-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    margin: 12px 0 6px 0;
+  }
+
+  .result-count {
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+  }
+
+  .modal-content {
+    padding: 16px;
+    width: 95%;
+  }
+
+  .modal-content h3 {
+    font-size: 18px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  .loading-overlay p {
+    font-size: 1rem;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border-width: 5px;
+  }
+}
+
+/* Small Mobile Devices (320px - 425px) */
+@media screen and (max-width: 425px) {
+  .navbar {
+    padding: 8px 12px;
+  }
+
+  .logo {
+    font-size: 20px;
+  }
+
+  .nav-menu-btn {
+    padding: 6px 12px;
+    font-size: 16px;
+  }
+
+  .profile-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dropdown-menu {
+    min-width: 180px;
+    right: -5px;
+  }
+
+  .user-name {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .dropdown-menu li {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .search-wrapper {
+    padding: 0.5rem 0.8rem;
+  }
+
+  .search-bar {
+    padding: 0.7rem;
+  }
+
+  .location-input {
+    padding: 0.6rem 0.9rem;
+    font-size: 13px;
+  }
+
+  .salon-card {
+    max-width: 300px;
+  }
+
+  .salon-image {
+    height: 150px;
+  }
+
+  .salon-info {
+    padding: 0.8rem;
+  }
+
+  .salon-info h4 {
+    font-size: 0.95rem;
+  }
+
+  .salon-info p {
+    font-size: 0.75rem;
+  }
+
+  .salon-info .rating-stars {
+    font-size: 14px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    padding-left: 8px;
+  }
+
+  .icon-label {
+    font-size: 1rem;
+  }
+}
+
+/* Extra Small Devices (320px and below) */
+@media screen and (max-width: 320px) {
+  .logo {
+    font-size: 18px;
+  }
+
+  .profile-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .nav-menu-btn {
+    padding: 5px 10px;
+    font-size: 14px;
+  }
+
+  .search-bar {
+    padding: 0.6rem;
+  }
+
+  .location-input {
+    padding: 0.5rem 0.8rem;
+    font-size: 12px;
+  }
+
+  .salon-card {
+    max-width: 260px;
+  }
+
+  .salon-image {
+    height: 140px;
+  }
+
+  .dropdown-menu {
+    min-width: 160px;
+  }
+}
+
+/* Landscape Mode for Mobile Devices */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .search-wrapper {
+    min-height: 100%;
+    padding: 0.8rem 2rem;
+  }
+
+  .navbar {
+    padding: 8px 20px;
+  }
+
+  .salon-grid {
+    gap: 16px;
+  }
+
+  .salon-card {
+    width: 260px;
+  }
+
+  .salon-image {
+    height: 140px;
+  }
+
+  .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+/* For devices with hover capability */
+@media (hover: hover) {
+  .salon-card:hover {
+    transform: translateY(0) scale(1.03);
+  }
+}
+
+/* For devices without hover capability */
+@media (hover: none) {
+  .salon-card:active {
+    transform: scale(0.98);
+  }
+  
+  .favorite-btn:active {
+    transform: scale(0.9);
+  }
+  
+  .select-btn:active {
+    background-color: #005a9e;
+    transform: scale(0.98);
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+  .nav-link,
+  .nav-btn-light,
+  .switch-option,
+  .select-btn,
+  .favorite-btn,
+  .dropdown-menu li,
+  .btn,
+  .btn-nearby,
+  .btn-reset {
+    min-height: 44px; /* Minimum touch target size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .location-input {
+    min-height: 44px;
+  }
+
+  .suggestion-list li {
+    padding: 14px 18px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  @media (max-width: 576px) {
+    body, 
+    .search-wrapper,
+    .navbar,
+    .modal-content {
+      background-color: #fff; /* Keep light theme for now */
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .search-bar,
+  .gender-switch-container,
+  .favorite-btn,
+  .btn-nearby,
+  .btn-reset,
+  .loading-overlay {
+    display: none !important;
+  }
+  
+  .salon-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Utility classes for responsive */
+.hide-on-mobile {
+  @media screen and (max-width: 576px) {
+    display: none !important;
+  }
+}
+
+.hide-on-desktop {
+  @media screen and (min-width: 577px) {
+    display: none !important;
+  }
+}
+
+.show-on-mobile {
+  @media screen and (min-width: 577px) {
+    display: none !important;
+  }
+}
+
+.show-on-desktop {
+  @media screen and (max-width: 576px) {
+    display: none !important;
+  }
+}
+
+/* Smooth transitions for responsive changes */
+.navbar,
+.search-bar,
+.salon-card,
+.dropdown-menu,
+.switch-option {
+  transition: all 0.3s ease-in-out;
 }

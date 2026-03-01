@@ -14,6 +14,7 @@ const SalonProfessionalsV2 = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const didFetch = useRef(false);
+
   const [genderFilter, setGenderFilter] = useState("All");
   const [availabilityFilter, setAvailabilityFilter] = useState("All");
 
@@ -22,12 +23,48 @@ const SalonProfessionalsV2 = () => {
     gender: "",
     service: "",
     serviceAvailability: "Both",
+    imageType: "icon", // "icon" | "upload"
     selectedIcon: "",
   });
 
+  const [fileImage, setFileImage] = useState(null);
   const [fileCertificate, setFileCertificate] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState(null);
+
+  // Gender icon options
+  const genderIcons = {
+    Male: [
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male1&backgroundColor=b6e3f4&hairColor=4a5568&clothingColor=3182ce",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male2&backgroundColor=c0aede&hairColor=2d3748&clothingColor=805ad5",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male3&backgroundColor=d1d4f9&hairColor=1a202c&clothingColor=38b2ac",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male4&backgroundColor=ffd5dc&hairColor=4a5568&clothingColor=e53e3e",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male5&backgroundColor=bee3f8&hairColor=2d3748&clothingColor=667eea",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=male6&backgroundColor=c6f6d5&hairColor=1a202c&clothingColor=48bb78",
+    ],
+    Female: [
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female1&backgroundColor=ffdfbf&hairColor=4a5568&clothingColor=ed64a6",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female2&backgroundColor=ffd5dc&hairColor=2d3748&clothingColor=f687b3",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female3&backgroundColor=c0aede&hairColor=1a202c&clothingColor=9f7aea",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female4&backgroundColor=b6e3f4&hairColor=4a5568&clothingColor=4299e1",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female5&backgroundColor=fbb6ce&hairColor=2d3748&clothingColor=fc8181",
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=female6&backgroundColor=fef5e7&hairColor=1a202c&clothingColor=fbbf24",
+    ],
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      gender: "",
+      service: "",
+      serviceAvailability: "Both",
+      imageType: "icon",
+      selectedIcon: "",
+    });
+    setFileImage(null);
+    setFileCertificate(null);
+    setEditingProfessional(null);
+  };
 
   const Sidebar = () => {
     return (
@@ -71,6 +108,7 @@ const SalonProfessionalsV2 = () => {
 
   const fetchProfessionals = useCallback(async () => {
     const salonId = salon?.id || salon?._id;
+
     if (!salonId) {
       setError("Salon information not found.");
       setLoading(false);
@@ -97,19 +135,24 @@ const SalonProfessionalsV2 = () => {
   }, [fetchProfessionals]);
 
   const handleInput = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const { name, value } = e.target;
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      gender: "",
-      service: "",
-      serviceAvailability: "Both",
-      selectedIcon: "",
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // Reset icon/upload when gender changes
+      if (name === "gender") {
+        updated.selectedIcon = "";
+        setFileImage(null);
+      }
+
+      // Clear uploaded file when switching back to icon mode
+      if (name === "imageType" && value === "icon") {
+        setFileImage(null);
+      }
+
+      return updated;
     });
-    setFileCertificate(null);
-    setEditingProfessional(null);
   };
 
   const handleAddOrUpdate = async () => {
@@ -121,7 +164,25 @@ const SalonProfessionalsV2 = () => {
     }
 
     if (!formData.name || !formData.service || !formData.gender) {
-      alert("Please fill all fields.");
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    if (
+      formData.imageType === "icon" &&
+      !formData.selectedIcon &&
+      !(editingProfessional && editingProfessional.imageUrl)
+    ) {
+      alert("Please select a gender icon.");
+      return;
+    }
+
+    if (
+      formData.imageType === "upload" &&
+      !fileImage &&
+      !(editingProfessional && editingProfessional.image)
+    ) {
+      alert("Please upload a custom image.");
       return;
     }
 
@@ -131,17 +192,31 @@ const SalonProfessionalsV2 = () => {
     form.append("service", formData.service);
     form.append("serviceAvailability", formData.serviceAvailability);
     form.append("salonId", salonId);
-    form.append("imageUrl", formData.selectedIcon);
+    form.append("imageType", formData.imageType);
+
+    if (formData.imageType === "icon" && formData.selectedIcon) {
+      form.append("imageUrl", formData.selectedIcon);
+    }
+
+    if (formData.imageType === "upload" && fileImage) {
+      form.append("image", fileImage);
+    }
 
     if (fileCertificate) {
       form.append("certificate", fileCertificate);
     }
 
     try {
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+
       if (editingProfessional) {
-        await axios.put(`/professionals/${editingProfessional._id}`, form);
+        await axios.put(`/professionals/${editingProfessional._id}`, form, config);
       } else {
-        await axios.post("/professionals", form);
+        await axios.post("/professionals", form, config);
       }
 
       await fetchProfessionals();
@@ -154,14 +229,19 @@ const SalonProfessionalsV2 = () => {
   };
 
   const handleEdit = (pro) => {
+    const isIconBased = !!pro.imageUrl;
+
     setFormData({
       name: pro.name || "",
       gender: pro.gender || "",
       service: pro.service || "",
       serviceAvailability: pro.serviceAvailability || "Both",
-      selectedIcon: pro.gender === "Male" ? maleIcon : femaleIcon,
+      imageType: isIconBased ? "icon" : "upload",
+      selectedIcon: pro.imageUrl || "",
     });
 
+    setFileImage(null);
+    setFileCertificate(null);
     setEditingProfessional(pro);
     setShowPopup(true);
   };
@@ -195,11 +275,29 @@ const SalonProfessionalsV2 = () => {
     );
   };
 
+  const getProfessionalImage = (pro) => {
+    if (pro.imageUrl) {
+      return pro.imageUrl;
+    }
+
+    if (pro.image) {
+      if (typeof pro.image === "string" && pro.image.startsWith("data:image")) {
+        return pro.image;
+      }
+      return `data:image/jpeg;base64,${pro.image}`;
+    }
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      pro.name || "Professional"
+    )}&background=random&size=100&color=fff`;
+  };
+
   const filteredProfessionals = professionals.filter((pro) => {
     const genderMatch = genderFilter === "All" || pro.gender === genderFilter;
     const availabilityMatch =
       availabilityFilter === "All" ||
       pro.serviceAvailability === availabilityFilter;
+
     return genderMatch && availabilityMatch;
   });
 
@@ -325,24 +423,13 @@ const SalonProfessionalsV2 = () => {
               const serviceLabel = pro.service || "Service not set";
               const availabilityLabel = pro.serviceAvailability || "Not set";
 
-              const profileFallback =
-                pro.gender === "Male"
-                  ? maleIcon
-                  : pro.gender === "Female"
-                  ? femaleIcon
-                  : maleIcon;
-
               return (
                 <div key={pro._id} className="pro-v2-card-enhanced">
                   <div className="pro-v2-card-header">
                     <div className="pro-v2-professional-avatar">
                       <div className="pro-v2-avatar-container">
                         <img
-                          src={
-                            pro.image
-                              ? `data:image/jpeg;base64,${pro.image}`
-                              : profileFallback
-                          }
+                          src={getProfessionalImage(pro)}
                           alt={pro.name}
                           className="pro-v2-avatar"
                         />
@@ -529,13 +616,7 @@ const SalonProfessionalsV2 = () => {
                         name="gender"
                         value="Male"
                         checked={formData.gender === "Male"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            gender: "Male",
-                            selectedIcon: maleIcon,
-                          })
-                        }
+                        onChange={handleInput}
                       />
                       <img src={maleIcon} alt="Male" className="gender-icon" />
                       <span>Male</span>
@@ -551,13 +632,7 @@ const SalonProfessionalsV2 = () => {
                         name="gender"
                         value="Female"
                         checked={formData.gender === "Female"}
-                        onChange={() =>
-                          setFormData({
-                            ...formData,
-                            gender: "Female",
-                            selectedIcon: femaleIcon,
-                          })
-                        }
+                        onChange={handleInput}
                       />
                       <img src={femaleIcon} alt="Female" className="gender-icon" />
                       <span>Female</span>
@@ -567,13 +642,108 @@ const SalonProfessionalsV2 = () => {
               </div>
 
               <div className="pro-v2-field pro-v2-field--full">
+                <div className="image-selection-type">
+                  <label>Choose Image Type:</label>
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="imageType"
+                        value="icon"
+                        checked={formData.imageType === "icon"}
+                        onChange={handleInput}
+                      />
+                      <span>Select Gender Icon</span>
+                    </label>
+
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="imageType"
+                        value="upload"
+                        checked={formData.imageType === "upload"}
+                        onChange={handleInput}
+                      />
+                      <span>Upload Custom Image</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pro-v2-field pro-v2-field--full">
+                {formData.imageType === "icon" ? (
+                  <div className="icon-selection">
+                    {formData.gender ? (
+                      <>
+                        <label>Select a {formData.gender} Icon:</label>
+                        <div className="icon-grid">
+                          {genderIcons[formData.gender]?.map((iconUrl, index) => (
+                            <div
+                              key={index}
+                              className={`icon-option ${
+                                formData.selectedIcon === iconUrl ? "selected" : ""
+                              }`}
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  selectedIcon: iconUrl,
+                                }))
+                              }
+                            >
+                              <img
+                                src={iconUrl}
+                                alt={`${formData.gender} icon ${index + 1}`}
+                              />
+                              {formData.selectedIcon === iconUrl && (
+                                <div className="icon-check">
+                                  <i className="fas fa-check-circle"></i>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="info-text">
+                        <i className="fas fa-info-circle"></i>
+                        Please select a gender first to see icon options
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="upload-section">
+                    <label htmlFor="pro-image">Upload Custom Image</label>
+                    <input
+                      id="pro-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFileImage(e.target.files[0])}
+                    />
+                    {fileImage && (
+                      <div className="file-preview">
+                        <i className="fas fa-image"></i>
+                        <p>{fileImage.name}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="pro-v2-field pro-v2-field--full">
                 <label htmlFor="pro-certificate">Upload Certificate (optional)</label>
                 <div className="pro-v2-file-input">
                   <input
                     id="pro-certificate"
                     type="file"
+                    accept=".pdf,application/pdf"
                     onChange={(e) => setFileCertificate(e.target.files[0])}
                   />
+                  {fileCertificate && (
+                    <div className="file-preview">
+                      <i className="fas fa-file-pdf"></i>
+                      <p>{fileCertificate.name}</p>
+                    </div>
+                  )}
                   <span className="pro-v2-field-note">
                     Certificates build client trust and highlight professional
                     expertise.
@@ -584,8 +754,10 @@ const SalonProfessionalsV2 = () => {
 
             <div className="pro-v2-popup-actions">
               <button className="pro-v2-save-btn" onClick={handleAddOrUpdate}>
-                {editingProfessional ? "Update" : "Add"}
+                <i className="fas fa-save"></i>
+                {editingProfessional ? "Update" : "Add"} Professional
               </button>
+
               <button
                 className="pro-v2-cancel-btn"
                 onClick={() => {
@@ -593,6 +765,7 @@ const SalonProfessionalsV2 = () => {
                   resetForm();
                 }}
               >
+                <i className="fas fa-times"></i>
                 Cancel
               </button>
             </div>

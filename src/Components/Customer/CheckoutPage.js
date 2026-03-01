@@ -196,7 +196,7 @@ const CheckoutPage = () => {
           </button>
 
           <button
-            className="cancel-btn"
+            className="cancel-bttn"
             onClick={() => navigate(-1)}
             disabled={isLoading}
           >

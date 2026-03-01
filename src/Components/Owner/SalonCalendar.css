@@ -10,7 +10,7 @@
 .calendar-container {
   display: flex;
   height: 100vh;
-  background-color: #fff;
+  background-color: #ffffff;
   overflow: hidden;
 }
 
@@ -75,9 +75,9 @@
 }
 
 .header-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #222;
+  font-size: 32px;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 /* 💡 Enhanced date & select */

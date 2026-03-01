@@ -149,17 +149,24 @@ const SalonServices = () => {
     data.append("gender", formData.gender);
     data.append("salonId", salonId);
 
+    // Only append image if a new file is selected
     if (file) {
       data.append("image", file);
-    } else if (formData.image) {
-      data.append("image", formData.image);
     }
 
     try {
       if (editingService) {
-        await axios.put(`/services/${editingService._id}`, data);
+        await axios.put(`/services/${editingService._id}`, data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
       } else {
-        await axios.post("/services", data);
+        await axios.post("/services", data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
       }
 
       await fetchServices();
@@ -237,10 +244,6 @@ const SalonServices = () => {
           </div>
 
           <div className="service-panel flex-1">
-            <div className="service-panel-header mb-4">
-              <h3 className="text-lg font-semibold">Hair & Styling</h3>
-            </div>
-
             <div className="service-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {error && (
                 <div className="service-card bg-red-50 text-red-700 p-4 rounded">
