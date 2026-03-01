@@ -1,8 +1,7 @@
 // Individual Booking SelectTimePage.jsx - Fixed for Multiple Services
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
-import "./SelectTimePage.css";
+import { CalendarDaysIcon, ClockIcon, ChevronRightIcon, ShieldExclamationIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
@@ -690,14 +689,22 @@ const SelectTimePage = () => {
   const displayTotalAmount = appointmentsToDisplay.reduce((total, appointment) => {
     return total + (Number(appointment.price) || 0);
   }, 0);
-
   // No services selected
   if (selectedServices.length === 0) {
     return (
-      <div className="SelectTimePage-container">
-        <div className="left-column">
-          <h2>No services selected</h2>
-          <button onClick={() => navigate("/")}>Go back to services</button>
+      <div className="min-h-screen bg-gray-50/50 font-sans flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center border border-gray-100">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShieldExclamationIcon className="w-8 h-8 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 mb-2">No Services Selected</h2>
+          <p className="text-sm text-gray-500 mb-6">Please select at least one service to continue booking.</p>
+          <button
+            onClick={() => navigate("/")}
+            className="w-full py-3 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+          >
+            Go back to services
+          </button>
         </div>
       </div>
     );
@@ -705,251 +712,384 @@ const SelectTimePage = () => {
 
   // Render
   return (
-    <div className="SelectTimePage-container" key={renderKey}>
+    <div className="min-h-screen bg-gray-50/50 font-sans pb-24 relative" key={renderKey}>
+      {/* Simple Header */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => navigate("/")}
+          >
+            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="text-sm font-medium text-gray-500 hover:text-dark-900 transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </header>
+
       {/* Guest Alert Modal */}
       {showGuestAlert && (
-        <div className="guest-alert-modal">
-          <div className="guest-alert-content">
-            <h3>🛑 Sign In Required</h3>
-            <p>You're currently browsing as a guest. To book appointments, please sign in or create an account.</p>
-            <div className="guest-alert-buttons">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm" onClick={() => setShowGuestAlert(false)}></div>
+          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <LockClosedIcon className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Sign In Required</h3>
+            <p className="text-center text-gray-500 text-sm mb-6">
+              You're currently browsing as a guest. To book appointments, please sign in or create an account.
+            </p>
+            <div className="space-y-3">
               <button
-                className="guest-alert-primary"
+                className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
                 onClick={handleNavigateToLogin}
               >
                 Sign In / Sign Up
               </button>
               <button
-                className="guest-alert-secondary"
+                className="w-full py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
                 onClick={() => setShowGuestAlert(false)}
               >
                 Continue as Guest (View Only)
               </button>
             </div>
-            <p className="guest-alert-note">
-              <small>Note: Guest users can browse but cannot make bookings.</small>
-            </p>
           </div>
         </div>
       )}
 
-      <div className="left-column">
-        <p className="breadcrumb">Services &gt; Professional &gt; <b>Time</b> &gt; Confirmation</p>
-        <h2 className="heading-with-search">
-          {isReschedule ? "Reschedule" : "Select Time for"} {currentService.name}
-        </h2>
-
-        {isGuest && (
-          <div className="guest-notice">
-            <p>⚠️ You're browsing as a guest. <a onClick={() => setShowGuestAlert(true)} style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}>Sign in to book</a></p>
-          </div>
-        )}
-
-        {isReschedule && (
-          <div className="reschedule-notice">
-            <p>🔁 You are rescheduling an existing appointment</p>
-            {rescheduleAppointment.date && rescheduleAppointment.startTime && rescheduleAppointment.endTime && (
-              <p>
-                Current: {new Date(rescheduleAppointment.date).toLocaleDateString()} at {rescheduleAppointment.startTime} - {rescheduleAppointment.endTime}
-                {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) &&
-                  <span style={{ color: 'red', fontWeight: 'bold' }}> (Within 24 hours - cannot reschedule)</span>
-                }
-              </p>
-            )}
-          </div>
-        )}
-
-        {rescheduleError && (
-          <div className="reschedule-error">
-            <p>{rescheduleError}</p>
-          </div>
-        )}
-
-        {selectedServices.length > 1 && !isReschedule && (
-          <div className="service-progress">
-            <p>Service {currentServiceIndex.current + 1} of {selectedServices.length}</p>
-            {bookedAppointments.length > 0 && (
-              <p>✅ {bookedAppointments.length} service(s) already scheduled</p>
-            )}
-          </div>
-        )}
-
-        <div className="date-buttons">
-          {currentService && dates.map(day => {
-            const serviceId = currentService._id;
-            const professional = resolveProfessionalForService(serviceId);
-            const professionalId = professional?._id;
-
-            return (
-              <button
-                key={`${serviceId}-${day.fullDate}`}
-                className={`date-button ${selectedDates[serviceId] === day.fullDate ? "selected" : ""}`}
-                onClick={() => professionalId && handleDateClick(serviceId, professionalId, day.fullDate)}
-                disabled={isGuest || !professionalId || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))}
-              >
-                <span>{day.date}</span><small>{day.day}</small>
-              </button>
-            );
-          })}
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-dark-900 rounded-full animate-spin mb-4"></div>
+          <p className="text-lg font-bold text-gray-900 animate-pulse">
+            Processing your {isReschedule ? 'reschedule' : 'appointment'}...
+          </p>
         </div>
+      )}
 
-        {!professionalId && (
-          <div style={{ padding: 12, background: "#fff3cd", color: "#856404", borderRadius: 8, margin: "12px 0" }}>
-            <strong>No professional selected</strong>
-          </div>
-        )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
 
-        <div className="SelectTimePage-list">
-          {!professionalId ? (
-            <p>No professional selected</p>
-          ) : !selectedDate ? (
-            <p>Please select a date</p>
-          ) : displaySlots.length === 0 ? (
-            <p>
-              No available time slots for {new Date(selectedDate).toLocaleDateString()}
-              {isPastTimeSlot(selectedDate, "23:59") && (
-                <span style={{ display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
-                  ⏰ Today's available slots have passed. Please select a future date.
-                </span>
-              )}
-            </p>
-          ) : (
-            displaySlots.map(slot => {
-              const slotId = slot._id || slot.id || slot.startTime;
-              const serviceId = currentService._id;
-              const isSelected = selectedTimes[serviceId] === slotId;
-              const isBooked = !!slot.isBooked;
+          {/* Main Content (Left) */}
+          <div className="lg:col-span-8 flex flex-col">
 
-              // Calculate end time for display
-              const displayStartTime = slot.startTime || slot.start;
-              const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
+            {/* Breadcrumb */}
+            <nav className="flex items-center flex-wrap gap-2 text-sm font-bold text-gray-400 mb-8">
+              <span className="text-dark-900 cursor-pointer hover:underline" onClick={() => navigate("/")}>1. Services</span>
+              <ChevronRightIcon className="w-4 h-4 text-gray-300" />
+              <span className="text-dark-900 cursor-pointer hover:underline" onClick={() => navigate(-1)}>2. Professional</span>
+              <ChevronRightIcon className="w-4 h-4 text-gray-300" />
+              <span className="text-dark-900 bg-gray-100 px-3 py-1 rounded-full">{isReschedule ? 'Reschedule' : '3. Time'}</span>
+              <ChevronRightIcon className="w-4 h-4 text-gray-300" />
+              <span className="opacity-60">{isReschedule ? 'Confirm' : '4. Confirm'}</span>
+            </nav>
 
-              return (
-                <div
-                  key={slotId}
-                  className={`SelectTimePage-card ${isBooked ? "disabled" : isSelected ? "selected" : ""} ${isGuest ? "guest-disabled" : ""}`}
-                  onClick={() => {
-                    if (isGuest || isBooked) return;
-                    if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
-                      setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
-                      return;
-                    }
-                    handleTimeClick(currentService._id, slotId, isBooked);
-                  }}
-                  style={{
-                    pointerEvents: isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? "none" : "auto",
-                    opacity: isGuest || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? 0.6 : 1
-                  }}
-                >
-                  <p>{displayStartTime} - {displayEndTime}</p>
-                  <p>{isBooked ? "❌ Booked" : `LKR ${currentService.price}`}</p>
-                  {isGuest && (
-                    <div className="guest-lock-icon">🔒</div>
-                  )}
-                  {isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && (
-                    <div className="time-warning">⏰ Cannot reschedule</div>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+            <div className="mb-6">
+              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+                {isReschedule ? "Reschedule" : "Select Time"}
+                <span className="block text-xl sm:text-2xl text-primary-500 font-bold mt-1">for {currentService.name}</span>
+              </h1>
+            </div>
 
-      <div className="right-column">
-        <div className="summary-box">
-          <img
-            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/150/150?random=9"}
-            alt="Salon"
-            className="salon-image"
-          />
-          <div className="salon-info">
-            <h4>{salon?.name}</h4>
-            <p>{salon?.location}</p>
-            <p>💇 {currentService.name}</p>
-            <p>👤 {professional?.name || "Any Professional"}</p>
-            {selectedTimes[serviceKey] && selectedDate && (
-              <p>
-                <CalendarDaysIcon className="h-4 w-4 inline mr-1" />
-                {new Date(selectedDate).toDateString()}
-                <ClockIcon className="h-4 w-4 inline mr-1" />
-                {displaySlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}
-              </p>
-            )}
-
-            {/* Show all scheduled services */}
-            {appointmentsToDisplay.length > 0 && (
-              <div className="services-breakdown">
-                <p><strong>Scheduled Services:</strong></p>
-                {appointmentsToDisplay.map((appointment, index) => (
-                  <div key={index} className="appointment-item">
-                    <p style={{ fontSize: '0.9em', margin: '2px 0' }}>
-                      <strong>{appointment.serviceName}</strong><br />
-                      <CalendarDaysIcon className="h-4 w-4 inline mr-1" />
-                      {new Date(appointment.date).toLocaleDateString()}
-                      <ClockIcon className="h-4 w-4 inline mr-1" />
-                      {appointment.startTime} - {appointment.endTime}<br />
-                      LKR {appointment.price}
-                    </p>
-                    {index < appointmentsToDisplay.length - 1 && <hr />}
-                  </div>
-                ))}
+            {/* Notifications */}
+            {isGuest && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-6">
+                <LockClosedIcon className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-sm text-amber-800">
+                  You're browsing as a guest. <button onClick={() => setShowGuestAlert(true)} className="font-bold underline">Sign in to book</button>
+                </p>
               </div>
             )}
 
-            <div className="total-section">
-              <p>Total Amount</p>
-              <p><strong>LKR {displayTotalAmount}</strong></p>
+            {isReschedule && rescheduleAppointment && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                    <CalendarDaysIcon className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-blue-900">Rescheduling Existing Appointment</h4>
+                    <p className="text-sm text-blue-800/80 mt-1">
+                      Current: {new Date(rescheduleAppointment.date).toLocaleDateString()} at {rescheduleAppointment.startTime} - {rescheduleAppointment.endTime}
+                    </p>
+                    {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && (
+                      <p className="text-xs font-bold text-red-600 mt-2 bg-red-100 px-2 py-1 rounded-md inline-block">
+                        Within 24 hours - cannot reschedule
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {rescheduleError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium mb-6">
+                {rescheduleError}
+              </div>
+            )}
+
+            {/* Service Progress */}
+            {selectedServices.length > 1 && !isReschedule && (
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-black text-primary-500 uppercase tracking-widest bg-primary-50 px-2.5 py-1 rounded-md">
+                    {currentServiceIndex.current + 1} of {selectedServices.length}
+                  </span>
+                  <span className="text-base font-bold text-gray-400">Services</span>
+                </div>
+                {bookedAppointments.length > 0 && (
+                  <span className="text-sm font-bold text-green-600 flex items-center gap-1.5 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-100">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    {bookedAppointments.length} scheduled
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Dates Selection */}
+            {!professionalId ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center text-yellow-800 font-medium mb-8">
+                No professional selected for this service.
+              </div>
+            ) : (
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <CalendarDaysIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="font-bold text-gray-900">Select Date</h3>
+                </div>
+
+                <div className="flex overflow-x-auto gap-3 pb-4 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                  {currentService && dates.map(day => {
+                    const serviceId = currentService._id;
+                    const isSelected = selectedDates[serviceId] === day.fullDate;
+                    const isDisabled = isGuest || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
+
+                    return (
+                      <button
+                        key={`${serviceId}-${day.fullDate}`}
+                        onClick={() => professionalId && handleDateClick(serviceId, professionalId, day.fullDate)}
+                        disabled={isDisabled}
+                        className={`flex flex-col flex-none items-center justify-center p-3 rounded-2xl border-2 min-w-[4.5rem] sm:min-w-[5rem] transition-all duration-200 ${isSelected
+                          ? 'bg-dark-900 border-dark-900 shadow-md shadow-dark-900/20 scale-105'
+                          : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                          {day.day}
+                        </span>
+                        <span className={`text-xl sm:text-2xl font-black ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                          {day.date}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Time Slots Grid */}
+            {professionalId && selectedDate && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <ClockIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="font-bold text-gray-900">Available Times</h3>
+                </div>
+
+                {displaySlots.length === 0 ? (
+                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-10 text-center">
+                    <p className="text-gray-500 font-medium">
+                      No available time slots on {new Date(selectedDate).toLocaleDateString()}.
+                    </p>
+                    {isPastTimeSlot(selectedDate, "23:59") && (
+                      <p className="text-sm mt-3 text-red-500 font-bold bg-red-50 py-1.5 px-3 rounded-lg inline-block">
+                        ⏰ Today's slots have passed. Please select a future date.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                    {displaySlots.map(slot => {
+                      const slotId = slot._id || slot.id || slot.startTime;
+                      const serviceId = currentService._id;
+                      const isSelected = selectedTimes[serviceId] === slotId;
+                      const isBooked = !!slot.isBooked;
+                      const displayStartTime = slot.startTime || slot.start;
+                      const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
+                      const isDisabled = isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
+
+                      return (
+                        <div
+                          key={slotId}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
+                              setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
+                              return;
+                            }
+                            handleTimeClick(currentService._id, slotId, isBooked);
+                          }}
+                          className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
+                            isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
+                              "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
+                            } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        >
+                          <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : 'text-gray-900'}`}>
+                            {displayStartTime}
+                          </span>
+
+                          {/* Booked indicator */}
+                          {isBooked ? (
+                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
+                          ) : (
+                            <span className={`text-[10px] font-medium mt-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                              LKR {currentService.price}
+                            </span>
+                          )}
+
+                          {isGuest && <LockClosedIcon className="absolute top-1.5 right-1.5 w-3 h-3 opacity-50" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+
+          {/* Sidebar / Summary (Right) */}
+          <div className="lg:col-span-4 mt-8 lg:mt-0 relative">
+            <div className="sticky top-28 bg-white rounded-[2rem] p-6 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col min-h-[400px]">
+
+              {/* Salon Preview */}
+              <div className="flex items-center gap-4 pb-6 border-b border-gray-100 mb-6 w-full">
+                <img
+                  src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/100/100?random=9"}
+                  alt="Salon"
+                  className="w-14 h-14 object-cover rounded-[1rem] border border-gray-100 shadow-sm shrink-0"
+                />
+                <div className="flex flex-col min-w-0 pr-2">
+                  <h4 className="text-sm font-black text-gray-900 line-clamp-1 truncate">{salon?.name || "Salon"}</h4>
+                  <p className="text-xs text-gray-500 line-clamp-1 truncate">{salon?.location || "Location"}</p>
+                </div>
+              </div>
+
+              {/* Current Context */}
+              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 mb-6">
+                <div className="flex gap-3 mb-4 items-start">
+                  <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                    <span className="text-sm">💇</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary-500 mb-0.5">Current Service</p>
+                    <p className="font-bold text-gray-900 leading-tight truncate">{currentService.name}</p>
+                    <p className="text-xs text-gray-500 mt-1 truncate">With: {professional?.name || "Any Professional"}</p>
+                  </div>
+                </div>
+
+                {selectedTimes[serviceKey] && selectedDate ? (
+                  <div className="bg-white rounded-xl p-3 border border-gray-200 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-bold text-gray-900">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ClockIcon className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-black text-dark-900">
+                        {displaySlots.find(s => (s._id === selectedTimes[serviceKey] || s.id === selectedTimes[serviceKey] || s.startTime === selectedTimes[serviceKey]))?.startTime}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white border border-gray-200 border-dashed rounded-xl p-3 text-center text-xs font-medium text-gray-400">
+                    Select a time slot
+                  </div>
+                )}
+              </div>
+
+              {/* Scheduled Services Summary */}
+              {appointmentsToDisplay.length > 0 && (
+                <div className="mb-6 max-h-[150px] overflow-y-auto pr-2 hide-scrollbar">
+                  <h5 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    Scheduled Items ({appointmentsToDisplay.length})
+                  </h5>
+                  <div className="space-y-3">
+                    {appointmentsToDisplay.map((appointment, index) => (
+                      <div key={index} className="flex flex-col gap-1 bg-white p-3 rounded-xl border border-gray-100 text-sm shadow-sm relative overflow-hidden fade-in">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-dark-900"></div>
+                        <div className="flex justify-between items-start">
+                          <strong className="text-gray-900 truncate pr-2">{appointment.serviceName}</strong>
+                          <span className="font-bold shrink-0">LKR {appointment.price}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span>{new Date(appointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                          <span className="font-bold text-gray-700">{appointment.startTime}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Area */}
+              <div className="mt-auto pt-6 border-t border-gray-100">
+                <div className="flex justify-between items-end mb-5">
+                  <p className="text-sm font-bold text-gray-500">Total Amount</p>
+                  <p className="text-2xl font-black text-dark-900 leading-none">
+                    LKR {displayTotalAmount}
+                  </p>
+                </div>
+
+                {isGuest ? (
+                  <div className="text-center">
+                    <button
+                      className="w-full py-4 rounded-xl flex justify-center items-center gap-2 bg-gray-100 text-gray-500 font-bold border border-gray-200 hover:bg-gray-200 transition-colors"
+                      onClick={() => setShowGuestAlert(true)}
+                    >
+                      <LockClosedIcon className="w-5 h-5" />
+                      Sign In to Book
+                    </button>
+                    <p className="text-xs text-gray-400 mt-3 font-medium">Guest users cannot make bookings.</p>
+                  </div>
+                ) : (
+                  <button
+                    className={`w-full py-4 rounded-xl font-bold flex flex-col items-center justify-center transition-all duration-300 shadow-xl ${!selectedTimes[serviceKey] || loading || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200"
+                      : "bg-dark-900 text-white hover:bg-black hover:shadow-dark-900/20 active:scale-[0.98]"
+                      }`}
+                    onClick={handleContinue}
+                    disabled={
+                      !selectedTimes[serviceKey] ||
+                      loading ||
+                      !isUserAuthorized ||
+                      (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
+                    }
+                  >
+                    <span className="flex items-center gap-2 text-[15px]">
+                      {loading ? "Processing..." :
+                        isReschedule ?
+                          (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
+                            "Reschedule Not Allowed" :
+                            "Confirm Reschedule") :
+                          currentServiceIndex.current + 1 < selectedServices.length
+                            ? `Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
+                            : `Confirm & Checkout`
+                      }
+                      {!loading && (!isReschedule || !isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) && <ChevronRightIcon className="w-5 h-5" />}
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {isGuest ? (
-            <div className="guest-action-section">
-              <button
-                className="continue-button guest-disabled-btn"
-                onClick={() => setShowGuestAlert(true)}
-              >
-                🔒 Sign In to Book Appointment
-              </button>
-              <p className="guest-action-note">
-                <small>Guest users cannot make bookings. Please sign in to continue.</small>
-              </p>
-            </div>
-          ) : (
-            <button
-              className="continue-button"
-              onClick={handleContinue}
-              disabled={
-                !selectedTimes[serviceKey] ||
-                loading ||
-                !isUserAuthorized ||
-                (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
-              }
-              title={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
-                "Cannot reschedule within 24 hours of appointment" : ""}
-            >
-              {loading ? "Processing..." :
-                isReschedule ?
-                  (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
-                    "Reschedule Not Allowed (Within 24h)" :
-                    "Reschedule Appointment") :
-                  currentServiceIndex.current + 1 < selectedServices.length
-                    ? `Continue to Next Service (${currentServiceIndex.current + 1}/${selectedServices.length})`
-                    : `Confirm All Services (LKR ${displayTotalAmount})`
-              }
-            </button>
-          )}
         </div>
       </div>
-
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loader">
-            <div className="loader-dots"><div></div><div></div><div></div></div>
-            <p>Processing your {isReschedule ? 'reschedule' : 'appointments'}...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

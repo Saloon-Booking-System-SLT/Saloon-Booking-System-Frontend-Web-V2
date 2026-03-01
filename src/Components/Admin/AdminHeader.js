@@ -51,7 +51,7 @@ const AdminHeader = () => {
             <input
               type="text"
               placeholder="Search customers, bookings, salons..."
-              className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <svg
               className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -99,7 +99,7 @@ const AdminHeader = () => {
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div 
+              <div
                 className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -118,7 +118,7 @@ const AdminHeader = () => {
                   ))}
                 </div>
                 <div className="px-4 py-2 border-t border-gray-200 text-center">
-                  <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
                     View all notifications
                   </button>
                 </div>
@@ -136,7 +136,7 @@ const AdminHeader = () => {
               }}
               className="flex items-center gap-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition"
             >
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center text-white font-semibold shadow-inner">
                 {user?.username ? user.username.substring(0, 2).toUpperCase() : 'AD'}
               </div>
               <div className="text-left hidden sm:block">
@@ -162,7 +162,7 @@ const AdminHeader = () => {
 
             {/* Profile Dropdown */}
             {showProfile && (
-              <div 
+              <div
                 className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
                 onClick={(e) => e.stopPropagation()}
               >

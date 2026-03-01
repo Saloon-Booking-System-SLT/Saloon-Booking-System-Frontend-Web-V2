@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../../Api/axios';
-import './CheckoutPage.css';
+import { ShieldCheckIcon, CreditCardIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 const CheckoutPage = () => {
   const location = useLocation();
@@ -11,9 +11,20 @@ const CheckoutPage = () => {
   // Safety check for missing state
   if (!location.state) {
     return (
-      <div className="checkout-error">
-        <h2>No booking details found</h2>
-        <button onClick={() => navigate('/')}>Return to Home</button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-gray-100">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 mb-2">No Booking Details Found</h2>
+          <p className="text-sm text-gray-500 mb-8">We couldn't find the details for this checkout session.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+          >
+            Return to Home
+          </button>
+        </div>
       </div>
     );
   }
@@ -39,7 +50,6 @@ const CheckoutPage = () => {
     setIsLoading(true);
     try {
       // Determine Identifier and Amount
-      // Use bookingId for groups, appointmentId for singles. Fallback to "TEMP_ID" safely.
       const idToProcess = isGroupBooking ? bookingId : appointmentId;
       const finalId = idToProcess || "TEMP_ID";
 
@@ -53,8 +63,8 @@ const CheckoutPage = () => {
 
       // 1. Prepare Request Payload
       const payload = {
-        appointmentId: finalId, // Backend expects 'appointmentId' key usually, but we pass bookingId for groups
-        isGroupBooking: !!isGroupBooking, // Flag for backend to handle differently if needed
+        appointmentId: finalId,
+        isGroupBooking: !!isGroupBooking,
         amount: finalAmount,
         currency: "LKR",
         items: itemsDescription,
@@ -71,7 +81,6 @@ const CheckoutPage = () => {
 
       // 2. Call Backend to Init Payment
       const response = await axios.post('/payments/payhere/initiate', payload);
-
       const result = response.data;
 
       if (result.success && result.data) {
@@ -81,7 +90,6 @@ const CheckoutPage = () => {
         alert('Failed to initiate payment. Please try again.');
         console.error('Payment init failed:', result);
       }
-
     } catch (error) {
       console.error('Error initiating PayHere payment:', error);
       alert('An error occurred. Please check your connection.');
@@ -117,35 +125,35 @@ const CheckoutPage = () => {
 
   // Helper to render single item summary
   const renderSingleSummary = () => (
-    <>
-      <div className="summary-row">
-        <span className="label">Service</span>
-        <span className="value">{service?.name || 'Unknown Service'}</span>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+        <span className="text-sm font-medium text-gray-500">Service</span>
+        <span className="text-sm font-bold text-gray-900">{service?.name || 'Unknown Service'}</span>
       </div>
-      <div className="summary-row">
-        <span className="label">Professional</span>
-        <span className="value">{professional?.name || 'Any Professional'}</span>
+      <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+        <span className="text-sm font-medium text-gray-500">Professional</span>
+        <span className="text-sm font-bold text-gray-900">{professional?.name || 'Any Professional'}</span>
       </div>
-      <div className="summary-row">
-        <span className="label">Date & Time</span>
-        <span className="value">
+      <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+        <span className="text-sm font-medium text-gray-500">Date & Time</span>
+        <span className="text-sm font-bold text-gray-900">
           {new Date(selectedDate).toLocaleDateString()} at {selectedTime}
         </span>
       </div>
-    </>
+    </div>
   );
 
   // Helper to render group summary
   const renderGroupSummary = () => (
-    <div className="group-summary-list">
+    <div className="space-y-3 max-h-64 overflow-y-auto pr-2 hide-scrollbar">
       {appointmentDetails.map((appt, idx) => (
-        <div key={idx} className="group-item">
-          <div className="group-item-header">
-            <span className="item-name">{appt.serviceName}</span>
-            <span className="item-price">LKR {appt.price}</span>
+        <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <div className="flex justify-between items-start mb-1">
+            <span className="font-bold text-gray-900 text-sm">{appt.serviceName}</span>
+            <span className="font-black text-dark-900 text-sm">LKR {appt.price}</span>
           </div>
-          <div className="group-item-details">
-            {appt.memberName} ({appt.memberCategory}) - {appt.startTime}
+          <div className="text-xs text-gray-500 font-medium">
+            {appt.memberName} <span className="text-gray-400">({appt.memberCategory})</span> • {appt.startTime}
           </div>
         </div>
       ))}
@@ -153,59 +161,91 @@ const CheckoutPage = () => {
   );
 
   return (
-    <div className="checkout-container">
-      <div className="checkout-card">
-        <div className="checkout-header">
-          <h1>Checkout</h1>
-          <p>Complete your {isGroupBooking ? 'group booking' : 'appointment'} with PayHere</p>
+    <div className="min-h-screen bg-gray-50/50 font-sans flex flex-col items-center justify-center p-4">
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-dark-900 rounded-full animate-spin mb-4"></div>
+          <p className="text-lg font-bold text-gray-900 animate-pulse">
+            Connecting to securely process payment...
+          </p>
         </div>
+      )}
 
-        <div className="order-summary-box">
-          <h3>Order Summary</h3>
+      <div className="w-full max-w-lg fade-in slide-up">
+        {/* Header Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-dark-900 transition-colors mb-6"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Back to details
+        </button>
 
-          {isGroupBooking ? renderGroupSummary() : renderSingleSummary()}
+        <div className="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
 
-          <div className="summary-row">
-            <span className="label">Salon</span>
-            <span className="value">{salon?.name || 'Salon detail unavailable'}</span>
+          {/* Top Header */}
+          <div className="bg-dark-900 px-8 py-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-black mb-1">Checkout</h1>
+                <p className="text-gray-300 text-sm font-medium">Complete your {isGroupBooking ? 'group booking' : 'appointment'} securely</p>
+              </div>
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <CreditCardIcon className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
 
-          <div className="summary-divider"></div>
+          <div className="p-8">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">Order Summary</h3>
 
-          <div className="summary-row total">
-            <span className="label">Total Amount</span>
-            <span className="value">
-              LKR {isGroupBooking
-                ? (totalAmount || 0).toLocaleString()
-                : (service?.price ? service.price.toLocaleString() : '0.00')}
-            </span>
+            {isGroupBooking ? renderGroupSummary() : renderSingleSummary()}
+
+            <div className="flex justify-between items-center py-4 border-b border-gray-100 mt-2">
+              <span className="text-sm font-medium text-gray-500">Location</span>
+              <span className="text-sm font-bold text-gray-900 text-right">{salon?.name || 'Salon unavailable'}</span>
+            </div>
+
+            <div className="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+              <div className="flex justify-between items-end">
+                <span className="text-sm font-bold text-gray-500">Total Amount</span>
+                <span className="text-3xl font-black text-dark-900">
+                  LKR {isGroupBooking
+                    ? (totalAmount || 0).toLocaleString()
+                    : (service?.price ? service.price.toLocaleString() : '0.00')}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-4">
+              <button
+                onClick={handlePayHereCheckout}
+                disabled={isLoading}
+                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isLoading
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                    : 'bg-primary-500 text-white hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30'
+                  }`}
+              >
+                {isLoading ? (
+                  <span>Processing...</span>
+                ) : (
+                  <>
+                    <CreditCardIcon className="w-5 h-5" />
+                    Secure Pay via PayHere
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 py-2 px-4 rounded-full w-fit mx-auto border border-green-100">
+              <ShieldCheckIcon className="w-4 h-4" />
+              <span>Payments are secure & encrypted</span>
+            </div>
+
           </div>
-        </div>
-
-        <div className="payment-actions">
-          <button
-            className="payhere-btn"
-            onClick={handlePayHereCheckout}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className="loader">Processing...</span>
-            ) : (
-              <>Pay with <span className="payhere-logo-text">PayHere</span></>
-            )}
-          </button>
-
-          <button
-            className="cancel-bttn"
-            onClick={() => navigate(-1)}
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-        </div>
-
-        <div className="secure-badge">
-          <span>🔒 Secure Payment via PayHere Sandbox</span>
         </div>
       </div>
     </div>

@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import LoadingSpinner from '../Common/LoadingSpinner';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import './CustomersPage.css';
+import {
+  UsersIcon,
+  MagnifyingGlassIcon,
+  UserCircleIcon,
+  ExclamationCircleIcon,
+  CheckBadgeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+  XMarkIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  CalendarIcon,
+  CurrencyDollarIcon,
+  StarIcon
+} from '@heroicons/react/24/outline';
 import axios from '../../Api/axios';
 
 const CustomersPage = () => {
@@ -21,10 +35,10 @@ const CustomersPage = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Get token from localStorage
         const token = localStorage.getItem('token');
-        
+
         if (!token) {
           setError('Authentication required');
           setIsLoading(false);
@@ -96,19 +110,13 @@ const CustomersPage = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  // Get loyalty score color
-  const getLoyaltyColor = (score) => {
-    if (score === null) return 'gray';
-    if (score >= 90) return '#10b981';
-    if (score >= 70) return '#3b82f6';
-    if (score >= 50) return '#f59e0b';
-    return '#ef4444';
-  };
-
   if (isLoading) {
     return (
       <AdminLayout>
-        <LoadingSpinner />
+        <div className="flex flex-col items-center justify-center h-64">
+          <LoadingSpinner />
+          <p className="mt-4 text-gray-500 font-medium">Loading customers...</p>
+        </div>
       </AdminLayout>
     );
   }
@@ -116,315 +124,330 @@ const CustomersPage = () => {
   if (error) {
     return (
       <AdminLayout>
-        <div className="error-message">{error}</div>
+        <div className="bg-red-50 text-red-700 p-6 rounded-2xl border border-red-200 text-center max-w-2xl mx-auto mt-10">
+          <ExclamationCircleIcon className="w-12 h-12 mx-auto text-red-500 mb-4" />
+          <p className="font-bold text-lg mb-2">Failed to load customers</p>
+          <p>{error}</p>
+        </div>
       </AdminLayout>
     );
   }
 
   return (
     <AdminLayout>
-      <div className="customers-container">
+      <div className="w-full max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="customers-header">
-          <h1 className="page-title">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Customers Management
-          </h1>
-          <div className="header-stats">
-            <div className="stat-box">
-              <span className="stat-label">Total</span>
-              <span className="stat-value">{customers.length}</span>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-600 rounded-l-2xl"></div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <UsersIcon className="w-8 h-8 text-primary-600" />
+              Customers Management
+            </h1>
+            <p className="text-gray-500 mt-1 ml-11">View and manage all customer accounts on the platform.</p>
+          </div>
+          <div className="flex gap-4">
+            <div className="bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-xl shadow-sm text-center min-w-[100px]">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total</div>
+              <div className="text-2xl font-black text-primary-600 leading-none">{customers.length}</div>
             </div>
-            <div className="stat-box">
-              <span className="stat-label">Registered</span>
-              <span className="stat-value">{customers.filter(c => c.isRegistered).length}</span>
+            <div className="bg-emerald-50 border border-emerald-100 px-4 py-2.5 rounded-xl shadow-sm text-center min-w-[100px]">
+              <div className="text-xs font-bold text-emerald-600/70 uppercase tracking-widest mb-1">Registered</div>
+              <div className="text-2xl font-black text-emerald-600 leading-none">{customers.filter(c => c.isRegistered).length}</div>
             </div>
-            <div className="stat-box">
-              <span className="stat-label">Guests</span>
-              <span className="stat-value">{customers.filter(c => !c.isRegistered).length}</span>
+            <div className="bg-amber-50 border border-amber-100 px-4 py-2.5 rounded-xl shadow-sm text-center min-w-[100px]">
+              <div className="text-xs font-bold text-amber-600/70 uppercase tracking-widest mb-1">Guests</div>
+              <div className="text-2xl font-black text-amber-600 leading-none">{customers.filter(c => !c.isRegistered).length}</div>
             </div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="search-bar">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
-            }}
-          />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <div className="relative max-w-lg">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by name, email, or phone..."
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors shadow-inner"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // Reset to first page on search
+              }}
+            />
+          </div>
         </div>
 
         {/* Customers Table */}
-        <div className="customers-table-container">
-          <table className="customers-table">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Bookings</th>
-                <th>Avg. Spend</th>
-                <th>Loyalty Score</th>
-                <th>Blacklist</th>
-                <th>SMS Opt-in</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentCustomers.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="no-data">
-                    <svg className="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
-                    No customers found
-                  </td>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Bookings</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Spend</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Loyalty</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Blacklist</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">SMS Opt-In</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
-              ) : (
-                currentCustomers.map((customer) => (
-                  <tr key={customer._id}>
-                    <td className="customer-info">
-                      {customer.photoURL ? (
-                        <img src={customer.photoURL} alt={customer.name} className="customer-avatar" />
-                      ) : (
-                        <div className="customer-avatar-placeholder">
-                          {customer.name?.charAt(0).toUpperCase() || '?'}
-                        </div>
-                      )}
-                      <div>
-                        <div className="customer-name">{customer.name}</div>
-                        <div className="customer-email">{customer.email}</div>
-                      </div>
-                    </td>
-                    <td className="bookings-cell">
-                      <span className="badge badge-blue">{customer.bookings}</span>
-                    </td>
-                    <td className="spend-cell">Rs {customer.avgSpend}</td>
-                    <td>
-                      {customer.loyaltyScore === null ? (
-                        <span className="loyalty-na">N/A</span>
-                      ) : (
-                        <div className="loyalty-score">
-                          <div className="loyalty-bar">
-                            <div 
-                              className="loyalty-fill" 
-                              style={{ 
-                                width: `${customer.loyaltyScore}%`,
-                                backgroundColor: getLoyaltyColor(customer.loyaltyScore)
-                              }}
-                            ></div>
-                          </div>
-                          <span className="loyalty-value">{customer.loyaltyScore}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      {customer.isBlacklisted ? (
-                        <span className="status-badge blacklisted">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
-                          </svg>
-                          Yes
-                        </span>
-                      ) : (
-                        <span className="status-badge active">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          No
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {customer.smsOptIn ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                          <CheckIcon className="h-4 w-4" />
-                          Yes
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                          <XMarkIcon className="h-4 w-4" />
-                          No
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <button 
-                        className="view-details-btn"
-                        onClick={() => handleViewDetails(customer)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        View Details
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentCustomers.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                      <UsersIcon className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p className="font-medium">No customers found matching your criteria</p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Previous
-            </button>
-            
-            <div className="pagination-numbers">
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  className={`pagination-number ${currentPage === index + 1 ? 'active' : ''}`}
-                  onClick={() => paginate(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                ) : (
+                  currentCustomers.map((customer) => (
+                    <tr key={customer._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {customer.photoURL ? (
+                            <img src={customer.photoURL} alt={customer.name} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm border-2 border-white">
+                              {customer.name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold text-gray-900 leading-tight">{customer.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{customer.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-600">
+                        <span className="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs border border-primary-100">{customer.bookings}</span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-emerald-600 tracking-tight">
+                        Rs {customer.avgSpend.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        {customer.loyaltyScore === null ? (
+                          <span className="text-xs text-gray-400 font-medium italic">N/A</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                              <div
+                                className={`h-2.5 rounded-full ${customer.loyaltyScore >= 80 ? 'bg-emerald-500' : customer.loyaltyScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(100, Math.max(0, customer.loyaltyScore))}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-bold text-gray-700">{customer.loyaltyScore}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {customer.isBlacklisted ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                            <XMarkIcon className="w-3.5 h-3.5" />
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <CheckIcon className="w-3.5 h-3.5" />
+                            No
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {customer.smsOptIn ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                            <CheckIcon className="w-4 h-4" />
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                            <XMarkIcon className="w-4 h-4" />
+                            No
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          className="inline-flex items-center gap-1.5 bg-white border border-gray-300 text-gray-700 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"
+                          onClick={() => handleViewDetails(customer)}
+                        >
+                          <UserCircleIcon className="w-4 h-4" />
+                          Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+              <span className="text-sm text-gray-500">
+                Showing <span className="font-bold text-gray-900">{indexOfFirstCustomer + 1}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastCustomer, filteredCustomers.length)}</span> of <span className="font-bold text-gray-900">{filteredCustomers.length}</span> results
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                {/* Simplified page numbers for responsiveness */}
+                <div className="flex gap-1 items-center">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => paginate(i + 1)}
+                      className={`w-9 h-9 rounded-xl text-sm font-bold transition-colors shadow-sm flex items-center justify-center ${currentPage === i + 1
+                          ? 'bg-primary-600 text-white border border-primary-600'
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  <ChevronRightIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Customer Details Modal */}
       {showModal && selectedCustomer && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Customer Details
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <UserCircleIcon className="w-6 h-6 text-primary-600" />
+                Customer Intelligence
               </h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                onClick={() => setShowModal(false)}
+              >
+                <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
-            
-            <div className="modal-body">
-              <div className="customer-profile">
-                <div className="profile-photo-placeholder">
-                  {selectedCustomer.name?.charAt(0).toUpperCase() || '?'}
-                </div>
-                <div className="profile-info">
-                  <h3>{selectedCustomer.name}</h3>
-                  <p>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {selectedCustomer.email}
-                  </p>
-                  <p>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {selectedCustomer.phone}
-                  </p>
-                  <p>
-                    Status: {selectedCustomer.isRegistered ? (
-                      <span className="status-badge registered">Registered</span>
-                    ) : (
-                      <span className="status-badge guest">Guest</span>
-                    )}
-                  </p>
-                </div>
-              </div>
 
-              <div className="customer-stats-grid">
-                <div className="stat-card">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <div>
-                    <h4>{selectedCustomer.bookings}</h4>
-                    <p>Total Bookings</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <h4>Rs {selectedCustomer.totalSpent}</h4>
-                    <p>Total Spent</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <div>
-                    <h4>Rs {selectedCustomer.avgSpend}</h4>
-                    <p>Avg. Spend</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                  <div>
-                    <h4>{selectedCustomer.loyaltyScore === null ? 'N/A' : selectedCustomer.loyaltyScore}</h4>
-                    <p>Loyalty Score</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-row">
-                <strong>SMS Opt-in:</strong>
-                <span className="inline-flex items-center gap-1">
-                  {selectedCustomer.smsOptIn ? (
-                    <>
-                      <CheckIcon className="h-4 w-4 text-green-600" />
-                      <span className="text-green-600 font-medium">Yes</span>
-                    </>
+            {/* Modal Body */}
+            <div className="p-6 md:p-8 overflow-y-auto w-full">
+              {/* Profile Card */}
+              <div className="flex flex-col sm:flex-row gap-6 mb-8 bg-white border border-gray-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-bl-full -z-0 opacity-50"></div>
+                <div className="shrink-0 relative z-10 flex justify-center">
+                  {selectedCustomer.photoURL ? (
+                    <img src={selectedCustomer.photoURL} alt={selectedCustomer.name} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
                   ) : (
-                    <>
-                      <XMarkIcon className="h-4 w-4 text-red-600" />
-                      <span className="text-red-600 font-medium">No</span>
-                    </>
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-3xl shadow-md border-4 border-white">
+                      {selectedCustomer.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
                   )}
-                </span>
+                </div>
+                <div className="flex flex-col justify-center relative z-10 w-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-black text-gray-900">{selectedCustomer.name}</h3>
+                    {selectedCustomer.isRegistered ? (
+                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckBadgeIcon className="w-4 h-4" /> Registered</span>
+                    ) : (
+                      <span className="bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3 py-1 rounded-full">Guest User</span>
+                    )}
+                  </div>
+                  <div className="space-y-2 mt-2 border-t border-gray-100 pt-3">
+                    <p className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                      <EnvelopeIcon className="w-4 h-4 text-primary-500" />
+                      {selectedCustomer.email}
+                    </p>
+                    <p className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                      <PhoneIcon className="w-4 h-4 text-emerald-500" />
+                      {selectedCustomer.phone}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="detail-row">
-                <strong>Blacklisted:</strong>
-                <span>{selectedCustomer.isBlacklisted ? 'Yes' : 'No'}</span>
+
+              {/* Stats Grid */}
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Analytics Overview</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-center transition-transform hover:-translate-y-1">
+                  <CalendarIcon className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                  <div className="text-2xl font-black text-gray-900 leading-tight">{selectedCustomer.bookings}</div>
+                  <div className="text-xs font-bold text-gray-500 mt-1 uppercase">Bookings</div>
+                </div>
+                <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 text-center transition-transform hover:-translate-y-1">
+                  <CurrencyDollarIcon className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+                  <div className="text-2xl font-black text-gray-900 leading-tight">Rs {selectedCustomer.totalSpent.toLocaleString()}</div>
+                  <div className="text-xs font-bold text-gray-500 mt-1 uppercase">Total Spent</div>
+                </div>
+                <div className="bg-violet-50/50 border border-violet-100 rounded-2xl p-4 text-center transition-transform hover:-translate-y-1">
+                  <svg className="w-6 h-6 text-violet-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                  <div className="text-2xl font-black text-gray-900 leading-tight">Rs {selectedCustomer.avgSpend.toLocaleString()}</div>
+                  <div className="text-xs font-bold text-gray-500 mt-1 uppercase">Avg. Spend</div>
+                </div>
+                <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-center transition-transform hover:-translate-y-1">
+                  <StarIcon className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+                  <div className="text-2xl font-black text-gray-900 leading-tight">{selectedCustomer.loyaltyScore === null ? 'N/A' : selectedCustomer.loyaltyScore}</div>
+                  <div className="text-xs font-bold text-gray-500 mt-1 uppercase">Loyalty</div>
+                </div>
               </div>
-              <div className="detail-row">
-                <strong>Last Booking:</strong>
-                <span>{formatDate(selectedCustomer.lastBooking)}</span>
+
+              {/* Status Details */}
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Account Status</h4>
+              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between p-4 border-b border-gray-50 bg-gray-50/30">
+                  <span className="text-sm font-bold text-gray-700">SMS Opt-In Settings</span>
+                  {selectedCustomer.smsOptIn ? (
+                    <span className="flex items-center gap-1 text-sm font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                      <CheckIcon className="w-4 h-4" /> Yes
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-sm font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
+                      <XMarkIcon className="w-4 h-4" /> No
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-4 border-b border-gray-50">
+                  <span className="text-sm font-bold text-gray-700">Blacklisted Override</span>
+                  {selectedCustomer.isBlacklisted ? (
+                    <span className="flex items-center gap-1 text-sm font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
+                      <XMarkIcon className="w-4 h-4" /> Yes
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-sm font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
+                      <CheckIcon className="w-4 h-4" /> No
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50/30">
+                  <span className="text-sm font-bold text-gray-700">Last Registered Booking</span>
+                  <span className="text-sm font-bold text-gray-900 font-mono tracking-tight">{formatDate(selectedCustomer.lastBooking)}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end">
+              <button
+                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+                onClick={() => setShowModal(false)}
+              >
+                Close View
+              </button>
             </div>
           </div>
         </div>

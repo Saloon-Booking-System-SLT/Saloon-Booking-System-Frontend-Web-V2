@@ -40,13 +40,13 @@ export const AuthProvider = ({ children }) => {
         const storedToken = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
         const salonData = localStorage.getItem('salonUser');
-        
+
         console.log('AuthContext: Checking stored data', {
           hasToken: !!storedToken,
           hasUserData: !!userData,
           hasSalonData: !!salonData
         });
-        
+
         // Priority 1: Salon owner authentication (backend)
         if (storedToken && salonData) {
           try {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('salonUser');
           }
         }
-        
+
         // Priority 2: Standard backend user authentication
         if (storedToken && userData) {
           try {
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('user');
           }
         }
-        
+
       } catch (error) {
         console.error('AuthContext: Error during session restore', error);
       }
@@ -93,7 +93,8 @@ export const AuthProvider = ({ children }) => {
 
   // Handle Firebase user separately for customer authentication
   useEffect(() => {
-    if (firebaseUser && !token) { // Only use Firebase if no backend token
+    // Only use Firebase if no backend token exists and we actually have a firebase user
+    if (firebaseUser && !token) {
       console.log('AuthContext: Using Firebase user session');
       setUser({
         id: firebaseUser.uid,
@@ -102,9 +103,6 @@ export const AuthProvider = ({ children }) => {
         role: 'customer',
         photoURL: firebaseUser.photoURL
       });
-      setLoading(false);
-    } else if (!firebaseUser && !token) {
-      // No authentication found
       setLoading(false);
     }
   }, [firebaseUser, token]);
@@ -116,18 +114,18 @@ export const AuthProvider = ({ children }) => {
         userRole: userData?.role,
         userId: userData?.id || userData?._id
       });
-      
+
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(userData));
-      
+
       // For salon owners, also store in salonUser for backward compatibility
       if (userData?.role === 'owner') {
         localStorage.setItem('salonUser', JSON.stringify(userData));
       }
-      
+
       setToken(newToken);
       setUser(userData);
-      
+
       console.log('AuthContext: Login successful');
     } catch (error) {
       console.error('AuthContext: Login failed', error);
@@ -141,17 +139,17 @@ export const AuthProvider = ({ children }) => {
         await signOut(auth);
         console.log('AuthContext: Firebase logout successful');
       }
-      
+
       // Clear all localStorage items
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('salonUser');
-      
+
       // Clear state
       setToken(null);
       setUser(null);
       setFirebaseUser(null);
-      
+
       console.log('AuthContext: Full logout completed');
     } catch (error) {
       console.error('AuthContext: Logout error', error);

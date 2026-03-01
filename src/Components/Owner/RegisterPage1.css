@@ -1,14 +1,7 @@
-
-
 /* Main Container */
-.register1-container {
-  display: flex;
-  height: 100%;
-  background-color: #fff;
- 
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
+/* Deprecated original RegisterPage1 styling
+   Now using TailwindCSS directly in RegisterPage1.js
+*/
 
 /* Left Side (Form) */
 .register1-left {

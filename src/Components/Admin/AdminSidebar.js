@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
+import {
   HomeIcon,
   BuildingStorefrontIcon,
   UsersIcon,
@@ -88,7 +88,7 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
     <>
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-dark-900 text-white rounded-lg shadow-lg"
         onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? (
@@ -100,8 +100,8 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
 
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
           onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
         />
       )}
@@ -110,59 +110,58 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
       <div className={`
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 fixed
-        w-64 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 
-        text-white h-screen flex flex-col shadow-2xl border-r border-slate-700 
+        w-64 bg-dark-900
+        text-white h-screen flex flex-col shadow-2xl border-r border-dark-800 
         transition-transform duration-300 ease-in-out z-40
       `}>
-      {/* Logo */}
-      <div className="p-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Brand Logo" className="h-10 w-auto" />
-          <div className="flex flex-col">
-            <span className="font-bold text-lg text-white">Admin</span>
-            <span className="text-xs text-slate-400">Dashboard</span>
+        {/* Logo */}
+        <div className="p-6 border-b border-dark-800">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Brand Logo" className="h-10 w-auto" />
+            <div className="flex flex-col">
+              <span className="font-heading font-bold text-lg text-white">Admin</span>
+              <span className="text-xs text-gray-400">Dashboard</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-1">
-        {menuItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group ${
-                isActive(item.path)
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 transform scale-105'
-                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white hover:transform hover:scale-105'
-              }`}
-            >
-              <IconComponent className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
-              <span className="font-medium text-sm tracking-wide truncate">{item.title}</span>
-              {isActive(item.path) && (
-                <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-90 flex-shrink-0"></div>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleNavigation(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive(item.path)
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
+                    : 'text-gray-300 hover:bg-dark-800 hover:text-white'
+                  }`}
+              >
+                <IconComponent className={`h-5 w-5 flex-shrink-0 transition-transform ${isActive(item.path) ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className={`text-sm tracking-wide truncate ${isActive(item.path) ? 'font-semibold' : 'font-medium'}`}>{item.title}</span>
+                {isActive(item.path) && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full opacity-90 flex-shrink-0 shadow-sm"></div>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Footer */}
-      <div className="border-t border-slate-700/50 p-3">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-red-600/20 hover:text-red-400 rounded-xl transition-all duration-300 group"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-          <span className="font-medium text-sm">Logout</span>
-        </button>
-        <p className="text-xs text-slate-500 text-center mt-3 opacity-75">
-          © 2024 Salon Admin
-        </p>
+        {/* Footer */}
+        <div className="border-t border-dark-800 p-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all duration-200 group"
+          >
+            <ArrowRightOnRectangleIcon className="h-5 w-5 transition-transform group-hover:scale-110" />
+            <span className="font-medium text-sm">Logout</span>
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-4">
+            © 2024 SalonPro Admin
+          </p>
+        </div>
       </div>
-    </div>
     </>
   );
 };
