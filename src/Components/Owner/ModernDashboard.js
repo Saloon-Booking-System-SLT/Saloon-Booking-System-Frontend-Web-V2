@@ -4,6 +4,7 @@ import axiosInstance from '../../Api/axios';
 import dayjs from 'dayjs';
 import { useAuth } from '../../contexts/AuthContext';
 import RevenueReport from './RevenueReport';
+import OwnerSidebar from './OwnerSidebar';
 import {
   HomeIcon,
   CalendarDaysIcon,
@@ -36,64 +37,7 @@ const formatTimeRange = (start, end) => {
   return `${s.format("h:mm A")} – ${e.format("h:mm A")}`;
 };
 
-// Sidebar component
-const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
-  const navigate = useNavigate();
-  const [activeItem, setActiveItem] = useState('dashboard');
 
-  const menuItems = [
-    { icon: HomeIcon, path: '/dashboard', key: 'dashboard', title: 'Home' },
-    { icon: CalendarDaysIcon, path: '/calendar', key: 'calendar', title: 'Calendar' },
-    { icon: ScissorsIcon, path: '/services', key: 'services', title: 'Services' },
-    { icon: ChatBubbleBottomCenterTextIcon, path: '/feedbacks', key: 'feedbacks', title: 'Feedbacks' },
-    { icon: UserGroupIcon, path: '/professionals', key: 'professionals', title: 'Professionals' },
-    { icon: ClockIcon, path: '/timeslots', key: 'timeslots', title: 'Time Slots' },
-  ];
-
-  const handleNavigation = (path, key) => {
-    setActiveItem(key);
-    navigate(path);
-    setIsMobileOpen(false);
-  };
-
-  return (
-    <>
-      {/* Mobile Backdrop */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-dark-900/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Content */}
-      <aside className={`fixed inset-y-0 left-0 bg-white w-64 border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:w-20 xl:w-64 flex flex-col ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-20 flex items-center justify-center border-b border-gray-100 xl:justify-start xl:px-6">
-          <img src={logo} alt="Brand Logo" className="h-10 w-auto" />
-          <span className="ml-3 font-heading font-bold text-xl text-dark-900 hidden xl:block">SalonPro</span>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeItem === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => handleNavigation(item.path, item.key)}
-                className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-primary-50 text-primary-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
-                title={item.title}
-              >
-                <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-primary-600' : 'text-gray-400'}`} />
-                <span className={`font-medium xl:block lg:hidden text-sm ${isActive ? 'font-semibold' : ''}`}>{item.title}</span>
-              </button>
-            )
-          })}
-        </nav>
-      </aside>
-    </>
-  );
-};
 
 // Main Dashboard component
 const ModernDashboard = () => {
@@ -162,7 +106,7 @@ const ModernDashboard = () => {
   if (salon && salon.approvalStatus !== 'approved') {
     return (
       <div className="flex h-screen bg-gray-50 font-sans">
-        <Sidebar isMobileOpen={isMobileSidebarOpen} setIsMobileOpen={setIsMobileSidebarOpen} />
+        <OwnerSidebar isMobileMenuOpen={isMobileSidebarOpen} setIsMobileMenuOpen={setIsMobileSidebarOpen} />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="bg-white rounded-2xl shadow-card p-10 max-w-lg text-center border border-gray-100">
             {salon.approvalStatus === 'pending' ? (
@@ -241,7 +185,7 @@ const ModernDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
-      <Sidebar isMobileOpen={isMobileSidebarOpen} setIsMobileOpen={setIsMobileSidebarOpen} />
+      <OwnerSidebar isMobileMenuOpen={isMobileSidebarOpen} setIsMobileMenuOpen={setIsMobileSidebarOpen} />
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}

@@ -33,7 +33,7 @@ const reverseGeocode = async (lat, lng) => {
     const data = await res.json();
     return data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   } catch (err) {
-    console.error('Reverse geocoding error:', err);
+ console.error('Reverse geocoding error:', err);
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   }
 };
@@ -111,7 +111,7 @@ const BusinessSetupWizard = () => {
           alert(data.message || 'Registration failed');
         }
       } catch (err) {
-        console.error('Registration error:', err);
+ console.error('Registration error:', err);
         alert('Server error. Try again later.');
       } finally {
         setIsSubmitting(false);

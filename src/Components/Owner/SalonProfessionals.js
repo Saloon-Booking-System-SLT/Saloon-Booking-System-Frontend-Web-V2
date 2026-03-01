@@ -256,17 +256,15 @@ const SalonProfessionals = () => {
           return pro.image;
         }
 
-        // If it looks like base64 (no slashes or extensions) we return it as base64
-        // A simple test: does it contain a dot? Filenames have dots (e.g. .jpg)
-        // Or if it contains slashes, it's definitively a path
-        if (pro.image.includes(".") || pro.image.includes("/") || pro.image.includes("\\")) {
-          const normalizedPath = pro.image.replace(/\\/g, '/');
-          const finalPath = normalizedPath.includes('/') ? normalizedPath : `professionals/${normalizedPath}`;
-          return `${UPLOADS_URL}/${finalPath}`;
+        // If it's a long string, it's most likely base64
+        if (pro.image.length > 200) {
+          return `data:image/jpeg;base64,${pro.image}`;
         }
 
-        // Otherwise fallback to base64
-        return `data:image/jpeg;base64,${pro.image}`;
+        // Otherwise treat as a path
+        const normalizedPath = pro.image.replace(/\\/g, '/');
+        const finalPath = normalizedPath.includes('/') ? normalizedPath : `professionals/${normalizedPath}`;
+        return `${UPLOADS_URL}/${finalPath}`;
       }
     }
 

@@ -48,7 +48,7 @@ const SalonServices = () => {
       const res = await axios.get(`/services/${salonId}`);
       setServices(res.data || []);
     } catch (err) {
-      console.error("Failed to fetch services", err);
+ console.error("Failed to fetch services", err);
       setError("Failed to load services. Please try again.");
     } finally {
       setLoading(false);
@@ -137,7 +137,7 @@ const SalonServices = () => {
       setShowPopup(false);
       resetForm();
     } catch (err) {
-      console.error(err);
+ console.error(err);
       alert(err.response?.data?.message || "Failed to save service");
     }
   };
@@ -162,7 +162,7 @@ const SalonServices = () => {
       await axios.delete(`/services/${id}`);
       await fetchServices();
     } catch (err) {
-      console.error("Delete failed", err);
+ console.error("Delete failed", err);
       alert("Failed to delete service");
     }
   };

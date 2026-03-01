@@ -42,21 +42,21 @@ const ResetPassword = () => {
   setLoading(true);
 
   try {
-    console.log("🔄 Sending reset password request with token:", token);
+ console.log(" Sending reset password request with token:", token);
     const res = await axios.post(`${API_BASE_URL}/salons/reset-password/${token}`, {
       password: formData.password
     });
 
-    console.log("✅ Reset password response:", res.data);
+ console.log(" Reset password response:", res.data);
     setMessage(res.data.message);
     
     // Wait a bit before redirecting
     setTimeout(() => {
-      console.log("🔄 Redirecting to /owner-login");
+ console.log(" Redirecting to /owner-login");
       navigate("/owner-login");
     }, 3000);
   } catch (err) {
-    console.error("❌ Reset password error:", {
+ console.error(" Reset password error:", {
       message: err.message,
       response: err.response?.data,
       status: err.response?.status

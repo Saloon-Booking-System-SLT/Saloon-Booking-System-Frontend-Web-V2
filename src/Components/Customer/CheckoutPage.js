@@ -88,10 +88,10 @@ const CheckoutPage = () => {
         submitPayHereForm(result.data);
       } else {
         alert('Failed to initiate payment. Please try again.');
-        console.error('Payment init failed:', result);
+ console.error('Payment init failed:', result);
       }
     } catch (error) {
-      console.error('Error initiating PayHere payment:', error);
+ console.error('Error initiating PayHere payment:', error);
       alert('An error occurred. Please check your connection.');
     } finally {
       setIsLoading(false);

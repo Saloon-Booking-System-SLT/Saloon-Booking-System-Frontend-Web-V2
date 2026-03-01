@@ -98,7 +98,7 @@ const OwnerConfirmationPage = () => {
     isOwnerMode = true
   } = location.state || {};
 
-  console.log("📋 Owner Confirmation Page Data:", {
+ console.log(" Owner Confirmation Page Data:", {
     salonName,
     appointmentDetails,
     totalAmount,

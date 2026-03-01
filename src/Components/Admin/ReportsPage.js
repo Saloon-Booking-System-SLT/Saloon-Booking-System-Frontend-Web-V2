@@ -231,7 +231,7 @@ const ReportsPage = () => {
       });
 
     } catch (error) {
-      console.error('Failed to fetch report data:', error);
+ console.error('Failed to fetch report data:', error);
     } finally {
       setLoading(false);
     }

@@ -37,7 +37,7 @@ const PromotionsPage = () => {
         setPromotions(transformedData);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch promotions:', err);
+ console.error('Failed to fetch promotions:', err);
         setError('Failed to load promotions');
         setPromotions([]);
       } finally {

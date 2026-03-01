@@ -41,7 +41,7 @@ const SelectProfessionalPage = () => {
         });
         setReviews(reviewsObj);
       })
-      .catch((err) => console.error("Failed to fetch professionals", err));
+ .catch((err) => console.error("Failed to fetch professionals", err));
   }, [salon]);
 
 

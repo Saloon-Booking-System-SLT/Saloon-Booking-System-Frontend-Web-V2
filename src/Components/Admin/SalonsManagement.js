@@ -25,12 +25,12 @@ const SalonsManagement = () => {
   const fetchSalons = async () => {
     setLoading(true);
     try {
-      console.log('Requesting URL:', axios.defaults.baseURL + '/admin/salons');
+ console.log('Requesting URL:', axios.defaults.baseURL + '/admin/salons');
       const res = await axios.get('/admin/salons');
       setSalons(res.data);
       setFilteredSalons(res.data);
     } catch (err) {
-      console.error('Failed to fetch salons', err);
+ console.error('Failed to fetch salons', err);
       if (err.response?.status === 401) {
         alert('Session expired. Please login again.');
         navigate('/admin-login');
@@ -91,7 +91,7 @@ const SalonsManagement = () => {
       alert('Salon approved successfully!');
       fetchSalons();
     } catch (err) {
-      console.error('Failed to approve salon', err);
+ console.error('Failed to approve salon', err);
       alert('Failed to approve salon: ' + (err.response?.data?.message || 'Unknown error'));
     }
   };
@@ -105,7 +105,7 @@ const SalonsManagement = () => {
       alert('Salon rejected successfully!');
       fetchSalons();
     } catch (err) {
-      console.error('Failed to reject salon', err);
+ console.error('Failed to reject salon', err);
       alert('Failed to reject salon: ' + (err.response?.data?.message || 'Unknown error'));
     }
   };

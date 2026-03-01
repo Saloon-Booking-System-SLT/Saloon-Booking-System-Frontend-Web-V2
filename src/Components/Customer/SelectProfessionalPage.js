@@ -157,7 +157,7 @@ const SelectProfessionalPage = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate("/")}
           >
-            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -229,7 +229,7 @@ const SelectProfessionalPage = () => {
                     <div
                       key={idx}
                       className={`h-full flex-1 rounded-full transition-all duration-500 ${idx === currentServiceIndex ? "bg-primary-500" :
-                          idx < currentServiceIndex || serviceProfessionals[selectedServices[idx]._id] ? "bg-primary-200" : "bg-gray-200"
+                        idx < currentServiceIndex || serviceProfessionals[selectedServices[idx]._id] ? "bg-primary-200" : "bg-gray-200"
                         }`}
                     />
                   ))}
@@ -242,8 +242,8 @@ const SelectProfessionalPage = () => {
               {/* Any Professional option */}
               <div
                 className={`group relative bg-white p-4 sm:p-5 rounded-[1.5rem] border flex items-center gap-5 cursor-pointer transition-all duration-300 ${getSelectedProfessionalForService()?._id === "any"
-                    ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
-                    : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
+                  ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
+                  : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
                   }`}
                 onClick={handleSelectAnyProfessional}
               >
@@ -277,16 +277,18 @@ const SelectProfessionalPage = () => {
                     key={pro._id}
                     onClick={() => handleSelectProfessional(pro)}
                     className={`group relative bg-white p-4 sm:p-5 rounded-[1.5rem] border flex items-center gap-5 cursor-pointer transition-all duration-300 ${isSelected
-                        ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
-                        : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
+                      ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
+                      : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
                       }`}
                   >
                     <img
                       src={
                         pro.image
-                          ? pro.image.startsWith("http")
-                            ? pro.image
-                            : `${API_BASE_URL}/uploads/professionals/${pro.image}`
+                          ? pro.image.length > 200
+                            ? `data:image/jpeg;base64,${pro.image}`
+                            : pro.image.startsWith("http") || pro.image.startsWith("data:image")
+                              ? pro.image
+                              : `${API_BASE_URL}/uploads/professionals/${pro.image}`
                           : `https://ui-avatars.com/api/?name=${encodeURIComponent(pro.name)}&background=random&color=fff&size=120`
                       }
                       alt={pro.name}
@@ -427,8 +429,8 @@ const SelectProfessionalPage = () => {
 
                 <button
                   className={`w-full py-4 rounded-xl font-bold flex flex-col items-center justify-center transition-all duration-300 ${!allServicesHaveProfessionals()
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-dark-900 text-white hover:bg-black hover:shadow-lg hover:shadow-dark-900/20 active:scale-[0.98]"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-dark-900 text-white hover:bg-black hover:shadow-lg hover:shadow-dark-900/20 active:scale-[0.98]"
                     }`}
                   onClick={handleContinue}
                   disabled={!allServicesHaveProfessionals()}
@@ -460,9 +462,11 @@ const SelectProfessionalPage = () => {
                 <img
                   src={
                     viewReviewsPro.image
-                      ? viewReviewsPro.image.startsWith("http")
-                        ? viewReviewsPro.image
-                        : `${API_BASE_URL}/uploads/professionals/${viewReviewsPro.image}`
+                      ? viewReviewsPro.image.length > 200
+                        ? `data:image/jpeg;base64,${viewReviewsPro.image}`
+                        : viewReviewsPro.image.startsWith("http") || viewReviewsPro.image.startsWith("data:image")
+                          ? viewReviewsPro.image
+                          : `${API_BASE_URL}/uploads/professionals/${viewReviewsPro.image}`
                       : `https://ui-avatars.com/api/?name=${encodeURIComponent(viewReviewsPro.name)}&background=random&color=fff&size=100`
                   }
                   alt={viewReviewsPro.name}

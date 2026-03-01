@@ -13,6 +13,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import Footer from '../Shared/Footer';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -67,7 +68,7 @@ const Profile = () => {
         setFavorites(data.favorites);
       }
     } catch (err) {
-      console.error("Error fetching favorites:", err);
+ console.error("Error fetching favorites:", err);
     } finally {
       setFavoritesLoading(false);
     }
@@ -90,7 +91,7 @@ const Profile = () => {
         setFavorites(favorites.filter(salon => salon._id !== salonId));
       }
     } catch (err) {
-      console.error("Error removing favorite:", err);
+ console.error("Error removing favorite:", err);
     }
   };
 
@@ -138,7 +139,7 @@ const Profile = () => {
             className="text-3xl font-black text-dark-900 tracking-tighter cursor-pointer select-none"
             onClick={() => navigate("/")}
           >
-            SalonPro
+
           </div>
           <div className="mt-6 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-inner overflow-hidden">
@@ -159,8 +160,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab("profile")}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "profile" || activeTab === "address"
-                ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
           >
             <UserCircleIcon className="w-5 h-5" />
@@ -178,8 +179,8 @@ const Profile = () => {
           <button
             onClick={() => setActiveTab("favorites")}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "favorites"
-                ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
           >
             <HeartIconOutline className="w-5 h-5" />
@@ -623,6 +624,8 @@ const AddAddressPopup = ({ isOpen, close, user, setUser }) => {
           </div>
         </div>
       </Dialog>
+
+      <Footer />
     </Transition>
   );
 };

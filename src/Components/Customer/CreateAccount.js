@@ -111,7 +111,7 @@ export default function CustomerRegister() {
 
       if (!res.ok) {
         // Handle backend errors
-        console.error("Backend error:", responseData);
+ console.error("Backend error:", responseData);
         throw new Error(responseData.message || 'Registration failed');
       }
 
@@ -127,7 +127,7 @@ export default function CustomerRegister() {
       navigate("/searchsalon");
 
     } catch (error) {
-      console.error("Registration failed:", error);
+ console.error("Registration failed:", error);
 
       // Show error alert
       let errorMessage = "Registration failed. Please try again.";
@@ -170,7 +170,7 @@ export default function CustomerRegister() {
 
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-500 text-base">Join SalonPro to discover and book the best beauty services around you.</p>
+            <p className="text-gray-500 text-base">Join us to discover and book the best beauty services around you.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -313,8 +313,8 @@ export default function CustomerRegister() {
               type="submit"
               disabled={loading}
               className={`w-full py-3 px-4 mt-2 rounded-xl text-white font-bold text-sm shadow-md transition-all duration-300 ${loading
-                  ? 'bg-gray-400 cursor-not-allowed shadow-none'
-                  : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
+                ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
                 }`}
             >
               {loading ? "Registering..." : "Register"}

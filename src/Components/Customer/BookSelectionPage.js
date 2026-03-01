@@ -37,7 +37,7 @@ const BookSelectionPage = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate("/")}
           >
-            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -66,8 +66,8 @@ const BookSelectionPage = () => {
           {/* Individual Booking Card */}
           <div
             className={`group relative bg-white rounded-[2rem] border overflow-hidden cursor-pointer transition-all duration-500 flex flex-col ${hoveredCard === 'individual'
-                ? 'border-dark-900 shadow-2xl shadow-dark-900/10 -translate-y-1'
-                : 'border-gray-200 hover:border-dark-900 hover:shadow-2xl hover:shadow-dark-900/10 hover:-translate-y-1'
+              ? 'border-dark-900 shadow-2xl shadow-dark-900/10 -translate-y-1'
+              : 'border-gray-200 hover:border-dark-900 hover:shadow-2xl hover:shadow-dark-900/10 hover:-translate-y-1'
               }`}
             onClick={() => navigate(`/select-services/${salon?._id}`, { state: { salon } })}
             onMouseEnter={() => setHoveredCard('individual')}
@@ -111,8 +111,8 @@ const BookSelectionPage = () => {
           {/* Group Booking Card */}
           <div
             className={`group relative bg-white rounded-[2rem] border overflow-hidden cursor-pointer transition-all duration-500 flex flex-col ${hoveredCard === 'group'
-                ? 'border-dark-900 shadow-2xl shadow-dark-900/10 -translate-y-1'
-                : 'border-gray-200 hover:border-dark-900 hover:shadow-2xl hover:shadow-dark-900/10 hover:-translate-y-1'
+              ? 'border-dark-900 shadow-2xl shadow-dark-900/10 -translate-y-1'
+              : 'border-gray-200 hover:border-dark-900 hover:shadow-2xl hover:shadow-dark-900/10 hover:-translate-y-1'
               }`}
             onClick={() => navigate("/familybooking", { state: { salon } })}
             onMouseEnter={() => setHoveredCard('group')}

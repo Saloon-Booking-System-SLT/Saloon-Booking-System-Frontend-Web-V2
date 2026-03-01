@@ -40,7 +40,7 @@ const SalonTimeSlots = () => {
           setSelectedProfessionalId(res.data[0]._id);
         }
       } catch (err) {
-        console.error("Error fetching professionals:", err);
+ console.error("Error fetching professionals:", err);
       }
     };
     if (salon?.id) fetchProfessionals();
@@ -55,7 +55,7 @@ const SalonTimeSlots = () => {
       });
       setTimeSlots(res.data);
     } catch (err) {
-      console.error("Error fetching time slots:", err);
+ console.error("Error fetching time slots:", err);
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ const SalonTimeSlots = () => {
       fetchTimeSlots();
       // Optional: use a proper notification system instead of alert
     } catch (err) {
-      console.error("Error adding time slot:", err);
+ console.error("Error adding time slot:", err);
       alert("Failed to add time slot");
     }
   };
@@ -109,7 +109,7 @@ const SalonTimeSlots = () => {
       await Promise.all(slots.map(slot => axios.post('/timeslots', slot)));
       fetchTimeSlots();
     } catch (err) {
-      console.error("Error generating time slots:", err);
+ console.error("Error generating time slots:", err);
       alert("Failed to generate time slots");
     }
   };
@@ -121,7 +121,7 @@ const SalonTimeSlots = () => {
       await axios.delete(`/timeslots/${slotId}`);
       fetchTimeSlots();
     } catch (err) {
-      console.error("Error deleting time slot:", err);
+ console.error("Error deleting time slot:", err);
       alert("Failed to delete time slot");
     }
   };

@@ -33,7 +33,7 @@ const SalonProfile = () => {
         setFormData(res.data);
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch salon:", err);
+ console.error("Failed to fetch salon:", err);
         setLoading(false);
       }
     };
@@ -53,7 +53,7 @@ const SalonProfile = () => {
       setSalon(formData);
       setEditing(false);
     } catch (err) {
-      console.error("Failed to update profile:", err);
+ console.error("Failed to update profile:", err);
       alert("Update failed!");
     }
   };

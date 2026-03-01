@@ -47,7 +47,7 @@ export default function CustomerLogin() {
           }
         }
       } catch (error) {
-        console.error("Redirect result error:", error);
+ console.error("Redirect result error:", error);
       }
     };
 
@@ -63,7 +63,7 @@ export default function CustomerLogin() {
         const result = await signInWithPopup(auth, googleProvider);
         await processGoogleAuthResult(result);
       } catch (popupError) {
-        console.log("Popup failed, trying redirect method...", popupError);
+ console.log("Popup failed, trying redirect method...", popupError);
 
         // Fallback to redirect method if popup fails
         await signInWithRedirect(auth, googleProvider);
@@ -71,7 +71,7 @@ export default function CustomerLogin() {
         return;
       }
     } catch (error) {
-      console.error("Google login failed:", error);
+ console.error("Google login failed:", error);
       if (error.response?.data?.message) {
         alert(`Google login failed: ${error.response.data.message}`);
       } else if (error.message) {
@@ -112,7 +112,7 @@ export default function CustomerLogin() {
         setLoading(false);
       }
     } catch (error) {
-      console.error("Google login processing failed:", error);
+ console.error("Google login processing failed:", error);
       if (error.response?.data?.message) {
         alert(`Google login failed: ${error.response.data.message}`);
       } else if (error.message) {
@@ -192,7 +192,7 @@ export default function CustomerLogin() {
         navigate("/searchsalon");
       }
     } catch (error) {
-      console.error("Login failed:", error);
+ console.error("Login failed:", error);
       alert("Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -231,7 +231,7 @@ export default function CustomerLogin() {
         }, 3000);
       }
     } catch (error) {
-      console.error("Password reset failed:", error);
+ console.error("Password reset failed:", error);
       alert("Failed to send reset email. Please try again.");
     } finally {
       setResetLoading(false);
@@ -323,8 +323,8 @@ export default function CustomerLogin() {
                   type="submit"
                   disabled={loading || !email || !password}
                   className={`w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all duration-300 ${loading || !email || !password
-                      ? 'bg-gray-300 cursor-not-allowed shadow-none'
-                      : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
+                    ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                    : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
                     }`}
                 >
                   {loading ? "Signing in..." : "Sign in"}
@@ -358,7 +358,7 @@ export default function CustomerLogin() {
               </div>
 
               <p className="mt-8 text-center text-sm text-gray-500">
-                New to SalonPro?{' '}
+                New to our platform?{' '}
                 <a href="/create-account" className="font-semibold text-primary-600 hover:text-primary-700">Create an account</a>
               </p>
 
@@ -408,8 +408,8 @@ export default function CustomerLogin() {
                   type="submit"
                   disabled={resetLoading || resetSent || !resetEmail}
                   className={`w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all duration-300 ${resetLoading || resetSent || !resetEmail
-                      ? 'bg-gray-300 cursor-not-allowed shadow-none'
-                      : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
+                    ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                    : 'bg-primary-600 hover:bg-primary-700 hover:shadow-primary-600/30'
                     }`}
                 >
                   {resetLoading ? "Sending Link..." : resetSent ? "Check Your Email ✓" : "Send Reset Link"}

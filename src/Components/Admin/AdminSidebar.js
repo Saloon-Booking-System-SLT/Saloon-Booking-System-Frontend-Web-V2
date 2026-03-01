@@ -134,8 +134,8 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive(item.path)
-                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
-                    : 'text-gray-300 hover:bg-dark-800 hover:text-white'
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
+                  : 'text-gray-300 hover:bg-dark-800 hover:text-white'
                   }`}
               >
                 <IconComponent className={`h-5 w-5 flex-shrink-0 transition-transform ${isActive(item.path) ? 'scale-110' : 'group-hover:scale-110'}`} />
@@ -158,7 +158,7 @@ const AdminSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
             <span className="font-medium text-sm">Logout</span>
           </button>
           <p className="text-xs text-gray-500 text-center mt-4">
-            © 2024 SalonPro Admin
+            © 2024 SLT-Mobitel Saloon Booking System Admin
           </p>
         </div>
       </div>

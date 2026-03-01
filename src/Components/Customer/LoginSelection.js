@@ -24,7 +24,7 @@ const LoginSelection = () => {
 
         <div className="max-w-md w-full mx-auto md:mx-0">
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-4">
-            Welcome to <span className="text-primary-600">SalonPro</span>
+            Welcome to <span className="text-primary-600">Our Platform</span>
           </h2>
           <p className="text-gray-500 text-lg mb-10">
             Sign in or register to start your beauty journey or manage your business.

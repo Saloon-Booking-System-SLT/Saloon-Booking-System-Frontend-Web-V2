@@ -29,7 +29,7 @@ const SalonCalendar = () => {
           setSelectedProfessionalId(res.data[0]._id);
         }
       } catch (err) {
-        console.error("❌ Error loading professionals", err);
+ console.error(" Error loading professionals", err);
       }
     };
     if (salon?.id) {
@@ -74,7 +74,7 @@ const SalonCalendar = () => {
 
         setAppointments(mapped);
       } catch (err) {
-        console.error("❌ Error loading appointments", err);
+ console.error(" Error loading appointments", err);
       }
     };
 

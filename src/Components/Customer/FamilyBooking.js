@@ -101,7 +101,7 @@ const FamilyBooking = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate("/")}
           >
-            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+
           </div>
           <button
             onClick={() => navigate(-1)}

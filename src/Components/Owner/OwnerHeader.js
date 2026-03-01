@@ -22,7 +22,7 @@ const OwnerHeader = () => {
       try {
         salon = JSON.parse(storedSalon);
       } catch (e) {
-        console.error('Failed to parse salon data:', e);
+ console.error('Failed to parse salon data:', e);
       }
     }
   }

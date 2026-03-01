@@ -65,7 +65,7 @@ const ConfirmationPage = () => {
           setError("Could not retrieve booking details. Please contact support.");
         }
       } catch (err) {
-        console.error("Error fetching booking:", err);
+ console.error("Error fetching booking:", err);
         setError("Network error. Please check your connection.");
       } finally {
         setLoading(false);
@@ -170,7 +170,7 @@ const ConfirmationPage = () => {
           setSaveStatus("error");
         }
       } catch (error) {
-        console.error("Error saving group appointments:", error);
+ console.error("Error saving group appointments:", error);
         setSaveStatus("error");
       } finally {
         setIsSaving(false);

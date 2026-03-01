@@ -13,10 +13,10 @@ const AdminHeader = () => {
     if (confirmLogout) {
       try {
         await logout();
-        console.log('Admin logout successful');
+ console.log('Admin logout successful');
         navigate('/admin-login');
       } catch (error) {
-        console.error('Logout error:', error);
+ console.error('Logout error:', error);
         // Force logout even if there's an error
         navigate('/admin-login');
       }

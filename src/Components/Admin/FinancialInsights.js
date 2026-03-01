@@ -29,7 +29,7 @@ const FinancialInsights = () => {
         setError(null);
         setLoading(false);
       } catch (err) {
-        console.error('Failed to fetch payments:', err);
+ console.error('Failed to fetch payments:', err);
         setError('Failed to load payment data');
         setPayments([]);
         setLoading(false);
@@ -85,12 +85,12 @@ const FinancialInsights = () => {
 
   // Export functions
   const handleExportCSV = () => {
-    console.log('Exporting CSV...');
+ console.log('Exporting CSV...');
     alert('Exporting payment data to CSV...');
   };
 
   const handleExportPDF = () => {
-    console.log('Exporting PDF...');
+ console.log('Exporting PDF...');
     alert('Exporting payment data to PDF...');
   };
 

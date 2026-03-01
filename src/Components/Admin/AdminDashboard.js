@@ -131,7 +131,7 @@ const AdminDashboard = () => {
       setLastUpdated(new Date());
 
     } catch (err) {
-      console.error("Failed to fetch dashboard data", err);
+ console.error("Failed to fetch dashboard data", err);
 
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Session expired. Please login again.');

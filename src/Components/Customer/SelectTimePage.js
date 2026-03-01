@@ -69,7 +69,7 @@ const SelectTimePage = () => {
       const timeDifference = appointmentDateTime.getTime() - now.getTime();
       const hoursDifference = timeDifference / (1000 * 60 * 60);
 
-      console.log("⏰ Time check:", {
+      console.log("Time check:", {
         appointmentDateTime,
         now,
         hoursDifference,
@@ -189,7 +189,7 @@ const SelectTimePage = () => {
       try {
         const data = JSON.parse(pendingBookingData);
 
-        console.log("🔄 Restoring booking data after login:", data);
+        console.log(" Restoring booking data after login:", data);
 
         if (data.selectedServices && data.selectedServices.length > 0) {
           setSelectedServices(data.selectedServices);
@@ -256,7 +256,7 @@ const SelectTimePage = () => {
   useEffect(() => {
     if (!isReschedule || !rescheduleAppointment) return;
 
-    console.log("🔄 Initializing reschedule data:", rescheduleAppointment);
+    console.log(" Initializing reschedule data:", rescheduleAppointment);
 
     if (rescheduleAppointment.professionalId) {
       setSelectedProfessional(rescheduleAppointment.professionalId);
@@ -368,7 +368,7 @@ const SelectTimePage = () => {
     const startTime = selectedSlot?.startTime || selectedSlot?.start || "";
     const endTime = computeEndFromStartAndDuration(startTime, currentService?.duration);
 
-    console.log("📅 Current appointment data:", {
+    console.log(" Current appointment data:", {
       startTime,
       duration: currentService.duration,
       calculatedEndTime: endTime
@@ -398,7 +398,7 @@ const SelectTimePage = () => {
   const createAppointment = async (appointmentData) => {
     try {
       setLoading(true);
-      console.log("📤 Sending appointment data:", appointmentData);
+      console.log(" Sending appointment data:", appointmentData);
 
       const response = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: "POST",
@@ -414,7 +414,7 @@ const SelectTimePage = () => {
       });
 
       const result = await response.json();
-      console.log("📥 Server response:", result);
+      console.log(" Server response:", result);
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to create appointment");
@@ -422,7 +422,7 @@ const SelectTimePage = () => {
 
       return result.data[0];
     } catch (error) {
-      console.error("❌ Error creating appointment:", error);
+      console.error(" Error creating appointment:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -459,7 +459,7 @@ const SelectTimePage = () => {
         throw new Error("Invalid time selection. Please select a valid time slot.");
       }
 
-      console.log("🔄 Sending reschedule request:", {
+      console.log(" Sending reschedule request:", {
         appointmentId: rescheduleAppointment._id,
         date: currentAppointment.date,
         startTime: currentAppointment.startTime,
@@ -481,7 +481,7 @@ const SelectTimePage = () => {
       });
 
       const result = await response.json();
-      console.log("📥 Reschedule API response:", result);
+      console.log(" Reschedule API response:", result);
 
       if (result.success) {
         alert("✅ Appointment rescheduled successfully!");
@@ -490,7 +490,7 @@ const SelectTimePage = () => {
         throw new Error(result.message || "Reschedule failed");
       }
     } catch (err) {
-      console.error("❌ Reschedule failed:", err);
+      console.error(" Reschedule failed:", err);
       alert(`❌ Reschedule failed: ${err.message}`);
     } finally {
       setLoading(false);
@@ -508,7 +508,7 @@ const SelectTimePage = () => {
     const currentService = selectedServices[currentServiceIndex.current];
     const serviceId = currentService?._id;
 
-    console.log("🔵 handleContinue called for service:", currentService?.name);
+    console.log(" handleContinue called for service:", currentService?.name);
 
     if (!selectedTimes[serviceId]) {
       alert("❌ Please select a time for the current service.");
@@ -527,8 +527,8 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
 
-      console.log("💾 Saving appointment for:", currentAppointment.serviceName);
-      console.log("📊 Total booked after save:", updatedBookedAppointments.length);
+      console.log(" Saving appointment for:", currentAppointment.serviceName);
+      console.log(" Total booked after save:", updatedBookedAppointments.length);
 
       setBookedAppointments(updatedBookedAppointments);
 
@@ -555,7 +555,7 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const finalAppointments = [...bookedAppointments, currentAppointment];
 
-      console.log("💾 Final appointments to create:", finalAppointments.length);
+      console.log(" Final appointments to create:", finalAppointments.length);
 
       // Create all appointments
       await createAllAppointments(finalAppointments);
@@ -570,21 +570,21 @@ const SelectTimePage = () => {
 
       // Create each appointment individually
       for (const appointmentData of appointments) {
-        console.log("📤 Creating appointment:", appointmentData.serviceName);
+        console.log(" Creating appointment:", appointmentData.serviceName);
 
         const createdAppointment = await createAppointment(appointmentData);
         createdAppointments.push(createdAppointment);
 
-        console.log("✅ Created appointment:", createdAppointment._id);
+        console.log(" Created appointment:", createdAppointment._id);
       }
 
-      console.log("🎉 All appointments created successfully:", createdAppointments.length);
+      console.log(" All appointments created successfully:", createdAppointments.length);
 
       // Navigate to confirmation with all appointments
       navigateToConfirmation(createdAppointments);
 
     } catch (error) {
-      console.error("❌ Failed to create appointments:", error);
+      console.error(" Failed to create appointments:", error);
       alert("❌ Failed to create appointments: " + error.message);
     } finally {
       setLoading(false);
@@ -636,7 +636,7 @@ const SelectTimePage = () => {
       user: user
     };
 
-    console.log("✅ Navigating to checkout with data:", confirmationData);
+    console.log(" Navigating to checkout with data:", confirmationData);
 
     // Clear localStorage
     localStorage.removeItem('selectedServices');
@@ -720,7 +720,7 @@ const SelectTimePage = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate("/")}
           >
-            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+
           </div>
           <button
             onClick={() => navigate(-1)}

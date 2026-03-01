@@ -134,12 +134,12 @@ const SelectProfessionalPage = () => {
   // Initialize page data
   useEffect(() => {
     const initializePage = async () => {
-      console.log("🔍 Initializing SelectProfessionalPage...");
-      console.log("Location state:", location.state);
+ console.log(" Initializing SelectProfessionalPage...");
+ console.log("Location state:", location.state);
       
       // Check if we have the required data
       if (!salonFromState || !servicesFromState || servicesFromState.length === 0) {
-        console.error("❌ Missing required data from previous page");
+ console.error(" Missing required data from previous page");
         setError("Missing booking information. Please start over.");
         setIsLoading(false);
         return;
@@ -166,7 +166,7 @@ const SelectProfessionalPage = () => {
   // Debug: Log professional images when they're loaded
   useEffect(() => {
     if (professionals.length > 0) {
-      console.log('🖼️ Professional images:', professionals.map(p => ({
+ console.log('️ Professional images:', professionals.map(p => ({
         name: p.name,
         image: p.image,
         constructedUrl: getImageUrl(p.image)
@@ -186,7 +186,7 @@ const SelectProfessionalPage = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log("📡 Fetching professionals for salon ID:", salonId);
+ console.log(" Fetching professionals for salon ID:", salonId);
       
       // ⚡ Use optimized endpoint - gets professionals with ratings in ONE call
       const response = await fetch(`${API_BASE_URL}/api/professionals/${salonId}/with-ratings`);
@@ -196,7 +196,7 @@ const SelectProfessionalPage = () => {
       }
       
       const data = await response.json();
-      console.log("✅ Professionals data received:", data);
+ console.log(" Professionals data received:", data);
       
       if (!Array.isArray(data)) {
         throw new Error("Invalid response format for professionals");
@@ -213,7 +213,7 @@ const SelectProfessionalPage = () => {
       setIsLoading(false);
       
     } catch (err) {
-      console.error("❌ Failed to fetch professionals", err);
+ console.error(" Failed to fetch professionals", err);
       setError("Failed to load professionals. Please try again.");
       setProfessionals([]);
       setIsLoading(false);
@@ -268,7 +268,7 @@ const SelectProfessionalPage = () => {
       ? serviceProfessionals[selectedServices[0].name] || { name: "Any Professional", _id: "any" }
       : serviceProfessionals;
 
-    console.log("✅ Continuing with:", {
+ console.log(" Continuing with:", {
       salon: salon.name,
       services: selectedServices.length,
       selectedProfessional,
@@ -390,7 +390,7 @@ const SelectProfessionalPage = () => {
                     alt="Profile"
                     className="modern-profile"
                     onError={(e) => {
-                      console.error('Failed to load salon profile image:', e.target.src);
+ console.error('Failed to load salon profile image:', e.target.src);
                       e.target.onerror = null;
                       e.target.src = "https://ui-avatars.com/api/?name=User&background=random&size=40";
                     }}
@@ -541,7 +541,7 @@ const SelectProfessionalPage = () => {
                                   alt={pro.name}
                                   className="service-image"
                                   onError={(e) => {
-                                    console.error(`Failed to load image for ${pro.name}:`, e.target.src);
+ console.error(`Failed to load image for ${pro.name}:`, e.target.src);
                                     e.target.onerror = null;
                                     e.target.src = "https://picsum.photos/150/150?random=3";
                                   }}
@@ -629,7 +629,7 @@ const SelectProfessionalPage = () => {
                     alt="Salon"
                     className="salon-image"
                     onError={(e) => {
-                      console.error('Failed to load salon image:', e.target.src);
+ console.error('Failed to load salon image:', e.target.src);
                       e.target.onerror = null;
                       e.target.src = "https://via.placeholder.com/150";
                     }}
@@ -752,7 +752,7 @@ const SelectProfessionalPage = () => {
                               alt={pro.name}
                               className="pro-image-popup"
                               onError={(e) => {
-                                console.error(`Failed to load popup image for ${pro.name}:`, e.target.src);
+ console.error(`Failed to load popup image for ${pro.name}:`, e.target.src);
                                 e.target.onerror = null;
                                 e.target.src = "https://ui-avatars.com/api/?name=User&background=random&size=50&color=fff";
                               }}

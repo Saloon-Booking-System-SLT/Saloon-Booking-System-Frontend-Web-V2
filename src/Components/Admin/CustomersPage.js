@@ -72,7 +72,7 @@ const CustomersPage = () => {
         setCustomers(transformedCustomers);
         setIsLoading(false);
       } catch (err) {
-        console.error('Error fetching customers:', err);
+ console.error('Error fetching customers:', err);
         setError(err.response?.data?.message || 'Failed to fetch customers');
         setIsLoading(false);
       }

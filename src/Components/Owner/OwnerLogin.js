@@ -29,17 +29,17 @@ const OwnerLogin = () => {
     setLoading(true);
 
     try {
-      console.log('🔐 Attempting login...');
+ console.log(' Attempting login...');
       const res = await axiosInstance.post('/salons/login', formData);
 
       const { token, salon } = res.data;
 
-      console.log('📥 Login response:', { token: !!token, salon });
+ console.log(' Login response:', { token: !!token, salon });
 
       // ✅ FIX: If approvalStatus is undefined, default to 'approved' (for backward compatibility)
       const approvalStatus = salon.approvalStatus || 'approved';
 
-      console.log('🔍 Approval status:', approvalStatus);
+ console.log(' Approval status:', approvalStatus);
 
       // Check approval status
       if (approvalStatus === 'pending') {
@@ -62,7 +62,7 @@ const OwnerLogin = () => {
         approvalStatus: approvalStatus
       };
 
-      console.log('💾 Saving salon user data:', salonUserData);
+ console.log(' Saving salon user data:', salonUserData);
 
       // ✅ CRITICAL FIX: Save EVERYTHING to localStorage BEFORE calling login()
       localStorage.setItem('token', token);
@@ -72,19 +72,19 @@ const OwnerLogin = () => {
       localStorage.setItem('userId', salon.id || salon._id);
       localStorage.setItem('salonUser', JSON.stringify(salonUserData));
 
-      console.log('✅ Saved to localStorage:');
-      console.log('  - token:', !!localStorage.getItem('token'));
-      console.log('  - userRole:', localStorage.getItem('userRole'));
-      console.log('  - userEmail:', localStorage.getItem('userEmail'));
-      console.log('  - userName:', localStorage.getItem('userName'));
+ console.log(' Saved to localStorage:');
+ console.log(' - token:', !!localStorage.getItem('token'));
+ console.log(' - userRole:', localStorage.getItem('userRole'));
+ console.log(' - userEmail:', localStorage.getItem('userEmail'));
+ console.log(' - userName:', localStorage.getItem('userName'));
 
       // Call the auth context login
       login(token, salonUserData);
 
-      console.log('🚀 Navigating to dashboard...');
+ console.log(' Navigating to dashboard...');
       navigate("/dashboard");
     } catch (err) {
-      console.error("❌ Owner login error:", err);
+ console.error(" Owner login error:", err);
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -116,7 +116,7 @@ const OwnerLogin = () => {
         setForgotMessage("");
       }, 5000);
     } catch (err) {
-      console.error("Forgot password error:", err);
+ console.error("Forgot password error:", err);
       setError(err.response?.data?.message || "Failed to send reset email. Please try again.");
     } finally {
       setForgotLoading(false);
@@ -206,8 +206,8 @@ const OwnerLogin = () => {
                   type="submit"
                   disabled={loading || !formData.email || !formData.password}
                   className={`w-full py-3.5 px-4 mt-4 rounded-xl text-white font-bold text-sm shadow-md transition-all duration-300 ${loading || !formData.email || !formData.password
-                      ? 'bg-gray-300 cursor-not-allowed shadow-none'
-                      : 'bg-dark-900 hover:bg-black hover:shadow-dark-900/30'
+                    ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                    : 'bg-dark-900 hover:bg-black hover:shadow-dark-900/30'
                     }`}
                 >
                   {loading ? "Authenticating..." : "Sign in to Dashboard"}
@@ -264,8 +264,8 @@ const OwnerLogin = () => {
                     type="submit"
                     disabled={forgotLoading || !forgotEmail}
                     className={`flex-2 py-3 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all duration-300 w-2/3 ${forgotLoading || !forgotEmail
-                        ? 'bg-gray-300 cursor-not-allowed shadow-none'
-                        : 'bg-dark-900 hover:bg-black hover:shadow-dark-900/30'
+                      ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                      : 'bg-dark-900 hover:bg-black hover:shadow-dark-900/30'
                       }`}
                   >
                     {forgotLoading ? "Sending..." : "Send Reset Link"}
@@ -303,7 +303,7 @@ const OwnerLogin = () => {
           <div className="backdrop-blur-md bg-white/10 p-8 rounded-2xl border border-white/20">
             <h2 className="text-3xl font-bold text-white mb-3">Maximize Your Potential</h2>
             <p className="text-gray-200 text-lg leading-relaxed">
-              Join thousands of top-rated salon owners who use SalonPro to eliminate no-shows and grow their loyal client base.
+              Join thousands of top-rated salon owners who use SLT-Mobitel Saloon Booking System to eliminate no-shows and grow their loyal client base.
             </p>
           </div>
         </div>

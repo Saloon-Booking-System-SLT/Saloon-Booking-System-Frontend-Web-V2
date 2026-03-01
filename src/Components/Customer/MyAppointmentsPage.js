@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
+import Footer from '../Shared/Footer';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
   process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
@@ -42,7 +43,7 @@ const MyAppointmentsPage = () => {
 
       return hoursDifference <= 24 && hoursDifference > 0;
     } catch (error) {
-      console.error("Error checking time:", error);
+ console.error("Error checking time:", error);
       return false;
     }
   };
@@ -57,7 +58,7 @@ const MyAppointmentsPage = () => {
 
       return appointmentDateTime < now;
     } catch (error) {
-      console.error("Error checking if appointment is past:", error);
+ console.error("Error checking if appointment is past:", error);
       return false;
     }
   };
@@ -89,7 +90,7 @@ const MyAppointmentsPage = () => {
 
         setAppointments(activeAppointments);
       } catch (err) {
-        console.error("Failed to fetch appointments", err);
+ console.error("Failed to fetch appointments", err);
       }
     };
 
@@ -255,7 +256,7 @@ const MyAppointmentsPage = () => {
             className="text-3xl font-black text-dark-900 tracking-tighter cursor-pointer select-none"
             onClick={() => navigate("/", { replace: true })}
           >
-            SalonPro
+
           </div>
           <div className="mt-6 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-inner">
@@ -416,8 +417,8 @@ const MyAppointmentsPage = () => {
                               title={rescheduleInfo.title}
                               onClick={() => handleReschedule(a)}
                               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${rescheduleInfo.disabled
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                                  : "bg-white text-dark-900 border border-gray-200 hover:border-dark-900 hover:bg-gray-50 shadow-sm"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                : "bg-white text-dark-900 border border-gray-200 hover:border-dark-900 hover:bg-gray-50 shadow-sm"
                                 }`}
                             >
                               <ArrowPathIcon className="w-4 h-4" />
@@ -431,8 +432,8 @@ const MyAppointmentsPage = () => {
                                 title={cancelDisabled ? "Cannot cancel this appointment" : "Click to cancel this appointment"}
                                 onClick={() => !cancelDisabled && handleCancel(a._id)}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${cancelDisabled
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                                    : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white"
+                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                  : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white"
                                   }`}
                               >
                                 <XCircleIcon className="w-4 h-4" />
@@ -446,8 +447,8 @@ const MyAppointmentsPage = () => {
                               title={a.status?.toLowerCase() !== "completed" ? "Review available after appointment is completed" : "Click to add review"}
                               onClick={() => openFeedbackPopup(a)}
                               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${isReviewDisabled(a)
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 hidden sm:flex" // hide on mobile if disabled
-                                  : "bg-dark-900 text-white shadow-xl shadow-dark-900/20 hover:bg-black"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 hidden sm:flex" // hide on mobile if disabled
+                                : "bg-dark-900 text-white shadow-xl shadow-dark-900/20 hover:bg-black"
                                 }`}
                             >
                               <CheckBadgeIcon className="w-4 h-4" />
@@ -555,6 +556,8 @@ const MyAppointmentsPage = () => {
           </div>
         </Dialog>
       </Transition>
+
+      <Footer />
     </div>
   );
 };

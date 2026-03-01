@@ -35,7 +35,7 @@ const RevenueReport = ({ salonId }) => {
       const response = await axiosInstance.get(`/salons/revenue/${salonId}?period=${selectedPeriod}`);
       setRevenueData(response.data);
     } catch (err) {
-      console.error('Error fetching revenue data:', err);
+ console.error('Error fetching revenue data:', err);
       setError(err.response?.data?.message || 'Failed to load revenue data');
     } finally {
       setLoading(false);

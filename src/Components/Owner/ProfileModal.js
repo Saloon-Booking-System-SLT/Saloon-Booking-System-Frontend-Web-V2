@@ -67,7 +67,7 @@ const ProfileModal = ({ isOpen, onClose, selectedClient = null }) => {
       setTimeout(() => setNotification(null), 4000);
 
     } catch (err) {
-      console.error("Failed to update status", err);
+ console.error("Failed to update status", err);
       setNotification({
         type: 'error',
         message: `Failed to update appointment status. Please try again.`

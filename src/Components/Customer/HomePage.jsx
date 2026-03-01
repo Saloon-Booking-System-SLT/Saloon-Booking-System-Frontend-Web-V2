@@ -14,29 +14,40 @@ import {
 } from "@heroicons/react/24/outline";
 import salonLogo from "../../Assets/salonlogo.png";
 import heroBg from "../../Assets/hero-image.jpg";
+import { useAuth } from "../../contexts/AuthContext";
+import Footer from "../Shared/Footer";
 
 const Home = () => {
-  const [user, setUser] = useState(null);
+  const { user: authUser, logout, firebaseUser } = useAuth();
+
+  // Create a combined user object for the UI to use
+  // Priority: 1. Guest User, 2. AuthContext User, 3. Firebase User
   const [isGuest, setIsGuest] = useState(false);
+  const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for regular user
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsGuest(false);
-    }
-
-    // Check for guest user
     const guestUser = localStorage.getItem("guestUser");
     if (guestUser) {
-      const guestData = JSON.parse(guestUser);
-      setUser(guestData);
+      setUser(JSON.parse(guestUser));
       setIsGuest(true);
+    } else if (authUser) {
+      setUser(authUser);
+      setIsGuest(false);
+    } else if (firebaseUser) {
+      setUser({
+        name: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        role: 'customer'
+      });
+      setIsGuest(false);
+    } else {
+      setUser(null);
+      setIsGuest(false);
     }
-  }, []);
+  }, [authUser, firebaseUser]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
@@ -59,12 +70,9 @@ const Home = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("guestUser");
-    setUser(null);
-    setIsGuest(false);
+    logout();
     setMenuOpen(false);
-    navigate("/login");
+    navigate("/login/customer");
   };
 
   const handleGuestLogout = () => {
@@ -93,7 +101,7 @@ const Home = () => {
             onClick={() => navigate("/")}
           >
             <img src={salonLogo} alt="Salon Logo" className="h-10 w-auto group-hover:scale-105 transition-transform" />
-            <span className="text-xl md:text-2xl font-bold text-white tracking-tight">Mobitel Salon</span>
+
           </div>
 
           <nav className="flex items-center gap-4">
@@ -259,6 +267,8 @@ const Home = () => {
           <p className="text-gray-500">Safe, cashless transactions. Focus on your self-care while we handle the checkout seamlessly.</p>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };

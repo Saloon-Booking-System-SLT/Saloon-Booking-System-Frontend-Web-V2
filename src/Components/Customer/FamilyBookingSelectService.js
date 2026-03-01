@@ -28,7 +28,7 @@ const FamilyBookingSelectService = () => {
         filterServices(data, searchQuery, selectedGender);
       })
       .catch((err) => {
-        console.error("Failed to load services", err);
+ console.error("Failed to load services", err);
         alert("Failed to load services");
       });
   }, [salon]);

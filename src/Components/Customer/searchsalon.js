@@ -15,6 +15,8 @@ import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from "@heroico
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import salonLogo from "../../Assets/salonlogo.png";
 import LocationPickerModal from "./LocationPickerModal";
+import { useAuth } from "../../contexts/AuthContext";
+import Footer from "../Shared/Footer";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL
   ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
@@ -41,6 +43,7 @@ const SearchSalon = () => {
   const [query, setQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("All");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { user: authUser, logout, firebaseUser } = useAuth();
   const [user, setUser] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,13 +82,9 @@ const SearchSalon = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("guestUser");
-    setUser(null);
-    setIsGuest(false);
+    logout();
     setMenuOpen(false);
-    navigate("/login");
+    navigate("/login/customer");
   };
 
   const handleGuestLogout = () => {
@@ -113,7 +112,7 @@ const SearchSalon = () => {
         setUserFavorites(data.favorites.map((salon) => salon._id));
       }
     } catch (error) {
-      console.error("Error fetching favorites:", error);
+ console.error("Error fetching favorites:", error);
     }
   };
 
@@ -154,7 +153,7 @@ const SearchSalon = () => {
         alert(error.message || "Error updating favorites");
       }
     } catch (error) {
-      console.error("Error toggling favorite:", error);
+ console.error("Error toggling favorite:", error);
       alert("Error updating favorites");
     }
   };
@@ -308,7 +307,7 @@ const SearchSalon = () => {
         setLocationError(null);
         setShowLocationSuccess(true);
         setTimeout(() => setShowLocationSuccess(false), 5000);
-        console.log("User location obtained:", { latitude, longitude });
+ console.log("User location obtained:", { latitude, longitude });
       },
       (error) => {
         setLocationLoading(false);
@@ -330,7 +329,7 @@ const SearchSalon = () => {
         }
 
         setLocationError(errorMessage);
-        console.error("Geolocation error:", error);
+ console.error("Geolocation error:", error);
       },
       {
         enableHighAccuracy: true,
@@ -352,7 +351,7 @@ const SearchSalon = () => {
           userLocation.lat,
           userLocation.lng
         );
-        console.log("Salons sorted by distance from user location");
+ console.log("Salons sorted by distance from user location");
       }
 
       setAllSalons(sortedSalons);
@@ -361,42 +360,50 @@ const SearchSalon = () => {
         applyFilters(sortedSalons, query, genderFilter);
       }
     } catch (err) {
-      console.error("Failed to load salons", err);
+ console.error("Failed to load salons", err);
       alert("Failed to load salons");
     }
   }, [query, genderFilter, isNearbyMode, userLocation, sortSalonsByDistance]);
 
   useEffect(() => {
     const hasVisitedBefore = localStorage.getItem("hasVisitedSalonApp");
-
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsGuest(false);
-      fetchUserFavorites();
-
-      if (!hasVisitedBefore) {
-        setShowLocationPrompt(true);
-        localStorage.setItem("hasVisitedSalonApp", "true");
-      } else {
-        getUserLocation();
-      }
-    }
-
     const guestUser = localStorage.getItem("guestUser");
-    if (guestUser) {
-      const guestData = JSON.parse(guestUser);
-      setUser(guestData);
-      setIsGuest(true);
 
+    // Auth priority: 1. Guest, 2. AuthContext User, 3. Firebase User
+    let currentUser = null;
+    let isUserGuest = false;
+
+    if (guestUser) {
+      currentUser = JSON.parse(guestUser);
+      isUserGuest = true;
+    } else if (authUser) {
+      currentUser = authUser;
+    } else if (firebaseUser) {
+      currentUser = {
+        name: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        role: 'customer'
+      };
+    }
+
+    if (currentUser) {
+      setUser(currentUser);
+      setIsGuest(isUserGuest);
+      if (!isUserGuest) {
+        fetchUserFavorites();
+      }
       if (!hasVisitedBefore) {
         setShowLocationPrompt(true);
         localStorage.setItem("hasVisitedSalonApp", "true");
       } else {
         getUserLocation();
       }
+    } else {
+      setUser(null);
+      setIsGuest(false);
     }
-  }, [getUserLocation]);
+  }, [getUserLocation, authUser, firebaseUser]);
 
   useEffect(() => {
     fetchSalons();
@@ -585,7 +592,7 @@ const SearchSalon = () => {
             <div className="w-10 h-10 bg-dark-900 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
               <img src={salonLogo} alt="Salon Logo" className="w-6 h-6 object-contain filter brightness-0 invert" />
             </div>
-            <span className="text-xl font-heading font-bold text-dark-900 tracking-tight">SalonPro</span>
+
           </div>
 
           {/* Nav Icons / Profile */}
@@ -961,6 +968,8 @@ const SearchSalon = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

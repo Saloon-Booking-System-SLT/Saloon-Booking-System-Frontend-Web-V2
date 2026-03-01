@@ -36,7 +36,7 @@ const SelectServicesPage = () => {
         filterServices(data, searchQuery, selectedGender);
       })
       .catch((err) => {
-        console.error("Failed to load services", err);
+ console.error("Failed to load services", err);
         alert("Failed to load services");
       });
   }, [salon]);
@@ -104,7 +104,7 @@ const SelectServicesPage = () => {
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate("/")}
           >
-            <div className="text-2xl font-black text-dark-900 tracking-tighter">SalonPro</div>
+
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -157,8 +157,8 @@ const SelectServicesPage = () => {
                 <div className="bg-gray-100 p-1 rounded-2xl flex flex-shrink-0">
                   <button
                     className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-all ${selectedGender === "Male"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                       }`}
                     onClick={() => setSelectedGender("Male")}
                   >
@@ -166,8 +166,8 @@ const SelectServicesPage = () => {
                   </button>
                   <button
                     className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-all ${selectedGender === "Female"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                       }`}
                     onClick={() => setSelectedGender("Female")}
                   >
@@ -187,8 +187,8 @@ const SelectServicesPage = () => {
                       key={service._id}
                       onClick={() => toggleService(service._id)}
                       className={`group relative bg-white p-4 sm:p-5 rounded-[1.5rem] border flex items-center gap-5 cursor-pointer transition-all duration-300 ${isSelected
-                          ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
-                          : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
+                        ? "border-dark-900 ring-1 ring-dark-900 shadow-md bg-gray-50/50"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50"
                         }`}
                     >
                       <img
@@ -308,8 +308,8 @@ const SelectServicesPage = () => {
 
                 <button
                   className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${selectedServiceIds.length === 0
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-dark-900 text-white hover:bg-black hover:shadow-lg hover:shadow-dark-900/20 active:scale-[0.98]"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-dark-900 text-white hover:bg-black hover:shadow-lg hover:shadow-dark-900/20 active:scale-[0.98]"
                     }`}
                   onClick={handleContinue}
                   disabled={selectedServiceIds.length === 0}

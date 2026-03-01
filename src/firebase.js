@@ -37,8 +37,8 @@ googleProvider.addScope('profile');
 
 // ✅ Optional: Limit login to session only (not persisted after close)
 setPersistence(auth, browserSessionPersistence)
-  .then(() => console.log("✅ Session-only login enabled"))
-  .catch((err) => console.error("❌ Auth persistence error:", err));
+ .then(() => console.log(" Session-only login enabled"))
+ .catch((err) => console.error(" Auth persistence error:", err));
 
 // ✅ Recaptcha Setup Function
 const setupRecaptcha = (containerId = "recaptcha-container") => {
@@ -48,7 +48,7 @@ const setupRecaptcha = (containerId = "recaptcha-container") => {
       {
         size: "invisible",
         callback: (response) => {
-          console.log("reCAPTCHA solved:", response);
+ console.log("reCAPTCHA solved:", response);
         },
       },
       auth

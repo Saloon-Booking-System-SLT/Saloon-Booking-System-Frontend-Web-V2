@@ -31,7 +31,7 @@ const OwnerFeedbackPage = () => {
       setProfessionals(res.data || []);
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch professionals with feedbacks", err);
+ console.error("Failed to fetch professionals with feedbacks", err);
       setError("Failed to load feedbacks. Please try again.");
       setLoading(false);
     }

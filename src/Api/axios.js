@@ -23,7 +23,7 @@ instance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     console.log(
-      `🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      `API Request: ${config.method?.toUpperCase()} ${config.url}`,
     );
     return config;
   },
@@ -37,7 +37,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => {
     console.log(
-      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`,
+      `API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`,
     );
     return response;
   },
@@ -57,9 +57,17 @@ instance.interceptors.response.use(
       localStorage.removeItem("user");
       localStorage.removeItem("salonUser");
 
+      const currentPath = window.location.pathname.toLowerCase();
+
       // Only redirect if we're not already on a login page
-      if (!window.location.pathname.includes("Login")) {
-        window.location.href = "/OwnerLogin";
+      if (!currentPath.includes("login")) {
+        if (currentPath.includes("admin")) {
+          window.location.href = "/admin-login";
+        } else if (currentPath.includes("dashboard") || currentPath.includes("services") || currentPath.includes("professionals") || currentPath.includes("calendar")) {
+          window.location.href = "/OwnerLogin";
+        } else {
+          window.location.href = "/login/customer";
+        }
       }
     }
     return Promise.reject(error);
