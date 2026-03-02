@@ -99,12 +99,16 @@ const CheckoutPage = () => {
   };
 
   const submitPayHereForm = (data) => {
+    console.log('Submitting PayHere form with data:', data);
+    
     // Append mandatory return_url and cancel_url if missing
     const formData = {
       ...data,
       return_url: data.return_url || `${window.location.origin}/confirmationpage`,
       cancel_url: data.cancel_url || window.location.href,
     };
+
+    console.log('Final PayHere form data:', formData);
 
     const form = document.createElement('form');
     form.setAttribute('method', 'POST');
