@@ -32,11 +32,129 @@ const RevenueReport = ({ salonId }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axiosInstance.get(`/salons/revenue/${salonId}?period=${selectedPeriod}`);
-      setRevenueData(response.data);
+
+      // Fetch all appointments for the salon - this endpoint IS available on live server
+      const response = await axiosInstance.get(`/appointments/salon/${salonId}`);
+      const allAppointments = response.data || [];
+
+      // Filter appointments based on selected period
+      const now = new Date();
+      let startDate = new Date();
+      let endDate = new Date();
+
+      switch (selectedPeriod) {
+        case 'daily':
+          // Today (starting from 00:00:00)
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+          break;
+        case 'weekly':
+          // Last 7 days
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          break;
+        case 'monthly':
+          // Current month
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+          break;
+        case 'annual':
+          // Current year
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = new Date(now.getFullYear() + 1, 0, 1);
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      }
+
+      // We need to compare dates carefully as strings or Date objects
+      const filteredAppointments = allAppointments.filter(appt => {
+        if (!appt.date) return false;
+        // The appt.date is usually in "YYYY-MM-DD" format from backend
+        // We handle potential variations in date format
+        try {
+          const [year, month, day] = appt.date.split('-').map(Number);
+          const apptDate = new Date(year, month - 1, day);
+          return apptDate >= startDate && apptDate < endDate;
+        } catch (e) {
+          return false;
+        }
+      });
+
+      let totalRevenueValue = 0;
+      let completedRevenueValue = 0;
+      let pendingRevenueValue = 0;
+      const periodMap = new Map();
+      const serviceMap = new Map();
+
+      filteredAppointments.forEach(appt => {
+        // Calculate total price of services in this appointment
+        const apptPrice = (appt.services || []).reduce((sum, s) => {
+          const price = typeof s === 'number' ? s : (Number(s.price) || 0);
+          return sum + price;
+        }, 0);
+
+        totalRevenueValue += apptPrice;
+        if (appt.status === 'completed') {
+          completedRevenueValue += apptPrice;
+        } else if (appt.status === 'pending' || appt.status === 'confirmed') {
+          pendingRevenueValue += apptPrice;
+        }
+
+        // Group by period for the chart
+        let periodKey = '';
+        if (selectedPeriod === 'daily') {
+          const timePrefix = appt.time ? appt.time.split(':')[0].padStart(2, '0') : '00';
+          periodKey = `${appt.date} ${timePrefix}:00`;
+        } else if (selectedPeriod === 'weekly' || selectedPeriod === 'monthly') {
+          periodKey = appt.date;
+        } else if (selectedPeriod === 'annual') {
+          const dateParts = appt.date.split('-');
+          periodKey = `${dateParts[0]}-${dateParts[1]}`;
+        }
+
+        if (periodKey) {
+          if (!periodMap.has(periodKey)) {
+            periodMap.set(periodKey, { period: periodKey, revenue: 0, appointments: 0 });
+          }
+          const pData = periodMap.get(periodKey);
+          pData.revenue += apptPrice;
+          pData.appointments += 1;
+        }
+
+        // Group by top services
+        (appt.services || []).forEach(s => {
+          const sName = typeof s === 'string' ? s : (s.name || 'Unknown');
+          const sPrice = typeof s === 'number' ? s : (Number(s.price) || 0);
+
+          if (!serviceMap.has(sName)) {
+            serviceMap.set(sName, { serviceName: sName, revenue: 0, count: 0 });
+          }
+          const sData = serviceMap.get(sName);
+          sData.revenue += sPrice;
+          sData.count += 1;
+        });
+      });
+
+      const revenueByPeriod = Array.from(periodMap.values()).sort((a, b) => a.period.localeCompare(b.period));
+      const topServices = Array.from(serviceMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      setRevenueData({
+        period: selectedPeriod,
+        totalRevenue: totalRevenueValue,
+        completedRevenue: completedRevenueValue,
+        pendingRevenue: pendingRevenueValue,
+        totalAppointments: filteredAppointments.length,
+        revenueByPeriod,
+        topServices
+      });
+
     } catch (err) {
- console.error('Error fetching revenue data:', err);
-      setError(err.response?.data?.message || 'Failed to load revenue data');
+      console.error('Error computing revenue data:', err);
+      setError('Failed to compute revenue data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -118,8 +236,8 @@ const RevenueReport = ({ salonId }) => {
             <button
               key={period.value}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${selectedPeriod === period.value
-                  ? 'bg-white text-dark-900 shadow-sm ring-1 ring-gray-200 block sm:inline-block'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 bg-transparent'
+                ? 'bg-white text-dark-900 shadow-sm ring-1 ring-gray-200 block sm:inline-block'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 bg-transparent'
                 }`}
               onClick={() => setSelectedPeriod(period.value)}
             >
