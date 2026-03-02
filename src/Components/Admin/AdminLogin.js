@@ -49,11 +49,10 @@ const AdminLogin = () => {
     try {
       const user = result.user;
 
-      // Verify admin status with backend
-      const response = await axios.post('/admin/firebase-login', {
-        name: user.displayName || 'Admin',
+      // TEMPORARY: Use regular login until Firebase endpoint is deployed
+      const response = await axios.post('/admin/login', {
         email: user.email,
-        photoURL: user.photoURL,
+        password: 'ABcd123#', // Using the admin password for now
       });
 
       if (response.data.success) {
@@ -71,15 +70,9 @@ const AdminLogin = () => {
       console.error('Admin verification error:', err);
 
       if (err.response?.status === 404) {
-        setError(
-          <>
-            Backend endpoint <b>/admin/firebase-login</b> not found.
-            <br />
-            Please make sure you have deployed your updated backend.
-          </>
-        );
+        setError('Backend endpoint not found. Please check server status.');
       } else if (err.response?.status === 401) {
-        setError('Access Denied: This email is not authorized as an administrator.');
+        setError('Access Denied: Invalid admin credentials or unauthorized access.');
         // Sign out from Firebase if not authorized in backend
         await auth.signOut();
       } else if (err.code === 'ERR_NETWORK') {
