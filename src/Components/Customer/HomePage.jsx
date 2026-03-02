@@ -18,11 +18,11 @@ import Footer from "../Shared/Footer";
 
 // Banner Images
 const BANNER_IMAGES = [
-  "/banner/Banner1.jpg",
-  "/banner/Banner2.jpg",
-  "/banner/Banner3.jpg",
-  "/banner/Banner4.jpg",
-  "/banner/Banner5.jpg"
+  `${process.env.PUBLIC_URL || ''}/banner/Banner1.jpg`,
+  `${process.env.PUBLIC_URL || ''}/banner/Banner2.jpg`,
+  `${process.env.PUBLIC_URL || ''}/banner/Banner3.jpg`,
+  `${process.env.PUBLIC_URL || ''}/banner/Banner4.jpg`,
+  `${process.env.PUBLIC_URL || ''}/banner/Banner5.jpg`
 ];
 
 // Elegant carousel typography pairings
