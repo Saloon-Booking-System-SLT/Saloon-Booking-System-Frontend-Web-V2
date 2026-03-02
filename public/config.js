@@ -1,6 +1,6 @@
-// Runtime configuration for production
+// Runtime configuration - TEMPORARILY SET TO LOCALHOST
 window.APP_CONFIG = {
-  BACKEND_URLS: ["https://dpdlab1.slt.lk:8447/salon-api/api"],
-  ENVIRONMENT: "production",
-  DEBUG: false
+  BACKEND_URLS: ["http://localhost:5000/api"],
+  ENVIRONMENT: "development",
+  DEBUG: true
 };
