@@ -56,7 +56,12 @@ export const getServiceImageUrl = (imagePath, name = "Service") => {
     if (!imagePath) {
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=120`;
     }
-    return getImageUrl(imagePath);
+    if (imagePath.startsWith("http") || imagePath.startsWith("data:")) return imagePath;
+    if (imagePath.length > 200) return `data:image/jpeg;base64,${imagePath}`;
+
+    const normalizedPath = imagePath.replace(/\\/g, '/');
+    const finalPath = normalizedPath.includes('/') ? normalizedPath : `services/${normalizedPath}`;
+    return `${IMAGE_ORIGIN}/uploads/${finalPath}`;
 };
 
 export const getSalonImageUrl = (imagePath, fallbackSeed = 1) => {
