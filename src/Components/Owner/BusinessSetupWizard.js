@@ -5,9 +5,11 @@ import manIcon from '../../Assets/man_icon.png';
 import womenIcon from '../../Assets/women_icon.png';
 import { API_BASE_URL } from '../../config/api';
 import { BuildingStorefrontIcon, ScissorsIcon, MapPinIcon, PhotoIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Crosshair } from 'lucide-react';
 
 // Leaflet imports
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -33,14 +35,14 @@ const reverseGeocode = async (lat, lng) => {
     const data = await res.json();
     return data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   } catch (err) {
- console.error('Reverse geocoding error:', err);
+    console.error('Reverse geocoding error:', err);
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   }
 };
 
 // Component for selecting location
 const LocationPicker = ({ coordinates, setCoordinates, setLocationAddress }) => {
-  useMapEvents({
+  const map = useMapEvents({
     click: async (e) => {
       const { lat, lng } = e.latlng;
       setCoordinates({ lat, lng });
@@ -48,7 +50,24 @@ const LocationPicker = ({ coordinates, setCoordinates, setLocationAddress }) => 
       setLocationAddress(address);
     },
   });
+
+  // Auto-pan to new coordinates when they change (e.g. from GPS)
+  useEffect(() => {
+    map.flyTo(coordinates, map.getZoom());
+  }, [coordinates, map]);
+
   return <Marker position={coordinates} />;
+};
+
+// Component to fix map loading issue when rendered in hidden/dynamic containers
+const MapResizeFix = () => {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+  }, [map]);
+  return null;
 };
 
 const BusinessSetupWizard = () => {
@@ -111,7 +130,7 @@ const BusinessSetupWizard = () => {
           alert(data.message || 'Registration failed');
         }
       } catch (err) {
- console.error('Registration error:', err);
+        console.error('Registration error:', err);
         alert('Server error. Try again later.');
       } finally {
         setIsSubmitting(false);
@@ -130,6 +149,32 @@ const BusinessSetupWizard = () => {
     (step === 2 && !selectedService) ||
     (step === 3 && !locationAddress.trim()) ||
     isSubmitting;
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    // Show temporary feedback in the input
+    setLocationAddress("Finding your location...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCoordinates({ lat, lng });
+        const address = await reverseGeocode(lat, lng);
+        setLocationAddress(address);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert("Unable to retrieve your location. Please ensure you've granted location permissions.");
+        setLocationAddress(""); // Revert loading text
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   const getStepIcon = (stepNum) => {
     switch (stepNum) {
@@ -183,8 +228,8 @@ const BusinessSetupWizard = () => {
                   key={service.id}
                   onClick={() => setSelectedService(service.id)}
                   className={`relative flex flex-col items-center justify-center p-6 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${selectedService === service.id
-                      ? 'border-dark-900 bg-dark-50 shadow-md transform -translate-y-1'
-                      : 'border-gray-100 hover:border-gray-300 bg-white hover:shadow-sm'
+                    ? 'border-dark-900 bg-dark-50 shadow-md transform -translate-y-1'
+                    : 'border-gray-100 hover:border-gray-300 bg-white hover:shadow-sm'
                     }`}
                 >
                   {selectedService === service.id && (
@@ -212,20 +257,32 @@ const BusinessSetupWizard = () => {
             <p className="text-gray-500 mb-6">Where can clients find you? Click the map to pinpoint your salon.</p>
 
             <div className="space-y-4 flex-grow flex flex-col">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <MapPinIcon className="h-5 w-5 text-gray-400" />
+              <div className="flex gap-2 relative z-10">
+                <div className="relative flex-grow">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <MapPinIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-dark-900 focus:border-dark-900 transition-all text-gray-900 outline-none"
+                    value={locationAddress}
+                    onChange={(e) => setLocationAddress(e.target.value)}
+                    placeholder="Enter address manually or click on the map"
+                  />
                 </div>
-                <input
-                  type="text"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white text-gray-900 outline-none cursor-default"
-                  value={locationAddress}
-                  readOnly
-                  placeholder="Click on the map below to set your exact location"
-                />
+
+                <button
+                  type="button"
+                  onClick={handleLocateMe}
+                  className="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 border border-transparent rounded-xl font-bold text-gray-700 transition-colors shadow-sm focus:ring-2 focus:ring-dark-900 focus:outline-none"
+                  title="Find my current location"
+                >
+                  <Crosshair className="w-5 h-5 text-dark-900" />
+                  <span className="hidden sm:inline">Locate Me</span>
+                </button>
               </div>
 
-              <div className="flex-grow rounded-2xl overflow-hidden border border-gray-200 shadow-sm min-h-[300px] md:min-h-[400px] relative z-0">
+              <div className="w-full h-[400px] sm:h-[500px] rounded-2xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
                 <MapContainer
                   center={coordinates}
                   zoom={12}
@@ -236,6 +293,7 @@ const BusinessSetupWizard = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   />
+                  <MapResizeFix />
                   <LocationPicker
                     coordinates={coordinates}
                     setCoordinates={setCoordinates}
@@ -324,10 +382,10 @@ const BusinessSetupWizard = () => {
               <div
                 key={s}
                 className={`relative z-10 flex flex-col items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${s < step
-                    ? 'bg-dark-900 border-dark-900 text-white'
-                    : s === step
-                      ? 'bg-white border-dark-900 text-dark-900 shadow-md scale-110'
-                      : 'bg-white border-gray-200 text-gray-300'
+                  ? 'bg-dark-900 border-dark-900 text-white'
+                  : s === step
+                    ? 'bg-white border-dark-900 text-dark-900 shadow-md scale-110'
+                    : 'bg-white border-gray-200 text-gray-300'
                   }`}
               >
                 {s < step ? <CheckCircleIcon className="w-6 h-6" /> : getStepIcon(s)}
@@ -363,8 +421,8 @@ const BusinessSetupWizard = () => {
             onClick={handleContinue}
             disabled={isContinueDisabled}
             className={`px-8 py-3 rounded-xl font-bold shadow-md transition-all duration-300 flex items-center ${isContinueDisabled
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                : 'bg-dark-900 text-white hover:bg-black hover:shadow-dark-900/30'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+              : 'bg-dark-900 text-white hover:bg-black hover:shadow-dark-900/30'
               }`}
           >
             {isSubmitting ? 'Processing...' : step === 4 ? 'Complete Registration' : 'Continue'}

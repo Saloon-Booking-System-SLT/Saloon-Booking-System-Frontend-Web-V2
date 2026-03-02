@@ -331,3 +331,10 @@ html {
   object-fit: cover;
   align-self: center;
 }
+
+/* Map Display Fix */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
