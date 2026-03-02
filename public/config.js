@@ -1,4 +1,4 @@
-// Runtime configuration - TEMPORARILY SET TO LOCALHOST
+// Runtime configuration - LOCALHOST FOR DEVELOPMENT
 window.APP_CONFIG = {
   BACKEND_URLS: ["http://localhost:5000/api"],
   ENVIRONMENT: "development",

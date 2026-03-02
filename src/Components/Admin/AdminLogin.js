@@ -105,7 +105,7 @@ const AdminLogin = () => {
                   type="email"
                   name="email"
                   className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm outline-none bg-gray-50 focus:bg-white"
-                  placeholder="admin@saloonbooking.lk"
+                  placeholder="Enter your admin email"
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -124,7 +124,7 @@ const AdminLogin = () => {
                   type="password"
                   name="password"
                   className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm outline-none bg-gray-50 focus:bg-white"
-                  placeholder="ABcd123#"
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                   required
