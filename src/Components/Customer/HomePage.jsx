@@ -18,11 +18,11 @@ import Footer from "../Shared/Footer";
 
 // Banner Images
 const BANNER_IMAGES = [
-  `${process.env.PUBLIC_URL || ''}/banner/Banner1.jpg`,
-  `${process.env.PUBLIC_URL || ''}/banner/Banner2.jpg`,
-  `${process.env.PUBLIC_URL || ''}/banner/Banner3.jpg`,
-  `${process.env.PUBLIC_URL || ''}/banner/Banner4.jpg`,
-  `${process.env.PUBLIC_URL || ''}/banner/Banner5.jpg`
+  `${process.env.PUBLIC_URL || ''}/Banner/Banner1.jpg`,
+  `${process.env.PUBLIC_URL || ''}/Banner/Banner2.jpg`,
+  `${process.env.PUBLIC_URL || ''}/Banner/Banner3.jpg`,
+  `${process.env.PUBLIC_URL || ''}/Banner/Banner4.jpg`,
+  `${process.env.PUBLIC_URL || ''}/Banner/Banner5.jpg`
 ];
 
 // Elegant carousel typography pairings
