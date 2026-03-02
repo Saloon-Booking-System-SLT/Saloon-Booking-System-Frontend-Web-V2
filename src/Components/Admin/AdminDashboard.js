@@ -28,8 +28,8 @@ const SummaryChart = ({ data }) => {
   }
 
   return (
-    <div className="w-full h-72 md:h-80 lg:h-96">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-full min-h-[300px]">
+      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <BarChart
           data={data}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -309,7 +309,9 @@ const AdminDashboard = () => {
                     Monthly Performance
                     <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">Last 6 Months</span>
                   </h3>
-                  <SummaryChart data={monthlyData} />
+                  <div className="h-80 w-full">
+                    <SummaryChart data={monthlyData} />
+                  </div>
                 </div>
               </div>
 
