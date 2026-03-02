@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL, UPLOADS_URL } from "../../config/api";
@@ -13,7 +13,8 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   ClockIcon,
-  ScissorsIcon
+  ScissorsIcon,
+  CameraIcon
 } from '@heroicons/react/24/outline';
 
 const SalonProfile = () => {
@@ -24,6 +25,8 @@ const SalonProfile = () => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const imageFileRef = useRef(null);
 
   useEffect(() => {
     const fetchSalon = async () => {
@@ -33,7 +36,7 @@ const SalonProfile = () => {
         setFormData(res.data);
         setLoading(false);
       } catch (err) {
- console.error("Failed to fetch salon:", err);
+        console.error("Failed to fetch salon:", err);
         setLoading(false);
       }
     };
@@ -53,7 +56,7 @@ const SalonProfile = () => {
       setSalon(formData);
       setEditing(false);
     } catch (err) {
- console.error("Failed to update profile:", err);
+      console.error("Failed to update profile:", err);
       alert("Update failed!");
     }
   };
@@ -61,6 +64,41 @@ const SalonProfile = () => {
   const getImageSrc = (imagePath) => {
     if (!imagePath) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
     return imagePath.startsWith("http") ? imagePath : `${UPLOADS_URL}/${imagePath}`;
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please select a JPG, PNG or WebP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB.');
+      return;
+    }
+
+    setImageUploading(true);
+    try {
+      const form = new FormData();
+      form.append('image', file);
+
+      const res = await axios.patch(`${API_BASE_URL}/salons/${id}/image`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const newImageUrl = res.data.image;
+      setSalon(prev => ({ ...prev, image: newImageUrl }));
+      setFormData(prev => ({ ...prev, image: newImageUrl }));
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setImageUploading(false);
+      if (imageFileRef.current) imageFileRef.current.value = '';
+    }
   };
 
   return (
@@ -126,11 +164,35 @@ const SalonProfile = () => {
               <div className="px-6 sm:px-10 pb-10 relative">
                 {/* Avatar */}
                 <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-16 sm:-mt-20 mb-8 relative z-10">
-                  <div className="relative inline-block">
+                  {/* Avatar with upload overlay */}
+                  <div className="relative inline-block group/avatar">
                     <img
                       src={getImageSrc(salon.image)}
                       alt="Salon"
                       className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl object-cover bg-white p-2 shadow-lg border-2 border-white"
+                    />
+                    {/* Camera overlay — always visible, triggers upload */}
+                    <button
+                      type="button"
+                      onClick={() => imageFileRef.current?.click()}
+                      disabled={imageUploading}
+                      className="absolute inset-0 rounded-3xl flex flex-col items-center justify-center bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer disabled:cursor-wait"
+                      title="Change salon photo"
+                    >
+                      {imageUploading
+                        ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        : <>
+                          <CameraIcon className="w-7 h-7 text-white mb-1" />
+                          <span className="text-white text-xs font-bold">Change Photo</span>
+                        </>
+                      }
+                    </button>
+                    <input
+                      ref={imageFileRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleImageUpload}
                     />
                   </div>
                   <div className="pb-2">
