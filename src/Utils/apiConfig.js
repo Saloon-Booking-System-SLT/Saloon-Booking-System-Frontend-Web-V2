@@ -9,7 +9,7 @@
  * Image paths need just the origin (scheme+host+port) to avoid /salon-api prefix.
  */
 
-const RAW_API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const RAW_API_URL = process.env.REACT_APP_API_URL || "http://localhost:10000/api";
 
 /**
  * Base URL WITHOUT the /api suffix.
