@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MagnifyingGlassIcon, CheckCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
 import { API_URL, getServiceImageUrl, getSalonImageUrl } from "../../Utils/apiConfig";
+import { UPLOADS_URL } from "../../config/api";
 
 const API_BASE_URL = API_URL;
 
@@ -161,15 +162,12 @@ const FamilyBookingSelectService = () => {
 
                       <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50">
                         <img
-                          src={
-                            service.image
-                              ? service.image.startsWith("http")
-                                ? service.image
-                                : `${API_BASE_URL}/uploads/${service.image}`
-                              : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"
-                          }
+                          src={service.image ? (service.image.startsWith("http") ? service.image : `${UPLOADS_URL}/${service.image.replace(/\\/g, '/').includes('/') ? service.image.replace(/\\/g, '/') : `services/${service.image}`}`) : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"}
                           alt={service.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.src = "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff";
+                          }}
                         />
                       </div>
 

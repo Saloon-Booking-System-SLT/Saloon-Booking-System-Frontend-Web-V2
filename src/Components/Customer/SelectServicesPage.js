@@ -10,6 +10,7 @@ import {
 import { CheckCircleIcon as CheckCircleSolid } from "@heroicons/react/24/solid";
 
 import { API_URL, getServiceImageUrl, getSalonImageUrl } from "../../Utils/apiConfig";
+import { UPLOADS_URL } from "../../config/api";
 
 const API_BASE_URL = API_URL;
 
@@ -211,9 +212,13 @@ const SelectServicesPage = () => {
                         }`}
                     >
                       <img
-                        src={getServiceImageUrl(service.image, service.name)}
+                        src={service.image ? (service.image.startsWith("http") ? service.image : `${UPLOADS_URL}/${service.image.replace(/\\/g, '/').includes('/') ? service.image.replace(/\\/g, '/') : `services/${service.image}`}`) : "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff"}
                       alt={service.name}
                       className="w-14 h-14 sm:w-18 sm:h-18 object-cover rounded-xl shrink-0 border border-gray-100"
+                      onError={(e) => {
+                        console.log(`❌ Failed to load image for ${service.name}:`, e.target.src);
+                        e.target.src = "https://ui-avatars.com/api/?name=Service&background=random&size=100&color=fff";
+                      }}
                       />
 
                       <div className="flex-grow min-w-0 pr-9">

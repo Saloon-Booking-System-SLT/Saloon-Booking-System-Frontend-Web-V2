@@ -74,13 +74,13 @@ function App() {
           <Route path="/searchsalon" element={<Searchsalon />} />
           <Route path="/profile" element={<CustomerRoute><Profile /></CustomerRoute>} />
           <Route path="/select-services/:salonId" element={<SelectServicesPage />} />
-          <Route path="/select-professional/:salonId" element={<CustomerRoute><SelectProfessionalPage /></CustomerRoute>} />
-          <Route path="/select-time" element={<CustomerRoute><SelectTimePage /></CustomerRoute>} />
+          <Route path="/select-professional/:salonId" element={<SelectProfessionalPage />} />
+          <Route path="/select-time" element={<SelectTimePage />} />
           <Route path="/appointments" element={<CustomerRoute><MyAppointmentsPage /></CustomerRoute>} />
-          <Route path="/familybooking" element={<CustomerRoute><FamilyBooking /></CustomerRoute>} />
-          <Route path="/familybookingselectservice/:salonId" element={<CustomerRoute><FamilyBookingSelectService /></CustomerRoute>} />
-          <Route path="/familybookingselectprofessional/:salonId" element={<CustomerRoute><FamilyBookingSelectProfessional /></CustomerRoute>} />
-          <Route path="/familybookingselecttimepage" element={<CustomerRoute><FamilyBookingSelectTimePage /></CustomerRoute>} />
+          <Route path="/familybooking" element={<FamilyBooking />} />
+          <Route path="/familybookingselectservice/:salonId" element={<FamilyBookingSelectService />} />
+          <Route path="/familybookingselectprofessional/:salonId" element={<FamilyBookingSelectProfessional />} />
+          <Route path="/familybookingselecttimepage" element={<FamilyBookingSelectTimePage />} />
           <Route path="/bookselectionpage" element={<BookSelectionPage />} />
           <Route path="/checkoutpage" element={<CustomerRoute><CheckoutPage /></CustomerRoute>} />
           <Route path="/confirmationpage" element={<CustomerRoute><ConfirmationPage /></CustomerRoute>} />
