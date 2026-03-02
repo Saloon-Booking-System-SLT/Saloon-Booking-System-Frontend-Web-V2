@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../Api/axios";
 import { API_BASE_URL, UPLOADS_URL } from "../../config/api";
 import OwnerSidebar from './OwnerSidebar';
 import OwnerHeader from './OwnerHeader';
@@ -85,13 +85,16 @@ const SalonProfile = () => {
       const form = new FormData();
       form.append('image', file);
 
-      const res = await axios.patch(`${API_BASE_URL}/salons/${id}/image`, form, {
+      // Configured axios auto-attaches the Bearer token via interceptor
+      const res = await axios.put(`salons/${id}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       const newImageUrl = res.data.image;
-      setSalon(prev => ({ ...prev, image: newImageUrl }));
-      setFormData(prev => ({ ...prev, image: newImageUrl }));
+      if (newImageUrl) {
+        setSalon(prev => ({ ...prev, image: newImageUrl }));
+        setFormData(prev => ({ ...prev, image: newImageUrl }));
+      }
     } catch (err) {
       console.error('Image upload failed:', err);
       alert('Failed to upload image. Please try again.');
