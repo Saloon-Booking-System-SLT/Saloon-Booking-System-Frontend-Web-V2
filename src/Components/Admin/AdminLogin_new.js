@@ -25,12 +25,12 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting admin login...');
+      console.log('🔐 Attempting admin login...');
       const res = await axiosInstance.post('/admin/login', formData);
 
       const { token, admin } = res.data;
 
-      console.log('Admin login response:', { token: !!token, admin });
+      console.log('✅ Admin login response:', { token: !!token, admin });
 
       // Prepare admin user data (similar to salon owner)
       const adminUserData = {
@@ -39,7 +39,7 @@ const AdminLogin = () => {
         id: admin.id || 'admin'
       };
 
-      console.log('Saving admin user data:', adminUserData);
+      console.log('💾 Saving admin user data:', adminUserData);
 
       // Save everything to localStorage BEFORE calling login()
       localStorage.setItem('token', token);
@@ -48,7 +48,7 @@ const AdminLogin = () => {
       localStorage.setItem('userName', admin.username || admin.name);
       localStorage.setItem('userId', admin.id || 'admin');
 
-      console.log('Saved to localStorage:');
+      console.log('📊 Saved to localStorage:');
       console.log('- token:', !!localStorage.getItem('token'));
       console.log('- userRole:', localStorage.getItem('userRole'));
       console.log('- userEmail:', localStorage.getItem('userEmail'));
@@ -57,10 +57,10 @@ const AdminLogin = () => {
       // Call the auth context login
       login(token, adminUserData);
 
-      console.log('Navigating to admin dashboard...');
+      console.log('🚀 Navigating to admin dashboard...');
       navigate("/admin-dashboard");
     } catch (err) {
-      console.error("Admin login error:", err);
+      console.error("❌ Admin login error:", err);
       if (err.response?.status === 401) {
         setError("Invalid admin credentials. Please check your email and password.");
       } else if (err.response?.data?.message) {
