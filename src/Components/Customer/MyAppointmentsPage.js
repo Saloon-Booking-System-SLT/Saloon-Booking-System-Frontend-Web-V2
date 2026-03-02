@@ -16,9 +16,9 @@ import {
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
-  "";
+import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const MyAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);

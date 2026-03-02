@@ -5,9 +5,9 @@ import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
-  'http://localhost:5000';
+import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const SelectTimePage = () => {
   const location = useLocation();
@@ -28,7 +28,7 @@ const SelectTimePage = () => {
   const initialBookedAppointments = useMemo(() => {
     const fromState = location.state?.bookedAppointments;
     if (fromState && Array.isArray(fromState) && fromState.length > 0) {
- console.log(" Loaded appointments from location state:", fromState.length);
+      console.log(" Loaded appointments from location state:", fromState.length);
       return fromState;
     }
 
@@ -37,15 +37,15 @@ const SelectTimePage = () => {
       try {
         const parsed = JSON.parse(fromStorage);
         if (Array.isArray(parsed) && parsed.length > 0) {
- console.log(" Loaded appointments from localStorage:", parsed.length);
+          console.log(" Loaded appointments from localStorage:", parsed.length);
           return parsed;
         }
       } catch (e) {
- console.error("Failed to parse bookedAppointments from localStorage:", e);
+        console.error("Failed to parse bookedAppointments from localStorage:", e);
       }
     }
 
- console.log("ℹ️ No previous appointments found");
+    console.log("ℹ️ No previous appointments found");
     return [];
   }, [location.state?.bookedAppointments]);
 
@@ -90,7 +90,7 @@ const SelectTimePage = () => {
       const timeDifference = appointmentDateTime.getTime() - now.getTime();
       const hoursDifference = timeDifference / (1000 * 60 * 60);
 
- console.log("⏰ Time check:", {
+      console.log("⏰ Time check:", {
         appointmentDateTime,
         now,
         hoursDifference,
@@ -99,7 +99,7 @@ const SelectTimePage = () => {
 
       return hoursDifference <= 24;
     } catch (error) {
- console.error("Error checking time:", error);
+      console.error("Error checking time:", error);
       return false;
     }
   }, []);
@@ -114,7 +114,7 @@ const SelectTimePage = () => {
 
       return slotDateTime < now;
     } catch (error) {
- console.error("Error checking if slot is past:", error);
+      console.error("Error checking if slot is past:", error);
       return true;
     }
   }, []);
@@ -134,7 +134,7 @@ const SelectTimePage = () => {
 
   const fetchTimeSlots = useCallback(async (professionalId, date) => {
     if (!professionalId || !date) {
- console.warn("fetchTimeSlots called without professionalId or date", { professionalId, date });
+      console.warn("fetchTimeSlots called without professionalId or date", { professionalId, date });
       return;
     }
     try {
@@ -152,7 +152,7 @@ const SelectTimePage = () => {
       setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
       console.debug("Fetched and filtered slots", key, filteredData.length, "of", data.length);
     } catch (err) {
- console.error("Error fetching time slots:", err);
+      console.error("Error fetching time slots:", err);
       const key = `${professionalId}-${date}`;
       setAvailableSlots(prev => ({ ...prev, [key]: [] }));
     }
@@ -179,7 +179,7 @@ const SelectTimePage = () => {
     }
 
     if (!professionalId) {
- console.error("No professional ID found");
+      console.error("No professional ID found");
       return;
     }
 
@@ -305,7 +305,7 @@ const SelectTimePage = () => {
         professionalId: currentAppointment.professionalId
       };
 
- console.log(" Sending reschedule request:", {
+      console.log(" Sending reschedule request:", {
         appointmentId: rescheduleAppointment._id,
         data: rescheduleData
       });
@@ -319,7 +319,7 @@ const SelectTimePage = () => {
       });
 
       const result = await response.json();
- console.log(" Reschedule API response:", result);
+      console.log(" Reschedule API response:", result);
 
       if (result.success) {
         alert("✅ Appointment rescheduled successfully!");
@@ -328,7 +328,7 @@ const SelectTimePage = () => {
         throw new Error(result.message || "Reschedule failed");
       }
     } catch (err) {
- console.error(" Reschedule failed:", err);
+      console.error(" Reschedule failed:", err);
       alert(`❌ Reschedule failed: ${err.message}`);
     } finally {
       setLoading(false);
@@ -353,8 +353,8 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
 
- console.log(" Saving appointment:", currentAppointment);
- console.log(" Total booked after save:", updatedBookedAppointments.length);
+      console.log(" Saving appointment:", currentAppointment);
+      console.log(" Total booked after save:", updatedBookedAppointments.length);
 
       setBookedAppointments(updatedBookedAppointments);
 
@@ -374,8 +374,8 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const finalBookedAppointments = [...bookedAppointments, currentAppointment];
 
- console.log(" Adding final appointment:", currentAppointment);
- console.log(" Final total appointments:", finalBookedAppointments.length);
+      console.log(" Adding final appointment:", currentAppointment);
+      console.log(" Final total appointments:", finalBookedAppointments.length);
 
       setBookedAppointments(finalBookedAppointments);
       localStorage.setItem('bookedAppointments', JSON.stringify(finalBookedAppointments));
@@ -437,7 +437,7 @@ const SelectTimePage = () => {
       user: user
     };
 
- console.log(" Navigating to confirmation with data:", {
+    console.log(" Navigating to confirmation with data:", {
       totalAmount,
       appointmentCount: appointments.length,
       isGroupBooking
@@ -588,7 +588,7 @@ const SelectTimePage = () => {
       <div className="right-column">
         <div className="summary-box">
           <img
-            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/150/150?random=5"}
+            src={salon?.image ? getSalonImageUrl(salon.image) : "https://picsum.photos/150/150?random=5"}
             alt="Salon"
             className="salon-image"
           />

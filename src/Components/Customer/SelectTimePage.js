@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDaysIcon, ClockIcon, ChevronRightIcon, ShieldExclamationIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
-  "";
+import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const SelectTimePage = () => {
   const location = useLocation();
@@ -968,7 +968,7 @@ const SelectTimePage = () => {
               {/* Salon Preview */}
               <div className="flex items-center gap-4 pb-6 border-b border-gray-100 mb-6 w-full">
                 <img
-                  src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/100/100?random=9"}
+                  src={salon?.image ? getSalonImageUrl(salon.image) : "https://picsum.photos/100/100?random=9"}
                   alt="Salon"
                   className="w-14 h-14 object-cover rounded-[1rem] border border-gray-100 shadow-sm shrink-0"
                 />
@@ -1113,11 +1113,10 @@ const SelectTimePage = () => {
             </button>
           ) : (
             <button
-              className={`shrink-0 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 text-sm transition-all ${
-                !selectedTimes[serviceKey] || loading || !isUserAuthorized
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-dark-900 text-white hover:bg-black active:scale-95"
-              }`}
+              className={`shrink-0 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 text-sm transition-all ${!selectedTimes[serviceKey] || loading || !isUserAuthorized
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-dark-900 text-white hover:bg-black active:scale-95"
+                }`}
               onClick={handleContinue}
               disabled={!selectedTimes[serviceKey] || loading || !isUserAuthorized}
             >

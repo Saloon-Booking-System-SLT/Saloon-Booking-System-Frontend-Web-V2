@@ -9,9 +9,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleSolid } from "@heroicons/react/24/solid";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
-  : "";
+import { API_URL, getServiceImageUrl, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const SelectServicesPage = () => {
   const location = useLocation();
@@ -115,7 +115,7 @@ const SelectServicesPage = () => {
                 src={
                   salon.image.startsWith("http")
                     ? salon.image
-                    : `${API_BASE_URL}/uploads/${salon.image}`
+                    : getSalonImageUrl(salon.image)
                 }
                 alt={salon.name}
                 className="w-8 h-8 rounded-lg object-cover border border-gray-100 shrink-0"
@@ -184,8 +184,8 @@ const SelectServicesPage = () => {
                     <button
                       key={g}
                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${selectedGender === g
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-700"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
                         }`}
                       onClick={() => setSelectedGender(g)}
                     >
@@ -206,20 +206,14 @@ const SelectServicesPage = () => {
                       key={service._id}
                       onClick={() => toggleService(service._id)}
                       className={`group relative bg-white p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 sm:gap-4 cursor-pointer transition-all duration-200 ${isSelected
-                          ? "border-dark-900 ring-1 ring-dark-900 shadow-md"
-                          : "border-gray-100 hover:border-gray-300 hover:shadow-md"
+                        ? "border-dark-900 ring-1 ring-dark-900 shadow-md"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-md"
                         }`}
                     >
                       <img
-                        src={
-                          service.image
-                            ? service.image.startsWith("http")
-                              ? service.image
-                              : `${API_BASE_URL}/uploads/${service.image}`
-                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(service.name)}&background=random&color=fff&size=120`
-                        }
-                        alt={service.name}
-                        className="w-14 h-14 sm:w-18 sm:h-18 object-cover rounded-xl shrink-0 border border-gray-100"
+                        src={getServiceImageUrl(service.image, service.name)}
+                      alt={service.name}
+                      className="w-14 h-14 sm:w-18 sm:h-18 object-cover rounded-xl shrink-0 border border-gray-100"
                       />
 
                       <div className="flex-grow min-w-0 pr-9">
@@ -274,7 +268,7 @@ const SelectServicesPage = () => {
                     salon?.image
                       ? salon.image.startsWith("http")
                         ? salon.image
-                        : `${API_BASE_URL}/uploads/${salon.image}`
+                        : getSalonImageUrl(salon.image)
                       : "https://picsum.photos/100/100?random=8"
                   }
                   alt="Salon"
@@ -324,8 +318,8 @@ const SelectServicesPage = () => {
                 </div>
                 <button
                   className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${selectedServiceIds.length === 0
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-dark-900 text-white hover:bg-black hover:shadow-lg active:scale-[0.98]"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-dark-900 text-white hover:bg-black hover:shadow-lg active:scale-[0.98]"
                     }`}
                   onClick={handleContinue}
                   disabled={selectedServiceIds.length === 0}
@@ -357,8 +351,8 @@ const SelectServicesPage = () => {
           </div>
           <button
             className={`shrink-0 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 text-sm transition-all ${selectedServiceIds.length === 0
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-dark-900 text-white hover:bg-black active:scale-95"
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-dark-900 text-white hover:bg-black active:scale-95"
               }`}
             onClick={handleContinue}
             disabled={selectedServiceIds.length === 0}

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MagnifyingGlassIcon, CheckCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
-  "";
+import { API_URL, getServiceImageUrl, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const FamilyBookingSelectService = () => {
   const location = useLocation();

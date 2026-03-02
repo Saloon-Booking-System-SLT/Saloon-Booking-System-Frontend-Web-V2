@@ -18,9 +18,9 @@ import LocationPickerModal from "./LocationPickerModal";
 import { useAuth } from "../../contexts/AuthContext";
 import Footer from "../Shared/Footer";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
-  : "https://saloon-booking-system-backend-v2.onrender.com";
+import { API_URL, getSalonImageUrl, getProfessionalImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const districtSuggestions = [
   "Colombo",
