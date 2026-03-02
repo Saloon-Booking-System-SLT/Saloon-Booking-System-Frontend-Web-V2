@@ -36,7 +36,7 @@ const SelectServicesPage = () => {
         filterServices(data, searchQuery, selectedGender);
       })
       .catch((err) => {
- console.error("Failed to load services", err);
+        console.error("Failed to load services", err);
         alert("Failed to load services");
       });
   }, [salon]);
@@ -50,9 +50,13 @@ const SelectServicesPage = () => {
       s.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    if (isUnisex) {
+    if (isUnisex && gender) {
       result = result.filter(
-        (s) => s.gender?.toLowerCase() === gender.toLowerCase()
+        (s) =>
+          !s.gender ||
+          s.gender.toLowerCase() === gender.toLowerCase() ||
+          s.gender.toLowerCase() === 'unisex' ||
+          s.gender.toLowerCase() === 'all'
       );
     }
 

@@ -8,7 +8,12 @@ import {
   XCircleIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  MapPinIcon
+  MapPinIcon,
+  TrashIcon,
+  ClockIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 
 const SalonsManagement = () => {
@@ -19,18 +24,20 @@ const SalonsManagement = () => {
   const [cityFilter, setCityFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
   const [loading, setLoading] = useState(false);
+  const [selectedSalon, setSelectedSalon] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Fetch salons data
   const fetchSalons = async () => {
     setLoading(true);
     try {
- console.log('Requesting URL:', axios.defaults.baseURL + '/admin/salons');
+      console.log('Requesting URL:', axios.defaults.baseURL + '/admin/salons');
       const res = await axios.get('/admin/salons');
       setSalons(res.data);
       setFilteredSalons(res.data);
     } catch (err) {
- console.error('Failed to fetch salons', err);
+      console.error('Failed to fetch salons', err);
       if (err.response?.status === 401) {
         alert('Session expired. Please login again.');
         navigate('/admin-login');
@@ -91,7 +98,7 @@ const SalonsManagement = () => {
       alert('Salon approved successfully!');
       fetchSalons();
     } catch (err) {
- console.error('Failed to approve salon', err);
+      console.error('Failed to approve salon', err);
       alert('Failed to approve salon: ' + (err.response?.data?.message || 'Unknown error'));
     }
   };
@@ -105,9 +112,41 @@ const SalonsManagement = () => {
       alert('Salon rejected successfully!');
       fetchSalons();
     } catch (err) {
- console.error('Failed to reject salon', err);
+      console.error('Failed to reject salon', err);
       alert('Failed to reject salon: ' + (err.response?.data?.message || 'Unknown error'));
     }
+  };
+
+  // Terminate salon
+  const handleTerminateSalon = async (salonId) => {
+    const reason = prompt('Please provide a reason for terminating this salon (this will hide them from the app):');
+    if (!reason) return;
+    try {
+      await axios.patch(`/admin/salons/${salonId}/terminate`, { reason });
+      alert('Salon terminated successfully!');
+      fetchSalons();
+    } catch (err) {
+      console.error('Failed to terminate salon', err);
+      alert('Failed to terminate salon: ' + (err.response?.data?.message || 'Unknown error'));
+    }
+  };
+
+  // Delete salon
+  const handleDeleteSalon = async (salonId) => {
+    if (!window.confirm('WARNING: Are you sure you want to PERMANENTLY delete this salon and all associated data including appointments and professionals?')) return;
+    try {
+      await axios.delete(`/admin/salons/${salonId}`);
+      alert('Salon deleted successfully!');
+      fetchSalons();
+    } catch (err) {
+      console.error('Failed to delete salon', err);
+      alert('Failed to delete salon: ' + (err.response?.data?.message || 'Unknown error'));
+    }
+  };
+
+  const openDetailsModal = (salon) => {
+    setSelectedSalon(salon);
+    setIsModalOpen(true);
   };
 
   const cities = ['All', ...new Set(salons.map(s => s.location).filter(Boolean))];
@@ -117,6 +156,7 @@ const SalonsManagement = () => {
     const s = status?.toLowerCase();
     if (s === 'approved') return <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-100 text-emerald-800">Approved</span>;
     if (s === 'rejected') return <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-red-100 text-red-800">Rejected</span>;
+    if (s === 'terminated') return <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-gray-100 text-gray-800">Terminated</span>;
     return <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-100 text-amber-800">Pending</span>;
   };
 
@@ -261,6 +301,12 @@ const SalonsManagement = () => {
                         {salon.approvalStatus === 'pending' || !salon.approvalStatus ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              className="text-sm font-bold text-primary-600 hover:text-primary-800 transition-colors bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg border border-primary-200"
+                              onClick={() => openDetailsModal(salon)}
+                            >
+                              Details
+                            </button>
+                            <button
                               className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg transition-colors border border-emerald-200"
                               onClick={() => handleApproveSalon(salon._id)}
                               title="Approve"
@@ -274,17 +320,53 @@ const SalonsManagement = () => {
                             >
                               <XCircleIcon className="w-5 h-5" />
                             </button>
+                            <button
+                              className="p-1.5 bg-gray-50 text-gray-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors border border-gray-200 hover:border-red-200 ml-1"
+                              onClick={() => handleDeleteSalon(salon._id)}
+                              title="Delete Salon"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : salon.approvalStatus === 'approved' ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              className="text-sm font-bold text-primary-600 hover:text-primary-800 transition-colors bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg border border-primary-200"
+                              onClick={() => openDetailsModal(salon)}
+                            >
+                              Details
+                            </button>
+                            <button
+                              className="text-sm font-bold text-orange-600 hover:text-orange-800 transition-colors bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200"
+                              onClick={() => handleTerminateSalon(salon._id)}
+                              title="Terminate (Hide from App)"
+                            >
+                              Terminate
+                            </button>
+                            <button
+                              className="p-1.5 bg-gray-50 text-gray-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors border border-gray-200 hover:border-red-200"
+                              onClick={() => handleDeleteSalon(salon._id)}
+                              title="Delete Salon"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
                           </div>
                         ) : (
-                          <button
-                            className="text-sm font-bold text-primary-600 hover:text-primary-800 transition-colors bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg border border-primary-200"
-                            onClick={() => {
-                              // Optional: Add view details modal or expand row
-                              alert(`Viewing details for ${salon.name} is not fully implemented in this view yet.`);
-                            }}
-                          >
-                            Details
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              className="text-sm font-bold text-primary-600 hover:text-primary-800 transition-colors bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg border border-primary-200"
+                              onClick={() => openDetailsModal(salon)}
+                            >
+                              Details
+                            </button>
+                            <button
+                              className="p-1.5 bg-gray-50 text-gray-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors border border-gray-200 hover:border-red-200"
+                              onClick={() => handleDeleteSalon(salon._id)}
+                              title="Delete Salon"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -295,6 +377,101 @@ const SalonsManagement = () => {
           )}
         </div>
       </div>
+
+      {/* Details Modal */}
+      {isModalOpen && selectedSalon && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setIsModalOpen(false)}></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <div className="flex justify-between items-center mb-5">
+                      <h3 className="text-2xl leading-6 font-bold text-gray-900 flex items-center gap-2" id="modal-title">
+                        <BuildingStorefrontIcon className="w-7 h-7 text-primary-600" />
+                        Salon Details
+                      </h3>
+                      {getStatusBadge(selectedSalon.approvalStatus)}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                      {/* Left Column */}
+                      <div className="space-y-4">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                          <h4 className="text-sm font-bold text-gray-500 uppercase mb-3 border-b border-gray-200 pb-2">Business Info</h4>
+                          <p className="font-bold text-gray-900 text-lg">{selectedSalon.name}</p>
+                          <div className="mt-2 space-y-2 text-sm text-gray-600">
+                            <p className="flex items-center gap-2"><UserIcon className="w-4 h-4" /> Owner: {selectedSalon.ownerName || 'N/A'}</p>
+                            <p className="flex items-center gap-2"><EnvelopeIcon className="w-4 h-4" /> {selectedSalon.email}</p>
+                            <p className="flex items-center gap-2"><PhoneIcon className="w-4 h-4" /> {selectedSalon.phone}</p>
+                            <p className="flex items-start gap-2"><MapPinIcon className="w-4 h-4 mt-1 flex-shrink-0" /> <span>{selectedSalon.location}</span></p>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                          <h4 className="text-sm font-bold text-gray-500 uppercase mb-3 border-b border-gray-200 pb-2">Operations</h4>
+                          <div className="space-y-2 text-sm text-gray-600">
+                            <p className="flex items-center gap-2"><ClockIcon className="w-4 h-4" /> Hours: <span className="font-medium text-gray-900">{selectedSalon.workingHours || 'Not specified'}</span></p>
+                            <p className="flex items-center gap-2"><BuildingStorefrontIcon className="w-4 h-4" /> Type: <span className="font-medium text-gray-900">{selectedSalon.salonType || 'Not specified'}</span></p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="space-y-4">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 h-full">
+                          <h4 className="text-sm font-bold text-gray-500 uppercase mb-3 border-b border-gray-200 pb-2">Offered Services</h4>
+                          {selectedSalon.services && selectedSalon.services.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {selectedSalon.services.map((service, idx) => (
+                                <span key={idx} className="bg-primary-50 text-primary-700 border border-primary-100 px-3 py-1 rounded-full text-sm font-semibold">
+                                  {service}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No services listed</p>
+                          )}
+                        </div>
+
+                        {selectedSalon.rejectionReason && (
+                          <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 className="text-sm font-bold text-red-500 uppercase mb-2">Rejection Reason</h4>
+                            <p className="text-sm text-red-700">{selectedSalon.rejectionReason}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Image Preview (if exists) */}
+                    {selectedSalon.image && (
+                      <div className="mt-6 border-t border-gray-200 pt-5">
+                        <h4 className="text-sm font-bold text-gray-500 uppercase mb-3">Salon Image</h4>
+                        <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                          <img src={selectedSalon.image} alt="Salon preview" className="w-full h-full object-cover" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-2xl border-t border-gray-200">
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

@@ -98,7 +98,7 @@ const SearchSalon = () => {
   const fetchUserFavorites = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token || !authUser) return;
 
       const res = await fetch(`${API_BASE_URL}/api/users/favorites`, {
         headers: {
@@ -112,7 +112,7 @@ const SearchSalon = () => {
         setUserFavorites(data.favorites.map((salon) => salon._id));
       }
     } catch (error) {
- console.error("Error fetching favorites:", error);
+      console.error("Error fetching favorites:", error);
     }
   };
 
@@ -125,7 +125,7 @@ const SearchSalon = () => {
       }
 
       const token = localStorage.getItem("token");
-      if (!token) {
+      if (!token || !authUser) {
         alert("Please log in to add favorites");
         navigate("/login");
         return;
@@ -153,7 +153,7 @@ const SearchSalon = () => {
         alert(error.message || "Error updating favorites");
       }
     } catch (error) {
- console.error("Error toggling favorite:", error);
+      console.error("Error toggling favorite:", error);
       alert("Error updating favorites");
     }
   };
@@ -307,7 +307,7 @@ const SearchSalon = () => {
         setLocationError(null);
         setShowLocationSuccess(true);
         setTimeout(() => setShowLocationSuccess(false), 5000);
- console.log("User location obtained:", { latitude, longitude });
+        console.log("User location obtained:", { latitude, longitude });
       },
       (error) => {
         setLocationLoading(false);
@@ -329,7 +329,7 @@ const SearchSalon = () => {
         }
 
         setLocationError(errorMessage);
- console.error("Geolocation error:", error);
+        console.error("Geolocation error:", error);
       },
       {
         enableHighAccuracy: true,
@@ -351,7 +351,7 @@ const SearchSalon = () => {
           userLocation.lat,
           userLocation.lng
         );
- console.log("Salons sorted by distance from user location");
+        console.log("Salons sorted by distance from user location");
       }
 
       setAllSalons(sortedSalons);
@@ -360,7 +360,7 @@ const SearchSalon = () => {
         applyFilters(sortedSalons, query, genderFilter);
       }
     } catch (err) {
- console.error("Failed to load salons", err);
+      console.error("Failed to load salons", err);
       alert("Failed to load salons");
     }
   }, [query, genderFilter, isNearbyMode, userLocation, sortSalonsByDistance]);
@@ -390,7 +390,7 @@ const SearchSalon = () => {
     if (currentUser) {
       setUser(currentUser);
       setIsGuest(isUserGuest);
-      if (!isUserGuest) {
+      if (!isUserGuest && authUser) {
         fetchUserFavorites();
       }
       if (!hasVisitedBefore) {

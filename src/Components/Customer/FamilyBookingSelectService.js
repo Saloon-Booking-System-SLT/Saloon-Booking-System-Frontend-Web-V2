@@ -28,7 +28,7 @@ const FamilyBookingSelectService = () => {
         filterServices(data, searchQuery, selectedGender);
       })
       .catch((err) => {
- console.error("Failed to load services", err);
+        console.error("Failed to load services", err);
         alert("Failed to load services");
       });
   }, [salon]);
@@ -42,9 +42,13 @@ const FamilyBookingSelectService = () => {
       s.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    if (isUnisex) {
+    if (isUnisex && gender) {
       result = result.filter(
-        (s) => s.gender?.toLowerCase() === gender.toLowerCase()
+        (s) =>
+          !s.gender ||
+          s.gender.toLowerCase() === gender.toLowerCase() ||
+          s.gender.toLowerCase() === 'unisex' ||
+          s.gender.toLowerCase() === 'all'
       );
     }
 
@@ -116,8 +120,8 @@ const FamilyBookingSelectService = () => {
               <div className="flex p-1 bg-gray-100 rounded-xl w-full sm:w- fit mb-8 text-sm font-bold">
                 <button
                   className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg transition-all duration-300 ${selectedGender === "Male"
-                      ? "bg-white text-dark-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white text-dark-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                   onClick={() => setSelectedGender("Male")}
                 >
@@ -125,8 +129,8 @@ const FamilyBookingSelectService = () => {
                 </button>
                 <button
                   className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg transition-all duration-300 ${selectedGender === "Female"
-                      ? "bg-white text-dark-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white text-dark-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                   onClick={() => setSelectedGender("Female")}
                 >
@@ -145,8 +149,8 @@ const FamilyBookingSelectService = () => {
                       key={service._id}
                       onClick={() => toggleService(service._id)}
                       className={`group relative bg-white border-2 rounded-2xl p-4 cursor-pointer transition-all duration-300 flex items-center gap-4 hover:-translate-y-1 ${isSelected
-                          ? "border-dark-900 shadow-lg shadow-dark-900/10"
-                          : "border-gray-100 hover:border-gray-300 hover:shadow-md"
+                        ? "border-dark-900 shadow-lg shadow-dark-900/10"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-md"
                         }`}
                     >
                       {isSelected && (
@@ -245,8 +249,8 @@ const FamilyBookingSelectService = () => {
 
               <button
                 className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${selectedServiceIds.length === 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-dark-900 text-white hover:bg-black hover:shadow-xl hover:shadow-dark-900/20 hover:-translate-y-0.5"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                  : "bg-dark-900 text-white hover:bg-black hover:shadow-xl hover:shadow-dark-900/20 hover:-translate-y-0.5"
                   }`}
                 onClick={handleContinue}
                 disabled={selectedServiceIds.length === 0}
