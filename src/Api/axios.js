@@ -1,8 +1,8 @@
 //
 import axios from "axios";
 
-// Force localhost for development - override any production configs
-const API_URL = "http://localhost:10000/api";
+// Use environment variable or fallback to localhost for development
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:10000/api";
 
 const instance = axios.create({
   baseURL: API_URL,
