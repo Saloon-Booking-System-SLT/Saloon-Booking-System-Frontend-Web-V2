@@ -88,7 +88,7 @@ const CheckoutPage = () => {
         submitPayHereForm(result.data);
         
         // Show popup notification
-        alert('Payment window opened. Please complete your payment in the new window.');
+        alert('Payment will open in a new tab. Please complete your payment there.');
       } else {
         alert('Failed to initiate payment. Please try again.');
         console.error('Payment init failed:', result);
@@ -113,18 +113,11 @@ const CheckoutPage = () => {
 
     console.log('📝 Final PayHere form data:', formData);
 
-    // Open PayHere in a new window so it can be closed properly
-    const paymentWindow = window.open('', 'payhere_payment', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    
-    if (!paymentWindow) {
-      alert('Please allow popups for this site to process payment');
-      return;
-    }
-
+    // Create form first
     const form = document.createElement('form');
     form.setAttribute('method', 'POST');
     form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-    form.setAttribute('target', 'payhere_payment');
+    form.setAttribute('target', '_blank'); // Open in new tab/window
     form.style.display = 'none';
 
     Object.keys(formData).forEach(key => {
@@ -135,12 +128,22 @@ const CheckoutPage = () => {
       form.appendChild(input);
     });
 
+    // Add form to page and submit
     document.body.appendChild(form);
-    form.submit();
+    
+    try {
+      form.submit();
+      console.log('PayHere form submitted successfully');
+    } catch (error) {
+      console.error('Error submitting PayHere form:', error);
+      alert('Failed to open payment window. Please try again.');
+    }
     
     // Remove form after submission
     setTimeout(() => {
-      document.body.removeChild(form);
+      if (document.body.contains(form)) {
+        document.body.removeChild(form);
+      }
     }, 1000);
   };
 
