@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   // Listen to Firebase auth state changes (for customers)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log('Firebase auth state changed:', {
+ console.log('Firebase auth state changed:', {
         hasFirebaseUser: !!firebaseUser,
         email: firebaseUser?.email,
         uid: firebaseUser?.uid
@@ -40,49 +40,49 @@ export const AuthProvider = ({ children }) => {
         const storedToken = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
         const salonData = localStorage.getItem('salonUser');
-        
-        console.log('AuthContext: Checking stored data', {
+
+ console.log('AuthContext: Checking stored data', {
           hasToken: !!storedToken,
           hasUserData: !!userData,
           hasSalonData: !!salonData
         });
-        
+
         // Priority 1: Salon owner authentication (backend)
         if (storedToken && salonData) {
           try {
             const parsedSalonData = JSON.parse(salonData);
             if (parsedSalonData && parsedSalonData.role === 'owner') {
-              console.log('AuthContext: Restoring salon owner session');
+ console.log('AuthContext: Restoring salon owner session');
               setToken(storedToken);
               setUser(parsedSalonData);
               setLoading(false);
               return;
             }
           } catch (e) {
-            console.error('AuthContext: Failed to parse salon data', e);
+ console.error('AuthContext: Failed to parse salon data', e);
             localStorage.removeItem('salonUser');
           }
         }
-        
+
         // Priority 2: Standard backend user authentication
         if (storedToken && userData) {
           try {
             const parsedUserData = JSON.parse(userData);
             if (parsedUserData) {
-              console.log('AuthContext: Restoring backend user session');
+ console.log('AuthContext: Restoring backend user session');
               setToken(storedToken);
               setUser(parsedUserData);
               setLoading(false);
               return;
             }
           } catch (e) {
-            console.error('AuthContext: Failed to parse user data', e);
+ console.error('AuthContext: Failed to parse user data', e);
             localStorage.removeItem('user');
           }
         }
-        
+
       } catch (error) {
-        console.error('AuthContext: Error during session restore', error);
+ console.error('AuthContext: Error during session restore', error);
       }
       setLoading(false);
     };
@@ -93,8 +93,9 @@ export const AuthProvider = ({ children }) => {
 
   // Handle Firebase user separately for customer authentication
   useEffect(() => {
-    if (firebaseUser && !token) { // Only use Firebase if no backend token
-      console.log('AuthContext: Using Firebase user session');
+    // Only use Firebase if no backend token exists and we actually have a firebase user
+    if (firebaseUser && !token) {
+ console.log('AuthContext: Using Firebase user session');
       setUser({
         id: firebaseUser.uid,
         email: firebaseUser.email,
@@ -103,34 +104,31 @@ export const AuthProvider = ({ children }) => {
         photoURL: firebaseUser.photoURL
       });
       setLoading(false);
-    } else if (!firebaseUser && !token) {
-      // No authentication found
-      setLoading(false);
     }
   }, [firebaseUser, token]);
 
   const login = (newToken, userData) => {
     try {
-      console.log('AuthContext: Logging in user', {
+ console.log('AuthContext: Logging in user', {
         hasToken: !!newToken,
         userRole: userData?.role,
         userId: userData?.id || userData?._id
       });
-      
+
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(userData));
-      
+
       // For salon owners, also store in salonUser for backward compatibility
       if (userData?.role === 'owner') {
         localStorage.setItem('salonUser', JSON.stringify(userData));
       }
-      
+
       setToken(newToken);
       setUser(userData);
-      
-      console.log('AuthContext: Login successful');
+
+ console.log('AuthContext: Login successful');
     } catch (error) {
-      console.error('AuthContext: Login failed', error);
+ console.error('AuthContext: Login failed', error);
     }
   };
 
@@ -139,22 +137,22 @@ export const AuthProvider = ({ children }) => {
       // Sign out from Firebase if user was signed in with Firebase
       if (firebaseUser) {
         await signOut(auth);
-        console.log('AuthContext: Firebase logout successful');
+ console.log('AuthContext: Firebase logout successful');
       }
-      
+
       // Clear all localStorage items
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('salonUser');
-      
+
       // Clear state
       setToken(null);
       setUser(null);
       setFirebaseUser(null);
-      
-      console.log('AuthContext: Full logout completed');
+
+ console.log('AuthContext: Full logout completed');
     } catch (error) {
-      console.error('AuthContext: Logout error', error);
+ console.error('AuthContext: Logout error', error);
     }
   };
 

@@ -71,7 +71,7 @@ const [selectedDate, setSelectedDate] = useState(new Date()); // Today's date
       
       setAppointments(transformedAppointments);
     } catch (err) {
-      console.error('Error fetching appointments:', err);
+ console.error('Error fetching appointments:', err);
       
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Session expired. Please login again.');
@@ -133,7 +133,7 @@ const [selectedDate, setSelectedDate] = useState(new Date()); // Today's date
       // Refresh appointments list
       fetchAppointments();
     } catch (err) {
-      console.error('Error cancelling appointment:', err);
+ console.error('Error cancelling appointment:', err);
       alert('Failed to cancel appointment. Please try again.');
     }
   };

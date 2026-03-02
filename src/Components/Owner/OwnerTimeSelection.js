@@ -135,7 +135,7 @@ const OwnerSelectTimePage = () => {
       
       return slotDateTime < now;
     } catch (error) {
-      console.error("Error checking if slot is past:", error);
+ console.error("Error checking if slot is past:", error);
       return true;
     }
   }, []);
@@ -175,7 +175,7 @@ const OwnerSelectTimePage = () => {
   // Fetch time slots for a specific professional and date
   const fetchTimeSlots = useCallback(async (professionalId, date, serviceName) => {
     if (!professionalId || !date) {
-      console.warn("fetchTimeSlots called without professionalId or date", { professionalId, date });
+ console.warn("fetchTimeSlots called without professionalId or date", { professionalId, date });
       return;
     }
     try {
@@ -193,7 +193,7 @@ const OwnerSelectTimePage = () => {
       setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
       console.debug("Fetched and filtered slots", key, filteredData.length, "of", data.length);
     } catch (err) {
-      console.error("Error fetching time slots:", err);
+ console.error("Error fetching time slots:", err);
       const key = `${serviceName}-${professionalId}-${date}`;
       setAvailableSlots(prev => ({ ...prev, [key]: [] }));
     }
@@ -384,8 +384,8 @@ const OwnerSelectTimePage = () => {
         appointments: appointments
       };
 
-      console.log("📤 Creating appointments via main endpoint:", appointmentData);
-      console.log("📤 Endpoint:", `${API_BASE_URL}/api/appointments`);
+ console.log(" Creating appointments via main endpoint:", appointmentData);
+ console.log(" Endpoint:", `${API_BASE_URL}/api/appointments`);
 
       const response = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: "POST",
@@ -398,8 +398,8 @@ const OwnerSelectTimePage = () => {
 
       // Check response type
       const contentType = response.headers.get("content-type");
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Content-Type:", contentType);
+ console.log(" Response status:", response.status);
+ console.log(" Content-Type:", contentType);
 
       let result;
       
@@ -407,7 +407,7 @@ const OwnerSelectTimePage = () => {
         result = await response.json();
       } else {
         const text = await response.text();
-        console.error("❌ Non-JSON response received:", text.substring(0, 200));
+ console.error(" Non-JSON response received:", text.substring(0, 200));
         
         if (response.status === 401 || response.status === 403) {
           throw new Error("Authentication failed. Please login again.");
@@ -418,7 +418,7 @@ const OwnerSelectTimePage = () => {
         }
       }
 
-      console.log("📥 Server response:", result);
+ console.log(" Server response:", result);
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to create appointment");
@@ -452,7 +452,7 @@ const OwnerSelectTimePage = () => {
 
       // If API failed but we want to proceed locally
       if (!result.success) {
-        console.warn("⚠️ API failed, using local booking fallback");
+ console.warn("️ API failed, using local booking fallback");
         confirmationData.isLocalBooking = true;
         confirmationData.bookingId = `local-${Date.now()}`;
         
@@ -467,7 +467,7 @@ const OwnerSelectTimePage = () => {
       navigate("/owner-confirmation", { state: confirmationData });
 
     } catch (error) {
-      console.error("❌ Error creating appointment:", error);
+ console.error(" Error creating appointment:", error);
       
       // Offer fallback option
       if (window.confirm(`Failed to create appointment: ${error.message}\n\nWould you like to save this booking locally and proceed?`)) {

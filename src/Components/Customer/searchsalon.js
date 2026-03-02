@@ -1,14 +1,26 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDaysIcon, UserCircleIcon } from "@heroicons/react/24/outline";
-import "./searchsaloon.css";
+import {
+  CalendarDaysIcon,
+  UserCircleIcon,
+  MapPinIcon,
+  MagnifyingGlassIcon,
+  HeartIcon,
+  Bars3Icon,
+  UserIcon,
+  ArrowRightOnRectangleIcon,
+  CheckBadgeIcon
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import fallbackImage from "../../Assets/searchsalonimg.png";
 import salonLogo from "../../Assets/salonlogo.png";
 import LocationPickerModal from "./LocationPickerModal";
+import { useAuth } from "../../contexts/AuthContext";
+import Footer from "../Shared/Footer";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
-  : "https://saloon-booking-system-backend-v2.onrender.com";
+import { API_URL, getSalonImageUrl, getProfessionalImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const districtSuggestions = [
   "Colombo",
@@ -31,6 +43,7 @@ const SearchSalon = () => {
   const [query, setQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("All");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { user: authUser, logout, firebaseUser } = useAuth();
   const [user, setUser] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,23 +64,27 @@ const SearchSalon = () => {
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   const handleNavigateToProfile = () => {
-    navigate("/profile");
+    if (user && user.role === 'owner') {
+      navigate(`/profile/${user.id || user._id}`);
+    } else {
+      navigate("/profile");
+    }
     setMenuOpen(false);
   };
 
   const handleNavigateToAppointments = () => {
-    navigate("/appointments");
+    if (user && user.role === 'owner') {
+      navigate("/dashboard");
+    } else {
+      navigate("/appointments");
+    }
     setMenuOpen(false);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("guestUser");
-    setUser(null);
-    setIsGuest(false);
+    logout();
     setMenuOpen(false);
-    navigate("/login");
+    navigate("/login/customer");
   };
 
   const handleGuestLogout = () => {
@@ -81,7 +98,7 @@ const SearchSalon = () => {
   const fetchUserFavorites = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token || !authUser) return;
 
       const res = await fetch(`${API_BASE_URL}/api/users/favorites`, {
         headers: {
@@ -108,7 +125,7 @@ const SearchSalon = () => {
       }
 
       const token = localStorage.getItem("token");
-      if (!token) {
+      if (!token || !authUser) {
         alert("Please log in to add favorites");
         navigate("/login");
         return;
@@ -175,8 +192,8 @@ const SearchSalon = () => {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLng / 2) ** 2;
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -350,35 +367,43 @@ const SearchSalon = () => {
 
   useEffect(() => {
     const hasVisitedBefore = localStorage.getItem("hasVisitedSalonApp");
-
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsGuest(false);
-      fetchUserFavorites();
-
-      if (!hasVisitedBefore) {
-        setShowLocationPrompt(true);
-        localStorage.setItem("hasVisitedSalonApp", "true");
-      } else {
-        getUserLocation();
-      }
-    }
-
     const guestUser = localStorage.getItem("guestUser");
-    if (guestUser) {
-      const guestData = JSON.parse(guestUser);
-      setUser(guestData);
-      setIsGuest(true);
 
+    // Auth priority: 1. Guest, 2. AuthContext User, 3. Firebase User
+    let currentUser = null;
+    let isUserGuest = false;
+
+    if (guestUser) {
+      currentUser = JSON.parse(guestUser);
+      isUserGuest = true;
+    } else if (authUser) {
+      currentUser = authUser;
+    } else if (firebaseUser) {
+      currentUser = {
+        name: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        role: 'customer'
+      };
+    }
+
+    if (currentUser) {
+      setUser(currentUser);
+      setIsGuest(isUserGuest);
+      if (!isUserGuest && authUser) {
+        fetchUserFavorites();
+      }
       if (!hasVisitedBefore) {
         setShowLocationPrompt(true);
         localStorage.setItem("hasVisitedSalonApp", "true");
       } else {
         getUserLocation();
       }
+    } else {
+      setUser(null);
+      setIsGuest(false);
     }
-  }, [getUserLocation]);
+  }, [getUserLocation, authUser, firebaseUser]);
 
   useEffect(() => {
     fetchSalons();
@@ -462,7 +487,7 @@ const SearchSalon = () => {
             const flatFeedbacks = allFeedbacks.flat();
             const avgRating = flatFeedbacks.length
               ? flatFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) /
-                flatFeedbacks.length
+              flatFeedbacks.length
               : 0;
 
             return { ...salon, avgRating: avgRating.toFixed(1) };
@@ -553,446 +578,350 @@ const SearchSalon = () => {
   };
 
   return (
-    <div className="search-wrapper">
-      <header className="navbar">
-        <div className="logo logo-lowered" onClick={() => navigate("/")}>
-          <img src={salonLogo} alt="Salon Logo" className="salon-logo" />
-          Salon
-        </div>
-        <nav className="nav-menu">
-          {!user ? (
-            <>
-              <button className="nav-link" onClick={() => navigate("/login")}>
-                Log In
-              </button>
-              <div className="menu-container">
-                <button className="nav-menu-btn" onClick={toggleMenu}>
-                  ☰
+    <div className="min-h-screen bg-gray-50 font-sans flex flex-col pt-20">
+
+      {/* Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b border-gray-100 z-50 transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+
+          {/* Logo */}
+          <div
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => navigate("/")}
+          >
+            <div className="w-10 h-10 bg-dark-900 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+              <img src={salonLogo} alt="Salon Logo" className="w-6 h-6 object-contain filter brightness-0 invert" />
+            </div>
+
+          </div>
+
+          {/* Nav Icons / Profile */}
+          <nav className="flex items-center gap-4 relative">
+            {!user ? (
+              <>
+                <button className="hidden sm:inline-flex px-5 py-2 text-sm font-medium text-gray-700 hover:text-dark-900 transition-colors" onClick={() => navigate("/login")}>
+                  Log In
                 </button>
+                <button
+                  className="p-2.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-xl text-gray-700 transition-colors"
+                  onClick={toggleMenu}
+                >
+                  <Bars3Icon className="w-5 h-5" />
+                </button>
+
                 {menuOpen && (
-                  <div className="dropdown-menu">
-                    <ul>
-                      <li>For Customers</li>
-                      <li onClick={() => navigate("/login")}>Login or Sign Up</li>
-                      <li>Download the App</li>
-                      <li>Help & Support</li>
-                      <li>සිංහල</li>
-                      <li className="dropdown-divider"></li>
-                      <li>For Business →</li>
+                  <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-xl p-2 z-50 border border-gray-100 fade-in slide-up">
+                    <ul className="flex flex-col">
+                      <li className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">For Customers</li>
+                      <li className="px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" onClick={() => navigate("/login")}>Login or Sign Up</li>
+                      <li className="px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">Download the App</li>
+                      <li className="px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">Help & Support</li>
+                      <li className="border-t border-gray-100 my-2"></li>
+                      <li
+                        onClick={() => navigate("/OwnerLogin")}
+                        className="px-4 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors flex items-center justify-between"
+                      >
+                        For Business <ArrowRightOnRectangleIcon className="w-4 h-4 ml-2" />
+                      </li>
                     </ul>
                   </div>
                 )}
-              </div>
-            </>
-          ) : (
-            <div className="menu-container profile-warp">
-              {isGuest ? (
-                <div
-                  className="flex items-center justify-center text-gray-700 bg-gray-200 rounded-full cursor-pointer guest-profile-icon"
+              </>
+            ) : (
+              <div className="relative flex items-center gap-3">
+                <button
+                  className="flex items-center justify-center rounded-full overflow-hidden border-2 border-transparent hover:border-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-dark-900"
                   onClick={toggleMenu}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    fontSize: "24px",
-                    fontWeight: "bold",
-                  }}
                 >
-                  <UserCircleIcon className="w-8 h-8 text-gray-600" />
-                </div>
-              ) : (
-                <img
-                  src={
-                    user.photoURL ||
-                    "https://ui-avatars.com/api/?name=User&background=random&size=40"
-                  }
-                  alt="Profile"
-                  className="profile-icon"
-                  onClick={toggleMenu}
-                />
-              )}
+                  {isGuest ? (
+                    <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-gray-500">
+                      <UserCircleIcon className="w-7 h-7" />
+                    </div>
+                  ) : (
+                    <img
+                      src={user.photoURL || `https://ui-avatars.com/api/?name=${user.name}&background=random`}
+                      alt="Profile"
+                      className="w-10 h-10 object-cover bg-gray-100"
+                    />
+                  )}
+                </button>
 
-              {menuOpen && (
-                <div className="dropdown-menu">
-                  <div className="user-name">
-                    {isGuest ? "Guest User" : user.name}
-                    {isGuest && <span className="guest-badge">Guest</span>}
-                  </div>
-                  <ul>
-                    {!isGuest && (
-                      <>
-                        <li onClick={handleNavigateToProfile}>👤 Profile</li>
-                        <li onClick={handleNavigateToAppointments}>
-                          <CalendarDaysIcon className="h-4 w-4 inline mr-1" />{" "}
-                          Appointments
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-xl p-2 z-50 border border-gray-100 fade-in slide-up">
+                      <div className="px-4 py-4 border-b border-gray-100 mb-2 bg-gray-50/50 rounded-t-xl flex flex-col items-start">
+                        <span className="text-sm font-bold text-gray-900 truncate w-full">
+                          {isGuest ? "Guest User" : user.name}
+                        </span>
+                        {isGuest && <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-600">Guest</span>}
+                      </div>
+
+                      <ul className="flex flex-col gap-1">
+                        {!isGuest && (
+                          <>
+                            <li className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-dark-900 rounded-lg cursor-pointer transition-colors flex items-center gap-3" onClick={handleNavigateToProfile}>
+                              <UserIcon className="h-4 w-4" /> Profile
+                            </li>
+                            <li className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-dark-900 rounded-lg cursor-pointer transition-colors flex items-center gap-3" onClick={handleNavigateToAppointments}>
+                              <CalendarDaysIcon className="h-4 w-4" /> Appointments
+                            </li>
+                          </>
+                        )}
+
+                        <li
+                          className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-colors flex items-center gap-3"
+                          onClick={isGuest ? handleGuestLogout : handleLogout}
+                        >
+                          <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                          {isGuest ? "Exit Guest Mode" : "Logout"}
                         </li>
-                      </>
-                    )}
+                      </ul>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </nav>
+        </div>
+      </header>
 
-                    {isGuest ? (
-                      <li onClick={handleGuestLogout}>🚪 Exit Guest Mode</li>
-                    ) : (
-                      <li onClick={handleLogout}>🚪 Logout</li>
-                    )}
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 items-start">
 
-                    <li className="dropdown-divider"></li>
-                    <li>Download the App</li>
-                    <li>Help & Support</li>
-                    <li>සිංහල</li>
-                    <li className="dropdown-divider"></li>
-                    <li>For Business →</li>
-                  </ul>
+        {/* Alerts / Info Banners */}
+        {user && userLocation && !locationLoading && showLocationSuccess && (
+          <div className="mb-6 fade-in flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3 text-sm font-medium">
+              <MapPinIcon className="w-5 h-5 text-emerald-600" />
+              Salons are sorted by distance from your current location
+            </div>
+            <button onClick={() => setShowLocationSuccess(false)} className="text-emerald-500 hover:text-emerald-700">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        )}
+
+        {user && locationError && (
+          <div className="mb-6 fade-in flex items-center justify-between bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3 text-sm font-medium">
+              <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              {locationError}
+            </div>
+            <button
+              onClick={getUserLocation}
+              className="text-xs font-bold bg-white border border-orange-200 text-orange-700 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Search Header Section */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+
+          <div className="w-full md:flex-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by city, district or area (e.g. Colombo)"
+              className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-dark-900 focus:ring-2 focus:ring-dark-900/20 text-gray-900 text-base shadow-inner transition-all outline-none"
+              value={query}
+              onChange={handleLocationInputChange}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onFocus={() => setShowSuggestions(true)}
+              disabled={manualNearbyMode}
+            />
+            {showSuggestions && query && !manualNearbyMode && (
+              <ul className="absolute z-30 w-full bg-white mt-1 border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-y-auto py-1">
+                {districtSuggestions
+                  .filter((d) => d.toLowerCase().startsWith(query.toLowerCase()))
+                  .map((d) => (
+                    <li
+                      key={d}
+                      className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 flex items-center"
+                      onClick={() => {
+                        setQuery(d);
+                        setShowSuggestions(false);
+                        if (manualNearbyMode) {
+                          setManualNearbyMode(false);
+                          setIsNearbyMode(false);
+                          setNearbySalons([]);
+                        }
+                      }}
+                    >
+                      <MapPinIcon className="w-4 h-4 mr-2 text-gray-400" />
+                      {d}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <button
+              className="px-6 py-4 bg-dark-900 text-white font-bold rounded-2xl hover:bg-black shadow-md shadow-dark-900/20 transition-all flex items-center justify-center gap-2 outline-none disabled:opacity-50"
+              onClick={openNearbyModal}
+              disabled={modalOpen}
+            >
+              <MapPinIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="whitespace-nowrap">Find Nearest</span>
+            </button>
+
+            {manualNearbyMode && (
+              <button
+                className="px-6 py-4 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 outline-none whitespace-nowrap"
+                onClick={resetNearbyFilter}
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
+
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+          <h2 className="text-2xl font-heading font-black text-gray-900 flex items-center gap-3">
+            {genderFilter === "All"
+              ? isNearbyMode
+                ? "Recommended Salons Near You"
+                : userLocation
+                  ? "Salons (Sorted by Distance)"
+                  : "Discover Salons"
+              : `${genderFilter} Salons`}
+            {filteredSalons.length > 0 && (
+              <span className="text-sm font-medium bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                {filteredSalons.length}
+              </span>
+            )}
+            {locationLoading && (
+              <span className="text-sm font-normal text-primary-500 animate-pulse">Locating...</span>
+            )}
+          </h2>
+
+          <div className="bg-gray-100/80 p-1.5 rounded-2xl inline-flex flex-wrap shadow-inner overflow-x-auto max-w-full hide-scrollbar border border-gray-200/50">
+            {[
+              { type: "All", icon: "🌐" },
+              { type: "Male", icon: "👨" },
+              { type: "Female", icon: "👩" },
+              { type: "Unisex", icon: "🧑‍🤝‍🧑" },
+            ].map(({ type, icon }) => (
+              <button
+                key={type}
+                className={`flex-1 min-w-[80px] sm:min-w-0 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 focus:outline-none flex items-center justify-center gap-2 whitespace-nowrap ${genderFilter === type
+                  ? "bg-white text-gray-900 shadow-sm border border-gray-100/80 ring-1 ring-black/5"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                  }`}
+                onClick={() => {
+                  setGenderFilter(type);
+                  if (type === "All") {
+                    setIsNearbyMode(false);
+                    setManualNearbyMode(false);
+                  }
+                }}
+              >
+                <span className="opacity-80">{icon}</span> {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Salon Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+          {filteredSalons.length > 0 ? (
+            filteredSalons.map((salon) => (
+              <div
+                className="group flex flex-col bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-dark-900/10 transition-all duration-300 transform hover:-translate-y-1"
+                key={salon._id}
+              >
+                {/* Card Header/Image */}
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-gray-100">
+                  <img
+                    src={salon.image || fallbackImage}
+                    alt={salon.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+
+                  {user && !isGuest && (
+                    <button
+                      className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all shadow-sm focus:outline-none ${userFavorites.includes(salon._id)
+                        ? "bg-white text-red-500 shadow-red-500/20"
+                        : "bg-black/30 text-white hover:bg-white hover:text-gray-900"
+                        }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(salon._id);
+                      }}
+                    >
+                      {userFavorites.includes(salon._id) ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
+                    </button>
+                  )}
+
+                  {/* Badge */}
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-bold text-gray-900 uppercase tracking-widest rounded-full shadow-sm">
+                      {salon.salonType}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Card Body */}
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-primary-600 transition-colors line-clamp-1">{salon.name}</h4>
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                      <StarIconSolid className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="text-xs font-bold text-amber-700">{salon.avgRating || "New"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-3 line-clamp-1">
+                    <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{getCityFromLocation(salon.location)}</span>
+                  </div>
+
+                  {salon.distanceRaw !== null && (
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-primary-600 bg-primary-50 self-start px-2 py-1 rounded-md mb-4 border border-primary-100">
+                      <span>📍</span> {formatDistance(salon.distanceRaw)} away
+                    </div>
+                  )}
+
+                  <div className="mt-auto pt-4 border-t border-gray-100">
+                    <button
+                      className="w-full py-3 bg-gray-50 text-dark-900 font-bold rounded-xl border border-gray-200 hover:bg-dark-900 hover:text-white hover:border-dark-900 transition-all duration-300"
+                      onClick={() => navigate("/bookselectionpage", { state: { salon } })}
+                    >
+                      Select Salon
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-dashed border-gray-200">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <MagnifyingGlassIcon className="w-10 h-10 text-gray-300" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No salons found</h3>
+              <p className="text-gray-500 max-w-md mx-auto mb-6">
+                We couldn't find any {genderFilter === "All" ? "" : genderFilter.toLowerCase()} salons
+                matching your criteria {query && `in "${query}"`}.
+              </p>
+              {genderFilter !== "All" && (
+                <button
+                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-colors"
+                  onClick={() => setGenderFilter("All")}
+                >
+                  Clear Filters
+                </button>
               )}
             </div>
           )}
-        </nav>
-      </header>
-
-      {user && userLocation && !locationLoading && showLocationSuccess && (
-        <div
-          style={{
-            backgroundColor: "#E8F5E9",
-            padding: "10px 20px",
-            margin: "10px 20px",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "10px",
-            fontSize: "14px",
-            color: "#2E7D32",
-            border: "1px solid #A5D6A7",
-            animation: "slideDown 0.3s ease-out",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span>📍</span>
-            <span>Salons are sorted by distance from your current location</span>
-          </div>
-          <button
-            onClick={() => setShowLocationSuccess(false)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#2E7D32",
-              cursor: "pointer",
-              fontSize: "18px",
-              padding: "0 5px",
-            }}
-          >
-            ×
-          </button>
         </div>
-      )}
-
-      {user && locationError && (
-        <div
-          style={{
-            backgroundColor: "#FFF3E0",
-            padding: "10px 20px",
-            margin: "10px 20px",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            fontSize: "14px",
-            color: "#E65100",
-            border: "1px solid #FFB74D",
-          }}
-        >
-          <span>⚠️</span>
-          <span>{locationError}</span>
-          <button
-            onClick={getUserLocation}
-            style={{
-              marginLeft: "auto",
-              padding: "5px 15px",
-              backgroundColor: "#00AEEF",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-
-      <div className="search-bar">
-        <div className="location-search">
-          <input
-            type="text"
-            placeholder="Search location (e.g. Colombo)"
-            className="location-input"
-            value={query}
-            onChange={handleLocationInputChange}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            onFocus={() => setShowSuggestions(true)}
-            disabled={manualNearbyMode}
-          />
-          {showSuggestions && query && !manualNearbyMode && (
-            <ul className="suggestion-list">
-              {districtSuggestions
-                .filter((d) => d.toLowerCase().startsWith(query.toLowerCase()))
-                .map((d) => (
-                  <li
-                    key={d}
-                    onClick={() => {
-                      setQuery(d);
-                      setShowSuggestions(false);
-                      if (manualNearbyMode) {
-                        setManualNearbyMode(false);
-                        setIsNearbyMode(false);
-                        setNearbySalons([]);
-                      }
-                    }}
-                  >
-                    {d}
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-
-        <button
-          className="btn btn-nearby"
-          onClick={openNearbyModal}
-          disabled={modalOpen}
-        >
-          Find Nearest Salon
-        </button>
-
-        {manualNearbyMode && (
-          <button
-            className="btn btn-reset"
-            onClick={resetNearbyFilter}
-            title="Reset location filter"
-          >
-            ✕ Reset Nearby Filter
-          </button>
-        )}
-      </div>
-
-      <div className="gender-switch-container">
-        {[
-          { type: "All", icon: "🌐" },
-          { type: "Male", icon: "👨" },
-          { type: "Female", icon: "👩" },
-          { type: "Unisex", icon: "🧑‍🤝‍🧑" },
-        ].map(({ type, icon }) => (
-          <label
-            key={type}
-            className={`switch-option ${genderFilter === type ? "active" : ""}`}
-            onClick={() => {
-              setGenderFilter(type);
-              if (type === "All") {
-                setIsNearbyMode(false);
-                setManualNearbyMode(false);
-              }
-            }}
-          >
-            <span className="icon-label">{icon}</span> {type}
-          </label>
-        ))}
-      </div>
-
-      {genderFilter === "All" || !isNearbyMode ? (
-        <>
-          <h2 className="section-title">
-            {genderFilter === "All"
-              ? userLocation
-                ? "All Salons (Sorted by Distance)"
-                : "All Salons in Database"
-              : `${genderFilter} Salons`}
-            {filteredSalons.length > 0 && (
-              <span className="salon-count"> ({filteredSalons.length} found)</span>
-            )}
-            {locationLoading && (
-              <span style={{ fontSize: "14px", color: "#666", marginLeft: "10px" }}>
-                {" "}
-                (Getting your location...)
-              </span>
-            )}
-          </h2>
-
-          <div className="salon-grid">
-            {filteredSalons.length > 0 ? (
-              filteredSalons.map((salon) => (
-                <div className="salon-card" key={salon._id}>
-                  <div className="salon-card-header">
-                    <img
-                      src={salon.image || fallbackImage}
-                      alt={salon.name}
-                      className="salon-image"
-                    />
-                    {user && !isGuest && (
-                      <button
-                        className={`favorite-btn ${
-                          userFavorites.includes(salon._id) ? "favorited" : ""
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(salon._id);
-                        }}
-                      >
-                        {userFavorites.includes(salon._id) ? "❤️" : "🤍"}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="salon-info">
-                    <h4>{salon.name}</h4>
-                    <p>{getCityFromLocation(salon.location)}</p>
-
-                    {salon.distanceRaw !== null && (
-                      <p
-                        style={{
-                          color: "#00AEEF",
-                          fontWeight: "500",
-                          fontSize: "14px",
-                        }}
-                      >
-                        📍 {formatDistance(salon.distanceRaw)} away
-                      </p>
-                    )}
-
-                    <p>
-                      <strong>{salon.salonType}</strong> salon
-                    </p>
-
-                    <p className="rating-stars">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span key={i} className={i < salon.avgRating ? "" : "empty-star"}>
-                          ★
-                        </span>
-                      ))}
-                      <span> ({salon.avgRating})</span>
-                    </p>
-
-                    <button
-                      className="select-btn"
-                      onClick={() =>
-                        navigate("/bookselectionpage", { state: { salon } })
-                      }
-                    >
-                      Select
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-salons-message">
-                <p>
-                  No {genderFilter === "All" ? "" : genderFilter.toLowerCase()} salons
-                  found {query && `in ${query}`}
-                </p>
-                {genderFilter !== "All" && (
-                  <button
-                    className="btn btn-reset"
-                    onClick={() => setGenderFilter("All")}
-                  >
-                    Show All Salons
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <h2 className="section-title">
-            Recommended Salons Near You
-            {filteredSalons.length > 0 && (
-              <span className="salon-count"> ({filteredSalons.length} found)</span>
-            )}
-          </h2>
-
-          <div className="salon-grid">
-            {filteredSalons.length > 0 ? (
-              filteredSalons.map((salon) => (
-                <div className="salon-card" key={salon._id}>
-                  <div className="salon-card-header">
-                    <img
-                      src={salon.image || fallbackImage}
-                      alt={salon.name}
-                      className="salon-image"
-                    />
-                    {user && !isGuest && (
-                      <button
-                        className={`favorite-btn ${
-                          userFavorites.includes(salon._id) ? "favorited" : ""
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(salon._id);
-                        }}
-                      >
-                        {userFavorites.includes(salon._id) ? "❤️" : "🤍"}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="salon-info">
-                    <h4>{salon.name}</h4>
-                    <p>{getCityFromLocation(salon.location)}</p>
-
-                    {salon.distanceRaw !== null && (
-                      <p
-                        style={{
-                          color: "#00AEEF",
-                          fontWeight: "500",
-                          fontSize: "14px",
-                        }}
-                      >
-                        📍 {formatDistance(salon.distanceRaw)} away
-                      </p>
-                    )}
-
-                    <p>
-                      <strong>{salon.salonType}</strong> salon
-                    </p>
-
-                    <p className="rating-stars">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span key={i} className={i < salon.avgRating ? "" : "empty-star"}>
-                          ★
-                        </span>
-                      ))}
-                      <span> ({salon.avgRating})</span>
-                    </p>
-
-                    <button
-                      className="select-btn"
-                      onClick={() =>
-                        navigate("/bookselectionpage", { state: { salon } })
-                      }
-                    >
-                      Select
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-salons-message">
-                <p>
-                  No {genderFilter === "All" ? "" : genderFilter.toLowerCase()} salons
-                  found near your location
-                </p>
-                {genderFilter !== "All" && (
-                  <button
-                    className="btn btn-reset"
-                    onClick={() => setGenderFilter("All")}
-                  >
-                    Show All Nearby Salons
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      )}
+      </main>
 
       <LocationPickerModal
         isOpen={modalOpen}
@@ -1000,89 +929,38 @@ const SearchSalon = () => {
         onLocationSelect={handleLocationSelect}
       />
 
+      {/* Location Permission Modal */}
       {showLocationPrompt && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              padding: "30px",
-              maxWidth: "400px",
-              width: "90%",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-            }}
-          >
-            <div style={{ textAlign: "center", marginBottom: "20px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "10px" }}>📍</div>
-              <h3
-                style={{
-                  fontSize: "20px",
-                  fontWeight: "bold",
-                  marginBottom: "10px",
-                  color: "#333",
-                }}
-              >
-                Enable Location Services
-              </h3>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  lineHeight: "1.5",
-                }}
-              >
-                We'd like to show you salons near your location for a better
-                experience. Your location data is only used to sort salons by
-                distance.
-              </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-dark-900/60 backdrop-blur-sm" onClick={() => setShowLocationPrompt(false)}></div>
+
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative z-10 fade-in slide-up text-center">
+            <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MapPinIcon className="w-10 h-10 text-primary-600" />
             </div>
 
-            <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Enable Location
+            </h3>
+            <p className="text-gray-500 mb-8 leading-relaxed text-sm">
+              We'll use your location just to show you the best salons nearby.
+              Find the perfect place, closer to you.
+            </p>
+
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   setShowLocationPrompt(false);
                   getUserLocation();
                 }}
-                style={{
-                  backgroundColor: "#00AEEF",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "12px 20px",
-                  fontSize: "16px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
+                className="w-full py-3.5 bg-dark-900 hover:bg-black text-white font-bold rounded-xl shadow-md transition-all"
               >
-                Allow Location Access
+                Allow Access
               </button>
 
               <button
                 onClick={() => setShowLocationPrompt(false)}
-                style={{
-                  backgroundColor: "#f0f0f0",
-                  color: "#666",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "12px 20px",
-                  fontSize: "16px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                }}
+                className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-all"
               >
                 Maybe Later
               </button>
@@ -1090,6 +968,8 @@ const SearchSalon = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

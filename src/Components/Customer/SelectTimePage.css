@@ -260,7 +260,8 @@
 }
 
 .loader-dots {
-  display: flex; /* horizontal */
+  display: flex;
+  /* horizontal */
   gap: 10px;
 }
 
@@ -275,10 +276,10 @@
 .loader-dots div:nth-child(2) {
   animation-delay: 0.2s;
 }
-.loader-dots div:nth-child(3) {
-  animation-delay: 0.4s;
-}
 
+/* SelectTimePage.css - Deprecated.
+   Styles have been migrated to Tailwind CSS utility classes within SelectTimePage.js.
+*/
 .loader p {
   color: white;
   font-size: 1rem;
@@ -576,11 +577,11 @@
     gap: 12px;
   }
 
-  .SelectTimePage-card > div:first-child {
+  .SelectTimePage-card>div:first-child {
     width: 100%;
   }
 
-  .SelectTimePage-card > div:last-child {
+  .SelectTimePage-card>div:last-child {
     width: 100%;
     display: flex;
     justify-content: flex-start;
@@ -945,6 +946,7 @@
 
 /* Touch-friendly adjustments */
 @media (pointer: coarse) {
+
   .date-button,
   .SelectTimePage-card,
   .continue-button,
@@ -977,6 +979,7 @@
 
 /* For devices without hover capability */
 @media (hover: none) {
+
   .date-button:hover,
   .SelectTimePage-card:hover,
   .continue-button:hover,
@@ -995,6 +998,7 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   @media (max-width: 576px) {
+
     /* Keep light theme for now */
     .SelectTimePage-container {
       background: #f0f6fb;
@@ -1025,6 +1029,7 @@
 
 /* Improve readability on small screens */
 @media screen and (max-width: 576px) {
+
   /* Better text contrast */
   .SelectTimePage-card h4 {
     color: #1a2634;
@@ -1144,7 +1149,8 @@
     font-size: 14px;
   }
 
-  h2, h3 {
+  h2,
+  h3 {
     font-size: 1.2rem;
   }
 

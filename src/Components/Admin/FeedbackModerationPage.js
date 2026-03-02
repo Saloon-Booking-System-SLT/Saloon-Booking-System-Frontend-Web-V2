@@ -33,7 +33,7 @@ const FeedbackModerationPage = () => {
         
         setFeedbacks(transformedData);
       } catch (err) {
-        console.error('Failed to fetch feedbacks:', err);
+ console.error('Failed to fetch feedbacks:', err);
         setError('Failed to load feedbacks. Please try again.');
       } finally {
         setIsLoading(false);
@@ -77,7 +77,7 @@ const FeedbackModerationPage = () => {
         f._id === feedbackId ? { ...f, status: 'approved' } : f
       ));
     } catch (err) {
-      console.error('Failed to approve feedback:', err);
+ console.error('Failed to approve feedback:', err);
       alert('Failed to approve feedback. Please try again.');
     }
   };
@@ -90,7 +90,7 @@ const FeedbackModerationPage = () => {
         f._id === feedbackId ? { ...f, status: 'rejected' } : f
       ));
     } catch (err) {
-      console.error('Failed to reject feedback:', err);
+ console.error('Failed to reject feedback:', err);
       alert('Failed to reject feedback. Please try again.');
     }
   };

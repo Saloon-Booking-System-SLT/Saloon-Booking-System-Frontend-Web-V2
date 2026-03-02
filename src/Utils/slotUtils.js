@@ -15,7 +15,7 @@ export const minutesToTimeString = (minutes) => {
 export const durationToMinutes = (durationStr) => {
   // ✅ Add null/undefined check
   if (!durationStr || typeof durationStr !== 'string') {
-    console.warn('Invalid duration string:', durationStr);
+ console.warn('Invalid duration string:', durationStr);
     return 30; // Default to 30 minutes if duration is missing
   }
 
@@ -48,7 +48,7 @@ export const computeEndTime = (startTime, duration) => {
 export const filterMatchingSlots = (rawSlots, serviceDuration) => {
   // ✅ Add validation for serviceDuration
   if (!serviceDuration) {
-    console.warn('No service duration provided, using default 30 minutes');
+ console.warn('No service duration provided, using default 30 minutes');
     serviceDuration = "30 minutes";
   }
 

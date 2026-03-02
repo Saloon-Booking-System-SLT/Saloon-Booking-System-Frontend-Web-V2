@@ -95,7 +95,7 @@ const CustomerManagement = () => {
 
       setCustomers(customersArray);
     } catch (error) {
-      console.error('Failed to fetch customers:', error);
+ console.error('Failed to fetch customers:', error);
     } finally {
       setLoading(false);
     }
@@ -178,7 +178,7 @@ const CustomerManagement = () => {
     const note = prompt('Add a note for this customer:');
     if (note) {
       // Update customer with note
-      console.log('Note added:', note);
+ console.log('Note added:', note);
     }
   };
 
@@ -208,7 +208,7 @@ const CustomerManagement = () => {
         fetchCustomers();
       }
     } catch (error) {
-      console.error('Failed to add customer:', error);
+ console.error('Failed to add customer:', error);
       alert(error.response?.data?.message || 'Failed to add customer. Please try again.');
     }
   };

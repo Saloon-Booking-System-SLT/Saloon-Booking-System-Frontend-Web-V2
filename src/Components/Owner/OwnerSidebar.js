@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
+import {
   HomeIcon,
   CalendarDaysIcon,
   WrenchScrewdriverIcon,
@@ -70,7 +70,7 @@ const OwnerSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
     <>
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-white text-gray-700 border border-gray-200 rounded-lg shadow-sm"
         onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? (
@@ -82,7 +82,7 @@ const OwnerSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
 
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
         />
@@ -92,59 +92,49 @@ const OwnerSidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
       <div className={`
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 fixed lg:relative
-        w-64 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 
-        text-white min-h-screen flex flex-col shadow-2xl border-r border-slate-700 
+        w-64 bg-white 
+        min-h-screen flex flex-col border-r border-gray-200 
         transition-transform duration-300 ease-in-out z-40
       `}>
-      {/* Logo */}
-      <div className="p-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Brand Logo" className="h-10 w-auto" />
-          <div className="flex flex-col">
-            <span className="font-bold text-lg text-white">Owner</span>
-            <span className="text-xs text-slate-400">Dashboard</span>
+        {/* Logo */}
+        <div className="h-20 flex items-center justify-center border-b border-gray-100 px-6">
+          <div className="flex items-center justify-center w-full">
+            <img src={logo} alt="Brand Logo" className="h-10 w-auto" />
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-1">
-        {menuItems.map((item) => {
-          const IconComponent = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group ${
-                isActive(item.path)
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 transform scale-105'
-                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white hover:transform hover:scale-105'
-              }`}
-            >
-              <IconComponent className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
-              <span className="font-medium text-sm tracking-wide truncate">{item.title}</span>
-              {isActive(item.path) && (
-                <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-90 flex-shrink-0"></div>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-2">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleNavigation(item.path)}
+                className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 ${active
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+              >
+                <IconComponent className={`h-6 w-6 shrink-0 ${active ? 'text-primary-600' : 'text-gray-400'}`} />
+                <span className={`font-medium text-sm tracking-wide truncate ${active ? 'font-semibold' : ''}`}>{item.title}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Footer */}
-      <div className="border-t border-slate-700/50 p-3">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-red-600/20 hover:text-red-400 rounded-xl transition-all duration-300 group"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-          <span className="font-medium text-sm">Logout</span>
-        </button>
-        <p className="text-xs text-slate-500 text-center mt-3 opacity-75">
-          © 2024 Salon Owner
-        </p>
+        {/* Footer */}
+        <div className="border-t border-gray-100 p-3">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-3 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+          >
+            <ArrowRightOnRectangleIcon className="h-6 w-6 shrink-0" />
+            <span className="font-medium text-sm">Logout</span>
+          </button>
+        </div>
       </div>
-    </div>
     </>
   );
 };

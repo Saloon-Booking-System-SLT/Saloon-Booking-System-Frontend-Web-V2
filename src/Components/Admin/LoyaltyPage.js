@@ -39,7 +39,7 @@ const LoyaltyPage = () => {
         
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch loyalty data:', err);
+ console.error('Failed to fetch loyalty data:', err);
         setError('Failed to load loyalty data');
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ const LoyaltyPage = () => {
 
   // Handle global config save
   const handleSaveConfig = () => {
-    console.log('Saving global configuration:', globalConfig);
+ console.log('Saving global configuration:', globalConfig);
     alert(`Configuration saved!\nPoints Threshold: ${globalConfig.pointsThreshold}\nConversion Rate: ${globalConfig.conversionRate}`);
   };
 
@@ -70,7 +70,7 @@ const LoyaltyPage = () => {
       alert('Please enter both email and points amount');
       return;
     }
-    console.log(`Issuing ${issuePoints} points to ${issueEmail}`);
+ console.log(`Issuing ${issuePoints} points to ${issueEmail}`);
     alert(`Successfully issued ${issuePoints} points to ${issueEmail}`);
     setIssueEmail('');
     setIssuePoints('');
@@ -82,7 +82,7 @@ const LoyaltyPage = () => {
       alert('Please enter both email and points amount');
       return;
     }
-    console.log(`Revoking ${revokePoints} points from ${revokeEmail}`);
+ console.log(`Revoking ${revokePoints} points from ${revokeEmail}`);
     alert(`Successfully revoked ${revokePoints} points from ${revokeEmail}`);
     setRevokeEmail('');
     setRevokePoints('');

@@ -5,9 +5,9 @@ import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./FamilyBookingSelectTime.css";
 import { filterMatchingSlots } from "../../Utils/slotUtils";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ?
-  process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
-  'http://localhost:5000';
+import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const SelectTimePage = () => {
   const location = useLocation();
@@ -28,7 +28,7 @@ const SelectTimePage = () => {
   const initialBookedAppointments = useMemo(() => {
     const fromState = location.state?.bookedAppointments;
     if (fromState && Array.isArray(fromState) && fromState.length > 0) {
-      console.log("✅ Loaded appointments from location state:", fromState.length);
+      console.log(" Loaded appointments from location state:", fromState.length);
       return fromState;
     }
 
@@ -37,7 +37,7 @@ const SelectTimePage = () => {
       try {
         const parsed = JSON.parse(fromStorage);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          console.log("✅ Loaded appointments from localStorage:", parsed.length);
+          console.log(" Loaded appointments from localStorage:", parsed.length);
           return parsed;
         }
       } catch (e) {
@@ -305,7 +305,7 @@ const SelectTimePage = () => {
         professionalId: currentAppointment.professionalId
       };
 
-      console.log("🔄 Sending reschedule request:", {
+      console.log(" Sending reschedule request:", {
         appointmentId: rescheduleAppointment._id,
         data: rescheduleData
       });
@@ -319,7 +319,7 @@ const SelectTimePage = () => {
       });
 
       const result = await response.json();
-      console.log("📥 Reschedule API response:", result);
+      console.log(" Reschedule API response:", result);
 
       if (result.success) {
         alert("✅ Appointment rescheduled successfully!");
@@ -328,7 +328,7 @@ const SelectTimePage = () => {
         throw new Error(result.message || "Reschedule failed");
       }
     } catch (err) {
-      console.error("❌ Reschedule failed:", err);
+      console.error(" Reschedule failed:", err);
       alert(`❌ Reschedule failed: ${err.message}`);
     } finally {
       setLoading(false);
@@ -353,8 +353,8 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
 
-      console.log("💾 Saving appointment:", currentAppointment);
-      console.log("📊 Total booked after save:", updatedBookedAppointments.length);
+      console.log(" Saving appointment:", currentAppointment);
+      console.log(" Total booked after save:", updatedBookedAppointments.length);
 
       setBookedAppointments(updatedBookedAppointments);
 
@@ -374,8 +374,8 @@ const SelectTimePage = () => {
       const currentAppointment = getCurrentAppointmentData();
       const finalBookedAppointments = [...bookedAppointments, currentAppointment];
 
-      console.log("💾 Adding final appointment:", currentAppointment);
-      console.log("📊 Final total appointments:", finalBookedAppointments.length);
+      console.log(" Adding final appointment:", currentAppointment);
+      console.log(" Final total appointments:", finalBookedAppointments.length);
 
       setBookedAppointments(finalBookedAppointments);
       localStorage.setItem('bookedAppointments', JSON.stringify(finalBookedAppointments));
@@ -437,7 +437,7 @@ const SelectTimePage = () => {
       user: user
     };
 
-    console.log("✅ Navigating to confirmation with data:", {
+    console.log(" Navigating to confirmation with data:", {
       totalAmount,
       appointmentCount: appointments.length,
       isGroupBooking
@@ -588,7 +588,7 @@ const SelectTimePage = () => {
       <div className="right-column">
         <div className="summary-box">
           <img
-            src={salon?.image ? (salon.image.startsWith("http") ? salon.image : `${API_BASE_URL}/uploads/${salon.image}`) : "https://picsum.photos/150/150?random=5"}
+            src={salon?.image ? getSalonImageUrl(salon.image) : "https://picsum.photos/150/150?random=5"}
             alt="Salon"
             className="salon-image"
           />

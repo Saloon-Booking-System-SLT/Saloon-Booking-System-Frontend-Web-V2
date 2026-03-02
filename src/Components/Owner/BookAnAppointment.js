@@ -105,41 +105,41 @@ const BookAnAppointment = () => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("userRole");
       
-      console.log("🔍 Initializing booking...");
-      console.log("Token exists:", !!token);
-      console.log("User role:", role);
-      console.log("Salon from state:", salonFromState);
+ console.log(" Initializing booking...");
+ console.log("Token exists:", !!token);
+ console.log("User role:", role);
+ console.log("Salon from state:", salonFromState);
       
       // Debug localStorage
-      console.log("📦 Full localStorage check:");
-      console.log("  - token:", token ? "exists" : "missing");
-      console.log("  - userRole:", role || "NULL/MISSING");
-      console.log("  - userEmail:", localStorage.getItem("userEmail") || "NULL");
-      console.log("  - userName:", localStorage.getItem("userName") || "NULL");
+ console.log(" Full localStorage check:");
+ console.log(" - token:", token ? "exists" : "missing");
+ console.log(" - userRole:", role || "NULL/MISSING");
+ console.log(" - userEmail:", localStorage.getItem("userEmail") || "NULL");
+ console.log(" - userName:", localStorage.getItem("userName") || "NULL");
       
       if (token && role === "owner") {
         // Owner mode - fetch their salon
-        console.log("👤 Owner mode detected");
+ console.log(" Owner mode detected");
         setIsOwnerMode(true);
         setUserRole("owner");
         await fetchOwnerSalon(token);
       } else if (token && !role) {
         // Token exists but role is missing - this is the bug!
-        console.error("⚠️ CRITICAL: Token exists but userRole is missing!");
-        console.error("⚠️ This means login didn't save the role properly");
-        console.error("⚠️ Please check your login component and save role to localStorage");
+ console.error("️ CRITICAL: Token exists but userRole is missing!");
+ console.error("️ This means login didn't save the role properly");
+ console.error("️ Please check your login component and save role to localStorage");
         setError("Session error. Please login again to continue.");
         setIsLoading(false);
       } else if (salonFromState) {
         // Customer/Guest mode with salon selected
-        console.log("🛍️ Customer mode with salon");
+ console.log("️ Customer mode with salon");
         setIsOwnerMode(false);
         setUserRole(token && role === "customer" ? "customer" : "guest");
         setSalon(salonFromState);
         await fetchServicesForSalon(salonFromState._id);
       } else {
         // No salon available
-        console.log("❌ No salon available");
+ console.log(" No salon available");
         setIsOwnerMode(false);
         setUserRole(token && role === "customer" ? "customer" : "guest");
         setError("Please select a salon first");
@@ -157,8 +157,8 @@ const BookAnAppointment = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log("📡 Fetching owner's salon...");
-      console.log("API URL:", `${API_BASE_URL}/api/salons/owner/my-salon`);
+ console.log(" Fetching owner's salon...");
+ console.log("API URL:", `${API_BASE_URL}/api/salons/owner/my-salon`);
       
       // Fetch owner's salon using the correct endpoint
       const response = await fetch(`${API_BASE_URL}/api/salons/owner/my-salon`, {
@@ -168,10 +168,10 @@ const BookAnAppointment = () => {
         }
       });
       
-      console.log("Response status:", response.status);
+ console.log("Response status:", response.status);
       
       if (response.status === 401 || response.status === 403) {
-        console.log("❌ Unauthorized - clearing session");
+ console.log(" Unauthorized - clearing session");
         localStorage.removeItem("token");
         localStorage.removeItem("userRole");
         localStorage.removeItem("userEmail");
@@ -186,7 +186,7 @@ const BookAnAppointment = () => {
       }
       
       const data = await response.json();
-      console.log("✅ Owner salon data:", data);
+ console.log(" Owner salon data:", data);
       
       if (!data || data.message?.includes("No salon found")) {
         setError("No salon found for your account. Please contact admin.");
@@ -221,12 +221,12 @@ const BookAnAppointment = () => {
         coordinates: data.coordinates
       };
       
-      console.log("🏢 Salon data prepared:", salonData);
+ console.log(" Salon data prepared:", salonData);
       setSalon(salonData);
       await fetchServicesForSalon(salonData._id);
       
     } catch (error) {
-      console.error("❌ Error fetching owner salon:", error);
+ console.error(" Error fetching owner salon:", error);
       setError("Failed to load salon information. Please try again.");
       setIsLoading(false);
     }
@@ -235,7 +235,7 @@ const BookAnAppointment = () => {
   // Function to fetch services for a salon
   const fetchServicesForSalon = async (salonId) => {
     if (!salonId) {
-      console.log("❌ No salon ID provided");
+ console.log(" No salon ID provided");
       setIsLoading(false);
       setError("Invalid salon ID");
       return;
@@ -243,7 +243,7 @@ const BookAnAppointment = () => {
     
     try {
       setIsLoading(true);
-      console.log("📡 Fetching services for salon ID:", salonId);
+ console.log(" Fetching services for salon ID:", salonId);
       
       const response = await fetch(`${API_BASE_URL}/api/services/${salonId}`);
       
@@ -252,7 +252,7 @@ const BookAnAppointment = () => {
       }
       
       const data = await response.json();
-      console.log("✅ Services data received:", data);
+ console.log(" Services data received:", data);
       
       if (!Array.isArray(data)) {
         throw new Error("Invalid response format");
@@ -264,7 +264,7 @@ const BookAnAppointment = () => {
       setIsLoading(false);
       
     } catch (err) {
-      console.error("❌ Failed to load services", err);
+ console.error(" Failed to load services", err);
       setError("Failed to load services. Please try again.");
       setIsLoading(false);
       setServices([]);
@@ -328,7 +328,7 @@ const BookAnAppointment = () => {
       return;
     }
     
-    console.log("✅ Continuing with:", {
+ console.log(" Continuing with:", {
       salon: salon.name,
       services: selectedServices.length,
       customer: customerName,

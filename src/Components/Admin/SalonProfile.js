@@ -52,7 +52,7 @@ const SalonProfile = () => {
           setProfile(prev => ({ ...prev, ...parsed }));
         }
       } catch (err) {
-        console.error('Error loading salon data:', err);
+ console.error('Error loading salon data:', err);
       }
     };
 
@@ -136,7 +136,7 @@ const SalonProfile = () => {
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
-      console.error('Error saving profile:', err);
+ console.error('Error saving profile:', err);
       setError(err.response?.data?.message || err.message || 'Failed to save profile');
     } finally {
       setSaving(false);

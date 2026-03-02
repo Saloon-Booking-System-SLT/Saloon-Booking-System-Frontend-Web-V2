@@ -77,7 +77,7 @@ const CheckoutForm = () => {
       const amountInLKR = totalAmount;
       const amountInUSDCents = Math.max(50, Math.round((amountInLKR * 100) / 200));
       
-      console.log('💰 Payment Details:', {
+ console.log(' Payment Details:', {
         originalAmountLKR: amountInLKR,
         amountUSDCents: amountInUSDCents,
         isGroupBooking: isGroupBooking,
@@ -96,7 +96,7 @@ const CheckoutForm = () => {
       });
       });
 
-      console.log('✅ Payment intent response:', response.data);
+ console.log(' Payment intent response:', response.data);
 
       if (!response.data.client_secret) {
         const errorMsg = response.data.error || response.data.details || 'Payment failed to initialize';
@@ -113,7 +113,7 @@ const CheckoutForm = () => {
         throw new Error('No client secret received from server');
       }
 
-      console.log('🔐 Confirming payment with Stripe...');
+ console.log(' Confirming payment with Stripe...');
       
       // Step 2: Confirm payment with Stripe
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
@@ -130,17 +130,17 @@ const CheckoutForm = () => {
       );
 
       if (stripeError) {
-        console.error('❌ Stripe error:', stripeError);
+ console.error(' Stripe error:', stripeError);
         throw new Error(stripeError.message || 'Payment failed');
       }
 
-      console.log('✅ Payment successful! Payment Intent:', paymentIntent.id);
+ console.log(' Payment successful! Payment Intent:', paymentIntent.id);
       
       // Step 3: Create appointment and clear data
       await handleAppointmentCreation(paymentIntent.id); // FIXED: use paymentIntent.id
       
     } catch (err) {
-      console.error('❌ Payment error:', err);
+ console.error(' Payment error:', err);
       setError(err.message || 'Payment failed. Please try again.');
     } finally {
       setProcessing(false);
@@ -185,11 +185,11 @@ const CheckoutForm = () => {
         if (isGroupBooking && appointments && appointments.length > 0) {
           // Group booking with multiple appointments
           bookingData.appointments = appointments;
-          console.log(`📤 Creating ${appointments.length} group appointments`);
+ console.log(` Creating ${appointments.length} group appointments`);
         } else if (appointmentDetails) {
           // Single booking with appointmentDetails
           bookingData.appointments = [appointmentDetails];
-          console.log('📤 Creating single appointment');
+ console.log(' Creating single appointment');
         } else if (services.length > 0) {
           // Fallback: create from services array
           bookingData.appointments = services.map(service => ({
@@ -204,12 +204,12 @@ const CheckoutForm = () => {
             startTime: '10:00',
             endTime: '11:00'
           }));
-          console.log(`📤 Creating ${services.length} appointments from services`);
+ console.log(` Creating ${services.length} appointments from services`);
         } else {
           throw new Error('No appointment data provided');
         }
 
-        console.log('📤 Sending booking data to backend:', bookingData);
+ console.log(' Sending booking data to backend:', bookingData);
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/appointments`, {
           method: "POST",
@@ -234,7 +234,7 @@ const CheckoutForm = () => {
         }
       }
     } catch (error) {
-      console.error('Appointment creation error:', error);
+ console.error('Appointment creation error:', error);
       setError('Payment successful but failed to create appointment. Please contact support.');
     }
   };
@@ -253,7 +253,7 @@ const CheckoutForm = () => {
     
     itemsToClear.forEach(item => localStorage.removeItem(item));
     
-    console.log('✅ Cleared all booking data after successful payment');
+ console.log(' Cleared all booking data after successful payment');
   };
 
   // Get display service name for summary

@@ -1,30 +1,4 @@
-/* AdminDashboard.css - Minimal custom styles only */
-
-/* Chart specific styles that Tailwind doesn't cover */
-.summary-chart {
-  width: 100%;
-  min-height: 350px;
-}
-
-.chart-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 16px;
-}
-
-/* Loading spinner animation */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.fa-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Ensure tables are responsive */
-.overflow-x-auto {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
+/* 
+  DEPRECATED: This file is no longer used.
+  All styles for AdminDashboard have been refactored to use Tailwind CSS utility classes directly in AdminDashboard.js.
+*/

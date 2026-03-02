@@ -1,13 +1,24 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "../../Api/axios";
-import logo from "../../Assets/logo.png";
 import maleIcon from "../../Assets/man.png";
 import femaleIcon from "../../Assets/feee.png";
-import "./SalonProfessionals.css";
+import OwnerSidebar from './OwnerSidebar';
+import OwnerHeader from './OwnerHeader';
+import {
+  UsersIcon,
+  UserPlusIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+  DocumentCheckIcon,
+  ClockIcon,
+  FunnelIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { UPLOADS_URL } from "../../config/api";
 
-const SalonProfessionalsV2 = () => {
-  const navigate = useNavigate();
+const SalonProfessionals = () => {
   const salon = JSON.parse(localStorage.getItem("salonUser"));
 
   const [professionals, setProfessionals] = useState([]);
@@ -17,6 +28,7 @@ const SalonProfessionalsV2 = () => {
 
   const [genderFilter, setGenderFilter] = useState("All");
   const [availabilityFilter, setAvailabilityFilter] = useState("All");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -66,46 +78,6 @@ const SalonProfessionalsV2 = () => {
     setEditingProfessional(null);
   };
 
-  const Sidebar = () => {
-    return (
-      <aside className="modern-sidebar">
-        <img src={logo} alt="Brand Logo" className="modern-logo" />
-
-        <i
-          className="fas fa-home"
-          title="Home"
-          onClick={() => navigate("/dashboard")}
-        ></i>
-        <i
-          className="fas fa-calendar-alt"
-          title="Calendar"
-          onClick={() => navigate("/calendar")}
-        ></i>
-        <i
-          className="fas fa-cut"
-          title="Services"
-          onClick={() => navigate("/services")}
-        ></i>
-        <i
-          className="fas fa-comment"
-          title="Feedbacks"
-          onClick={() => navigate("/feedbacks")}
-        ></i>
-        <i className="fas fa-users active" title="Professionals"></i>
-        <i
-          className="fas fa-calendar-check"
-          title="Book An Appointment"
-          onClick={() => navigate("/book-appointment")}
-        ></i>
-        <i
-          className="fas fa-clock"
-          title="Time Slots"
-          onClick={() => navigate("/timeslots")}
-        ></i>
-      </aside>
-    );
-  };
-
   const fetchProfessionals = useCallback(async () => {
     const salonId = salon?.id || salon?._id;
 
@@ -140,13 +112,11 @@ const SalonProfessionalsV2 = () => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
-      // Reset icon/upload when gender changes
-      if (name === "gender") {
+      if (name === "gender" && prev.gender !== value) {
         updated.selectedIcon = "";
         setFileImage(null);
       }
 
-      // Clear uploaded file when switching back to icon mode
       if (name === "imageType" && value === "icon") {
         setFileImage(null);
       }
@@ -247,7 +217,7 @@ const SalonProfessionalsV2 = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete?")) return;
+    if (!window.confirm("Delete this professional?")) return;
 
     try {
       await axios.delete(`/professionals/${id}`);
@@ -281,10 +251,21 @@ const SalonProfessionalsV2 = () => {
     }
 
     if (pro.image) {
-      if (typeof pro.image === "string" && pro.image.startsWith("data:image")) {
-        return pro.image;
+      if (typeof pro.image === "string") {
+        if (pro.image.startsWith("data:image") || pro.image.startsWith("http")) {
+          return pro.image;
+        }
+
+        // If it's a long string, it's most likely base64
+        if (pro.image.length > 200) {
+          return `data:image/jpeg;base64,${pro.image}`;
+        }
+
+        // Otherwise treat as a path
+        const normalizedPath = pro.image.replace(/\\/g, '/');
+        const finalPath = normalizedPath.includes('/') ? normalizedPath : `professionals/${normalizedPath}`;
+        return `${UPLOADS_URL}/${finalPath}`;
       }
-      return `data:image/jpeg;base64,${pro.image}`;
     }
 
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -309,464 +290,426 @@ const SalonProfessionalsV2 = () => {
   ).length;
 
   return (
-    <div className="pro-v2-container">
-      <Sidebar />
+    <div className="flex min-h-screen bg-gray-50 font-sans">
+      <OwnerSidebar
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
 
-      <div className="pro-v2-main">
-        <header className="pro-v2-header">
-          <div className="pro-v2-header-content">
-            <h1 className="pro-v2-header-title">Salon Professionals</h1>
-            <div className="pro-v2-header-decoration"></div>
-          </div>
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-0 overflow-hidden">
+        <OwnerHeader />
 
-          <button
-            className="pro-v2-add-btn"
-            onClick={() => {
-              resetForm();
-              setShowPopup(true);
-            }}
-          >
-            Add Professional
-          </button>
-        </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto w-full max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-600 rounded-l-2xl"></div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <UsersIcon className="w-7 h-7 text-primary-600" />
+                Salon Professionals
+              </h1>
+              <p className="text-gray-500 mt-1 ml-10">Manage your barbers, stylists, and staff.</p>
+            </div>
 
-        <div className="pro-v2-stats">
-          <div className="pro-v2-stat-card">
-            <div className="pro-v2-stat-icon total">
-              <i className="fas fa-users"></i>
-            </div>
-            <div className="pro-v2-stat-copy">
-              <span className="pro-v2-stat-label">Total Professionals</span>
-              <span className="pro-v2-stat-value">{totalProfessionals}</span>
-            </div>
-          </div>
-
-          <div className="pro-v2-stat-card">
-            <div className="pro-v2-stat-icon male">
-              <i className="fas fa-mars"></i>
-            </div>
-            <div className="pro-v2-stat-copy">
-              <span className="pro-v2-stat-label">Male Specialists</span>
-              <span className="pro-v2-stat-value">{maleCount}</span>
-            </div>
-          </div>
-
-          <div className="pro-v2-stat-card">
-            <div className="pro-v2-stat-icon female">
-              <i className="fas fa-venus"></i>
-            </div>
-            <div className="pro-v2-stat-copy">
-              <span className="pro-v2-stat-label">Female Specialists</span>
-              <span className="pro-v2-stat-value">{femaleCount}</span>
-            </div>
-          </div>
-
-          <div className="pro-v2-stat-card">
-            <div className="pro-v2-stat-icon both">
-              <i className="fas fa-user-friends"></i>
-            </div>
-            <div className="pro-v2-stat-copy">
-              <span className="pro-v2-stat-label">Serving Both</span>
-              <span className="pro-v2-stat-value">{bothAvailabilityCount}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="filter-section">
-          <h3>Filters</h3>
-          <div className="filter-controls">
-            <select
-              value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
+            <button
+              onClick={() => {
+                resetForm();
+                setShowPopup(true);
+              }}
+              className="btn-primary py-2.5 px-5 whitespace-nowrap flex items-center gap-2"
             >
-              <option value="All">Filter by Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-
-            <select
-              value={availabilityFilter}
-              onChange={(e) => setAvailabilityFilter(e.target.value)}
-            >
-              <option value="All">Filter by Service Availability</option>
-              <option value="Male">Male Only</option>
-              <option value="Female">Female Only</option>
-              <option value="Both">Both</option>
-            </select>
+              <UserPlusIcon className="w-5 h-5" />
+              Add Professional
+            </button>
           </div>
-        </div>
 
-        {error && <div className="error-banner">{error}</div>}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
+                <UsersIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Total</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-gray-900 leading-none">{totalProfessionals}</span>
+                </div>
+              </div>
+            </div>
 
-        <div className="pro-v2-grid">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <UserIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Male Specialists</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-gray-900 leading-none">{maleCount}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+                <UserIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Female Specialists</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-gray-900 leading-none">{femaleCount}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <UsersIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Serving Both</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-black text-gray-900 leading-none">{bothAvailabilityCount}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-400 to-primary-600"></div>
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 pl-2">
+              <FunnelIcon className="w-5 h-5 text-gray-400" />
+              Filter Professionals
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <select
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium text-gray-700 min-w-[160px]"
+              >
+                <option value="All">All Genders</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+
+              <select
+                value={availabilityFilter}
+                onChange={(e) => setAvailabilityFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium text-gray-700 min-w-[160px]"
+              >
+                <option value="All">All Service Availability</option>
+                <option value="Male">Male Only</option>
+                <option value="Female">Female Only</option>
+                <option value="Both">Both</option>
+              </select>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 flex items-center gap-3">
+              <XMarkIcon className="w-5 h-5 text-red-500" />
+              <p className="font-medium text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Professionals Grid */}
           {loading ? (
-            <div className="pro-v2-card skeleton">Loading professionals...</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-pulse h-64"></div>
+              ))}
+            </div>
           ) : filteredProfessionals.length === 0 ? (
-            <div className="pro-v2-card empty">No professionals found.</div>
+            <div className="flex flex-col justify-center items-center h-64 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <UsersIcon className="w-8 h-8 text-gray-300" />
+              </div>
+              <p className="text-gray-500 font-medium">No professionals found.</p>
+              <button onClick={() => setShowPopup(true)} className="mt-4 text-primary-600 font-bold hover:text-primary-700">
+                + Add New Professional
+              </button>
+            </div>
           ) : (
-            filteredProfessionals.map((pro) => {
-              const genderBadgeClass =
-                pro.gender === "Male"
-                  ? "badge-male"
-                  : pro.gender === "Female"
-                  ? "badge-female"
-                  : "badge-muted";
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProfessionals.map((pro) => (
+                <div key={pro._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group flex flex-col h-full">
+                  <div className="p-6 flex-1 flex flex-col relative">
+                    <div className="absolute top-4 right-4 bg-gray-50 px-2 py-1 rounded-full flex items-center gap-1 border border-gray-100">
+                      <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-xs font-bold text-gray-700">4.8</span>
+                    </div>
 
-              const genderIconClass =
-                pro.gender === "Male"
-                  ? "fa-mars"
-                  : pro.gender === "Female"
-                  ? "fa-venus"
-                  : "fa-user";
-
-              const genderLabel = pro.gender || "Not specified";
-              const serviceLabel = pro.service || "Service not set";
-              const availabilityLabel = pro.serviceAvailability || "Not set";
-
-              return (
-                <div key={pro._id} className="pro-v2-card-enhanced">
-                  <div className="pro-v2-card-header">
-                    <div className="pro-v2-professional-avatar">
-                      <div className="pro-v2-avatar-container">
+                    <div className="flex flex-col items-center mb-5 text-center px-4">
+                      <div className="relative mb-3">
                         <img
                           src={getProfessionalImage(pro)}
                           alt={pro.name}
-                          className="pro-v2-avatar"
+                          className="w-24 h-24 rounded-full object-cover bg-gray-50 shadow-sm border-4 border-white"
                         />
-                        <div className="pro-v2-status-indicator active"></div>
+                        <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm"></div>
                       </div>
 
-                      <div className="pro-v2-rating-badge">
-                        <i className="fas fa-star"></i>
-                        <span>4.8</span>
-                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1">{pro.name}</h3>
+                      <p className="text-sm font-medium text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full inline-block mt-1">
+                        {pro.service || "Service not set"} Specialist
+                      </p>
                     </div>
 
-                    <div className="pro-v2-header-info">
-                      <h3 className="pro-v2-name">{pro.name}</h3>
-                      <div className="pro-v2-title-row">
-                        <span className="pro-v2-primary-service">
-                          <i className="fas fa-scissors"></i>
-                          {serviceLabel} Specialist
+                    <div className="space-y-3 mb-5 flex-1 bg-gray-50/70 p-4 rounded-xl border border-gray-100">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 flex items-center gap-1.5 font-medium">
+                          <UserIcon className="w-4 h-4 text-gray-400" /> Gender
+                        </span>
+                        <span className={`font-bold px-2 py-0.5 rounded-md ${pro.gender === "Male" ? "bg-blue-100 text-blue-800" :
+                          pro.gender === "Female" ? "bg-pink-100 text-pink-800" :
+                            "bg-gray-200 text-gray-800"
+                          }`}>
+                          {pro.gender || "Not specified"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 flex items-center gap-1.5 font-medium">
+                          <UsersIcon className="w-4 h-4 text-gray-400" /> Serves
+                        </span>
+                        <span className="font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                          {pro.serviceAvailability || "Both"}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="pro-v2-professional-details">
-                    <div className="pro-v2-detail-section">
-                      <div className="pro-v2-detail-row">
-                        <div className="pro-v2-detail-item">
-                          <i
-                            className={`fas ${genderIconClass} pro-v2-detail-icon`}
-                          ></i>
-                          <div className="pro-v2-detail-content">
-                            <span className="pro-v2-detail-label">Gender</span>
-                            <span
-                              className={`pro-v2-detail-value ${genderBadgeClass}`}
-                            >
-                              {genderLabel}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="pro-v2-detail-item">
-                          <i className="fas fa-users pro-v2-detail-icon"></i>
-                          <div className="pro-v2-detail-content">
-                            <span className="pro-v2-detail-label">Serves</span>
-                            <span className="pro-v2-detail-value badge-availability">
-                              {availabilityLabel}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pro-v2-certification-section">
+                    {/* Certificate Status */}
+                    <div className="mt-auto">
                       {pro.certificate ? (
-                        <div
-                          className="pro-v2-cert-verified"
+                        <button
                           onClick={() => handleViewCertificate(pro.certificate)}
+                          className="w-full flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-colors text-left group/cert"
                         >
-                          <div className="pro-v2-cert-icon">
-                            <i className="fas fa-certificate"></i>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-white p-1.5 rounded-lg shadow-sm group-hover/cert:scale-105 transition-transform">
+                              <DocumentCheckIcon className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-emerald-900 leading-tight">Verified Professional</p>
+                              <p className="text-xs text-emerald-700">Certificate Available</p>
+                            </div>
                           </div>
-                          <div className="pro-v2-cert-info">
-                            <span className="pro-v2-cert-title">
-                              Verified Professional
-                            </span>
-                            <span className="pro-v2-cert-subtitle">
-                              Certificate available
-                            </span>
-                          </div>
-                          <i className="fas fa-external-link-alt pro-v2-cert-link"></i>
-                        </div>
+                        </button>
                       ) : (
-                        <div className="pro-v2-cert-pending">
-                          <div className="pro-v2-cert-icon">
-                            <i className="fas fa-clock"></i>
+                        <div className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/80">
+                          <div className="bg-white p-1.5 rounded-lg shadow-sm">
+                            <ClockIcon className="w-5 h-5 text-gray-400" />
                           </div>
-                          <div className="pro-v2-cert-info">
-                            <span className="pro-v2-cert-title">
-                              Pending Verification
-                            </span>
-                            <span className="pro-v2-cert-subtitle">
-                              Certificate not uploaded
-                            </span>
+                          <div>
+                            <p className="text-sm font-bold text-gray-700 leading-tight">Pending Verification</p>
+                            <p className="text-xs text-gray-500">No certificate uploaded</p>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="pro-v2-card-footer">
-                    <div className="pro-v2-quick-stats">
-                      <div className="pro-v2-stat">
-                        <i className="fas fa-thumbs-up"></i>
-                        <span>98% Rating</span>
-                      </div>
-                      <div className="pro-v2-stat">
-                        <i className="fas fa-clock"></i>
-                        <span>Available</span>
-                      </div>
-                    </div>
-
-                    <div className="pro-v2-actions">
-                      <button
-                        className="pro-v2-action-btn pro-v2-edit-btn"
-                        onClick={() => handleEdit(pro)}
-                      >
-                        <i className="fas fa-edit"></i>
-                        Edit
-                      </button>
-                      <button
-                        className="pro-v2-action-btn pro-v2-delete-btn"
-                        onClick={() => handleDelete(pro._id)}
-                      >
-                        <i className="fas fa-trash-alt"></i>
-                        Remove
-                      </button>
-                    </div>
+                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex gap-3">
+                    <button
+                      onClick={() => handleEdit(pro)}
+                      className="flex-1 flex justify-center items-center gap-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
+                    >
+                      <PencilSquareIcon className="w-4 h-4" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(pro._id)}
+                      className="flex-1 flex justify-center items-center gap-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm"
+                    >
+                      <TrashIcon className="w-4 h-4" /> Remove
+                    </button>
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           )}
-        </div>
+        </main>
       </div>
 
+      {/* Add/Edit Modal */}
       {showPopup && (
-        <div className="pro-v2-popup-overlay">
-          <div className="pro-v2-popup">
-            <div className="pro-v2-popup-header">
-              <h2>{editingProfessional ? "Edit Professional" : "Add Professional"}</h2>
-              <p className="pro-v2-popup-subtitle">
-                Keep your salon roster vibrant by sharing a few quick details.
-              </p>
+        <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in overflow-y-auto" onClick={() => { setShowPopup(false); resetForm(); }}>
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden relative my-8 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            {/* Header Background */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-800 p-6 text-white relative shrink-0">
+              <button
+                className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+                onClick={() => { setShowPopup(false); resetForm(); }}
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+              <h2 className="text-2xl font-bold mb-1">{editingProfessional ? "Edit Professional" : "Add Professional"}</h2>
+              <p className="text-primary-100 text-sm opacity-90">Keep your salon roster vibrant by sharing a few quick details.</p>
             </div>
 
-            <div className="pro-v2-form-grid">
-              <div className="pro-v2-field">
-                <label htmlFor="pro-name">Professional Name</label>
-                <input
-                  id="pro-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInput}
-                  placeholder="E.g. Alex Perera"
-                />
-              </div>
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                <div className="col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Professional Name</label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInput}
+                    placeholder="E.g. Alex Perera"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 transition-all placeholder-gray-400"
+                  />
+                </div>
 
-              <div className="pro-v2-field">
-                <label htmlFor="pro-service">Primary Service</label>
-                <input
-                  id="pro-service"
-                  name="service"
-                  value={formData.service}
-                  onChange={handleInput}
-                  placeholder="E.g. Hair Coloring"
-                />
-              </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Primary Service</label>
+                  <input
+                    name="service"
+                    value={formData.service}
+                    onChange={handleInput}
+                    placeholder="E.g. Hair Coloring"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 transition-all placeholder-gray-400"
+                  />
+                </div>
 
-              <div className="pro-v2-field">
-                <label htmlFor="pro-availability">Service Availability</label>
-                <select
-                  id="pro-availability"
-                  name="serviceAvailability"
-                  value={formData.serviceAvailability}
-                  onChange={handleInput}
-                >
-                  <option value="Male">Male Only</option>
-                  <option value="Female">Female Only</option>
-                  <option value="Both">Both</option>
-                </select>
-              </div>
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Service Availability</label>
+                  <select
+                    name="serviceAvailability"
+                    value={formData.serviceAvailability}
+                    onChange={handleInput}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                  >
+                    <option value="Male">Male Only</option>
+                    <option value="Female">Female Only</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
 
-              <div className="pro-v2-field pro-v2-field--full">
-                <div className="gender-icon-section">
-                  <span className="pro-v2-section-title">Select Gender</span>
-                  <div className="gender-options">
-                    <label
-                      className={`gender-card ${
-                        formData.gender === "Male" ? "selected" : ""
-                      }`}
-                    >
+                <div className="col-span-1 md:col-span-2 mt-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Select Gender</label>
+                  <div className="flex gap-4">
+                    <label className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.gender === "Male" ? "border-primary-500 bg-primary-50" : "border-gray-100 bg-white hover:border-primary-200"
+                      }`}>
                       <input
                         type="radio"
                         name="gender"
                         value="Male"
                         checked={formData.gender === "Male"}
                         onChange={handleInput}
+                        className="hidden"
                       />
-                      <img src={maleIcon} alt="Male" className="gender-icon" />
-                      <span>Male</span>
+                      <img src={maleIcon} alt="Male" className="w-12 h-12" />
+                      <span className="font-bold text-sm text-gray-700">Male</span>
                     </label>
 
-                    <label
-                      className={`gender-card ${
-                        formData.gender === "Female" ? "selected" : ""
-                      }`}
-                    >
+                    <label className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.gender === "Female" ? "border-primary-500 bg-primary-50" : "border-gray-100 bg-white hover:border-primary-200"
+                      }`}>
                       <input
                         type="radio"
                         name="gender"
                         value="Female"
                         checked={formData.gender === "Female"}
                         onChange={handleInput}
+                        className="hidden"
                       />
-                      <img src={femaleIcon} alt="Female" className="gender-icon" />
-                      <span>Female</span>
+                      <img src={femaleIcon} alt="Female" className="w-12 h-12 flex-shrink-0" />
+                      <span className="font-bold text-sm text-gray-700">Female</span>
                     </label>
                   </div>
                 </div>
-              </div>
 
-              <div className="pro-v2-field pro-v2-field--full">
-                <div className="image-selection-type">
-                  <label>Choose Image Type:</label>
-                  <div className="radio-group">
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="imageType"
-                        value="icon"
-                        checked={formData.imageType === "icon"}
-                        onChange={handleInput}
-                      />
-                      <span>Select Gender Icon</span>
-                    </label>
+                {formData.gender && (
+                  <div className="col-span-1 md:col-span-2 mt-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Choose Image Type</label>
+                    <div className="flex gap-4 mb-4">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          value="icon"
+                          checked={formData.imageType === "icon"}
+                          onChange={handleInput}
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        Select Generated Icon
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          value="upload"
+                          checked={formData.imageType === "upload"}
+                          onChange={handleInput}
+                          className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        Upload Custom Image
+                      </label>
+                    </div>
 
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="imageType"
-                        value="upload"
-                        checked={formData.imageType === "upload"}
-                        onChange={handleInput}
-                      />
-                      <span>Upload Custom Image</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pro-v2-field pro-v2-field--full">
-                {formData.imageType === "icon" ? (
-                  <div className="icon-selection">
-                    {formData.gender ? (
-                      <>
-                        <label>Select a {formData.gender} Icon:</label>
-                        <div className="icon-grid">
-                          {genderIcons[formData.gender]?.map((iconUrl, index) => (
+                    {formData.imageType === "icon" && Array.isArray(genderIcons[formData.gender]) ? (
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Select a {formData.gender} Icon</label>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                          {genderIcons[formData.gender].map((iconUrl, index) => (
                             <div
                               key={index}
-                              className={`icon-option ${
-                                formData.selectedIcon === iconUrl ? "selected" : ""
-                              }`}
-                              onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  selectedIcon: iconUrl,
-                                }))
-                              }
+                              onClick={() => setFormData((prev) => ({ ...prev, selectedIcon: iconUrl }))}
+                              className={`relative aspect-square rounded-xl cursor-pointer overflow-hidden border-2 transition-all ${formData.selectedIcon === iconUrl ? "border-primary-500 shadow-md ring-2 ring-primary-200" : "border-transparent hover:border-gray-300"
+                                }`}
                             >
-                              <img
-                                src={iconUrl}
-                                alt={`${formData.gender} icon ${index + 1}`}
-                              />
+                              <img src={iconUrl} alt={`Avatar option ${index + 1}`} className="w-full h-full object-cover bg-white" />
                               {formData.selectedIcon === iconUrl && (
-                                <div className="icon-check">
-                                  <i className="fas fa-check-circle"></i>
+                                <div className="absolute top-1 right-1 bg-primary-500 text-white rounded-full p-0.5">
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                 </div>
                               )}
                             </div>
                           ))}
                         </div>
-                      </>
-                    ) : (
-                      <p className="info-text">
-                        <i className="fas fa-info-circle"></i>
-                        Please select a gender first to see icon options
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="upload-section">
-                    <label htmlFor="pro-image">Upload Custom Image</label>
-                    <input
-                      id="pro-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setFileImage(e.target.files[0])}
-                    />
-                    {fileImage && (
-                      <div className="file-preview">
-                        <i className="fas fa-image"></i>
-                        <p>{fileImage.name}</p>
                       </div>
-                    )}
+                    ) : formData.imageType === "upload" ? (
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 border-dashed">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Upload Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setFileImage(e.target.files[0])}
+                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
+                        />
+                        {fileImage && <p className="mt-2 text-sm text-gray-600 font-medium truncate">Selected: {fileImage.name}</p>}
+                      </div>
+                    ) : null}
                   </div>
                 )}
-              </div>
 
-              <div className="pro-v2-field pro-v2-field--full">
-                <label htmlFor="pro-certificate">Upload Certificate (optional)</label>
-                <div className="pro-v2-file-input">
-                  <input
-                    id="pro-certificate"
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={(e) => setFileCertificate(e.target.files[0])}
-                  />
-                  {fileCertificate && (
-                    <div className="file-preview">
-                      <i className="fas fa-file-pdf"></i>
-                      <p>{fileCertificate.name}</p>
-                    </div>
-                  )}
-                  <span className="pro-v2-field-note">
-                    Certificates build client trust and highlight professional
-                    expertise.
-                  </span>
+                <div className="col-span-1 md:col-span-2 mt-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Upload Certificate <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 border-dashed">
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => setFileCertificate(e.target.files[0])}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 cursor-pointer"
+                    />
+                    {fileCertificate && <p className="mt-2 text-sm text-gray-600 font-medium truncate">Selected: {fileCertificate.name}</p>}
+                    <p className="mt-2 text-xs text-gray-500 italic">Certificates build client trust and highlight expertise. PDF files only.</p>
+                  </div>
                 </div>
+
               </div>
             </div>
 
-            <div className="pro-v2-popup-actions">
-              <button className="pro-v2-save-btn" onClick={handleAddOrUpdate}>
-                <i className="fas fa-save"></i>
-                {editingProfessional ? "Update" : "Add"} Professional
-              </button>
-
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end shrink-0">
               <button
-                className="pro-v2-cancel-btn"
-                onClick={() => {
-                  setShowPopup(false);
-                  resetForm();
-                }}
+                className="px-5 py-2.5 rounded-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                onClick={() => { setShowPopup(false); resetForm(); }}
               >
-                <i className="fas fa-times"></i>
                 Cancel
+              </button>
+              <button
+                className="btn-primary py-2.5 px-6"
+                onClick={handleAddOrUpdate}
+              >
+                {editingProfessional ? "Save Changes" : "Create Professional"}
               </button>
             </div>
           </div>
@@ -776,4 +719,4 @@ const SalonProfessionalsV2 = () => {
   );
 };
 
-export default SalonProfessionalsV2;
+export default SalonProfessionals;

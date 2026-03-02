@@ -1,55 +1,21 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "../../Api/axios";
-import logo from "../../Assets/logo.png";
-import "./OwnerFeedbackPage.css";
+import OwnerSidebar from './OwnerSidebar';
+import OwnerHeader from './OwnerHeader';
+import {
+  ChatBubbleLeftRightIcon,
+  StarIcon as StarIconOutline,
+  UserCircleIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 
 const OwnerFeedbackPage = () => {
-  const navigate = useNavigate();
   const salon = JSON.parse(localStorage.getItem("salonUser"));
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const didFetch = useRef(false);
-
-  const Sidebar = () => {
-    return (
-      <aside className="modern-sidebar">
-        <img src={logo} alt="Brand Logo" className="modern-logo" />
-        <i
-          className="fas fa-home"
-          title="Home"
-          onClick={() => navigate("/dashboard")}
-        ></i>
-        <i
-          className="fas fa-calendar-alt"
-          title="Calendar"
-          onClick={() => navigate("/calendar")}
-        ></i>
-        <i
-          className="fas fa-cut"
-          title="Services"
-          onClick={() => navigate("/services")}
-        ></i>
-        <i className="fas fa-comment-alt active" title="Feedbacks"></i>
-        <i
-          className="fas fa-users"
-          title="Professionals"
-          onClick={() => navigate("/professionals")}
-        ></i>
-        <i
-          className="fas fa-calendar-check"
-          title="Book An Appointment"
-          onClick={() => navigate("/book-appointment")}
-        ></i>
-        <i
-          className="fas fa-clock"
-          title="Time Slots"
-          onClick={() => navigate("/timeslots")}
-        ></i>
-      </aside>
-    );
-  };
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchProfessionalsWithFeedbacks = useCallback(async () => {
     try {
@@ -65,7 +31,7 @@ const OwnerFeedbackPage = () => {
       setProfessionals(res.data || []);
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch professionals with feedbacks", err);
+ console.error("Failed to fetch professionals with feedbacks", err);
       setError("Failed to load feedbacks. Please try again.");
       setLoading(false);
     }
@@ -92,118 +58,144 @@ const OwnerFeedbackPage = () => {
 
   const getRatingColor = (rating) => {
     const numericRating = Number(rating);
-    if (numericRating >= 4) return "#27ae60";
-    if (numericRating >= 3) return "#f39c12";
-    return "#e74c3c";
+    if (numericRating >= 4.0) return "text-emerald-500 bg-emerald-50 border-emerald-200";
+    if (numericRating >= 3.0) return "text-amber-500 bg-amber-50 border-amber-200";
+    return "text-red-500 bg-red-50 border-red-200";
+  };
+
+  const getRatingStars = (rating) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          star <= rating ?
+            <StarIconSolid key={star} className="w-4 h-4 text-amber-400" /> :
+            <StarIconOutline key={star} className="w-4 h-4 text-gray-300" />
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="calendar-container">
-      <Sidebar />
+    <div className="flex min-h-screen bg-gray-50 font-sans">
+      <OwnerSidebar
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
 
-      <div className="main-content">
-        <header className="header">
-          <div className="header-content">
-            <h1 className="header-title">Customer Feedbacks</h1>
-            <div className="header-decoration"></div>
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-0 overflow-hidden">
+        <OwnerHeader />
+
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto w-full max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-600 rounded-l-2xl"></div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <ChatBubbleLeftRightIcon className="w-7 h-7 text-primary-600" />
+                Customer Feedbacks
+              </h1>
+              <p className="text-gray-500 mt-1 ml-10">Monitor reviews and ratings for your professionals.</p>
+            </div>
           </div>
-        </header>
 
-        <div className="services-body">
           {error && (
-            <div
-              className="empty-state"
-              style={{ color: "#b91c1c", background: "#fee2e2" }}
-            >
-              {error}
+            <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 flex items-center gap-3">
+              <p className="font-medium text-sm">{error}</p>
             </div>
           )}
 
           {loading ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p>Loading feedbacks...</p>
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-500 font-medium">Loading feedbacks...</p>
             </div>
           ) : professionals.length === 0 ? (
-            <div className="empty-state">
-              <i className="fas fa-comments"></i>
-              <h3>No Professionals Found</h3>
-              <p>Start by adding professionals to your salon team.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <ChatBubbleLeftRightIcon className="w-8 h-8 text-gray-300" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Professionals Found</h3>
+              <p className="text-gray-500 max-w-md">You don't have any professionals listed yet, or there are no feedbacks available.</p>
             </div>
           ) : (
-            professionals.map((pro) => {
-              const feedbacks = pro.feedbacks || [];
-              const avgRating = getAverageRating(feedbacks);
-              const ratingColor = getRatingColor(avgRating);
+            <div className="space-y-6">
+              {professionals.map((pro) => {
+                const feedbacks = pro.feedbacks || [];
+                const avgRating = getAverageRating(feedbacks);
+                const ratingStatusClasses = getRatingColor(avgRating);
 
-              return (
-                <div key={pro._id} className="professional-feedback-section">
-                  <div className="professional-header">
-                    <div className="professional-info">
-                      <h3 className="professional-name">{pro.name}</h3>
-                      <span className="professional-role">{pro.role}</span>
-                    </div>
-
-                    <div
-                      className="rating-summary"
-                      style={{ borderLeftColor: ratingColor }}
-                    >
-                      <div className="avg-rating" style={{ color: ratingColor }}>
-                        {Number(avgRating) > 0 ? `⭐ ${avgRating}/5` : "No ratings"}
+                return (
+                  <div key={pro._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    {/* Professional Header */}
+                    <div className="p-5 md:p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">{pro.name}</h3>
+                        <span className="text-sm font-medium text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full">
+                          {pro.role || pro.service || "Professional"}
+                        </span>
                       </div>
-                      <div className="review-count">
-                        {feedbacks.length} {feedbacks.length === 1 ? "review" : "reviews"}
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="feedbacks-grid">
-                    {feedbacks.length === 0 ? (
-                      <div className="no-feedback-card">
-                        <i className="fas fa-comment-slash"></i>
-                        <p>No feedback received yet</p>
-                      </div>
-                    ) : (
-                      feedbacks.map((fb) => (
-                        <div key={fb._id} className="feedback-card">
-                          <div className="feedback-header">
-                            <div className="user-info">
-                              <div className="user-avatar">
-                                <i className="fas fa-user"></i>
-                              </div>
-                              <div className="user-details">
-                                <strong className="user-email">{fb.userEmail}</strong>
-                                <span className="feedback-date">
-                                  {new Date(fb.createdAt).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="rating-stars">
-                              {"★".repeat(fb.rating)}
-                              {"☆".repeat(5 - fb.rating)}
-                              <span className="rating-number">({fb.rating})</span>
-                            </div>
-                          </div>
-
-                          <div className="feedback-comment">
-                            {fb.comment || (
-                              <span className="no-comment">(No comment provided)</span>
-                            )}
-                          </div>
+                      <div className={`flex flex-col items-end px-4 py-2 rounded-xl border ${ratingStatusClasses}`}>
+                        <div className="text-xl font-black mb-0.5">
+                          {Number(avgRating) > 0 ? (
+                            <span className="flex items-center gap-1.5">
+                              {avgRating} <StarIconSolid className="w-5 h-5 text-amber-400" />
+                            </span>
+                          ) : "No ratings"}
                         </div>
-                      ))
-                    )}
+                        <div className="text-xs font-bold uppercase tracking-wider opacity-80">
+                          {feedbacks.length} {feedbacks.length === 1 ? "review" : "reviews"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Feedbacks Grid */}
+                    <div className="p-5 md:p-6 bg-white">
+                      {feedbacks.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500 font-medium italic">No feedback received for this professional yet.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {feedbacks.map((fb) => (
+                            <div key={fb._id} className="bg-white border text-left border-gray-100 rounded-xl p-5 hover:border-gray-300 hover:shadow-md transition-all">
+                              <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                    <UserCircleIcon className="w-8 h-8" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                                      {fb.userEmail ? fb.userEmail.split('@')[0] : 'Customer'}
+                                    </h4>
+                                    <span className="text-xs font-medium text-gray-500">
+                                      {new Date(fb.createdAt).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="bg-amber-50 px-2 py-1 rounded-lg">
+                                  {getRatingStars(fb.rating)}
+                                </div>
+                              </div>
+
+                              <p className="text-gray-600 text-sm leading-relaxed">
+                                "{fb.comment || <span className="text-gray-400 italic">No written detail was provided for this rating.</span>}"
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

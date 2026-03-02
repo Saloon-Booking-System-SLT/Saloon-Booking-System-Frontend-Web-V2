@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SelectServicesPage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL.replace(/\/api$/, "")
-  : "https://saloon-booking-system-backend-v2.onrender.com";
+import { API_URL, getProfessionalImageUrl, getSalonImageUrl } from "../../Utils/apiConfig";
+
+const API_BASE_URL = API_URL;
 
 const SelectProfessionalPage = () => {
   const location = useLocation();
@@ -17,7 +17,7 @@ const SelectProfessionalPage = () => {
   const [reviews, setReviews] = useState({});
 
   // ⭐ NEW STATES FOR REVIEWS
-  
+
   const [viewReviewsPro, setViewReviewsPro] = useState(null);
   const [selectedProReviews, setSelectedProReviews] = useState([]);
 
@@ -26,14 +26,14 @@ const SelectProfessionalPage = () => {
 
 
 
-    
+
     // ⚡ Use optimized endpoint - gets professionals with ratings in ONE call
     fetch(`${API_BASE_URL}/api/professionals/${salon._id}/with-ratings`)
 
       .then((res) => res.json())
       .then((data) => {
         setProfessionals(data);
-        
+
         // Build reviews object from the data (feedbacks already included)
         const reviewsObj = {};
         data.forEach(pro => {
@@ -145,11 +145,10 @@ const SelectProfessionalPage = () => {
             <h4 style={{ marginTop: "10px" }}>For: {selectedServices[0].name}</h4>
             <div className="select-services-list">
               <div
-                className={`select-services-card ${
-                  serviceProfessionals[selectedServices[0].name]?._id === "any"
+                className={`select-services-card ${serviceProfessionals[selectedServices[0].name]?._id === "any"
                     ? "selected"
                     : ""
-                }`}
+                  }`}
                 onClick={() =>
                   setServiceProfessionals({
                     [selectedServices[0].name]: { name: "Any Professional", _id: "any" },
@@ -169,17 +168,15 @@ const SelectProfessionalPage = () => {
                 const proReviews = reviews[pro._id] || [];
                 const avgRating = getAverageRating(pro._id);
                 const reviewCount = proReviews.length;
-                
+
 
                 return (
                   <div
                     key={pro._id}
-                    className={`select-services-card ${
-
-                      serviceProfessionals[selectedServices[0].name]?._id === pro._id
+                    className={`select-services-card ${serviceProfessionals[selectedServices[0].name]?._id === pro._id
                         ? "selected"
                         : ""
-                    }`}
+                      }`}
                   >
                     <div
                       className="professional-info"
@@ -208,9 +205,8 @@ const SelectProfessionalPage = () => {
                         {/* ⭐ Rating text */}
                         <p style={{ fontSize: "13px", color: "#555" }}>
                           {reviewCount > 0
-                            ? `⭐ ${avgRating} (${reviewCount} review${
-                                reviewCount !== 1 ? "s" : ""
-                              })`
+                            ? `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? "s" : ""
+                            })`
                             : "No reviews yet"}
                         </p>
                       </div>
@@ -354,13 +350,12 @@ const SelectProfessionalPage = () => {
               {professionals.map((pro) => {
                 const avgRating = getAverageRating(pro._id);
                 const reviewCount = getReviewCount(pro._id);
-                
+
                 return (
                   <div
                     key={pro._id}
-                    className={`service-card ${
-                      serviceProfessionals[popupService.name]?._id === pro._id ? "selected" : ""
-                    }`}
+                    className={`service-card ${serviceProfessionals[popupService.name]?._id === pro._id ? "selected" : ""
+                      }`}
                     onClick={() => handleSelectProForService(popupService.name, pro)}
                   >
                     <div className="professional-info">
