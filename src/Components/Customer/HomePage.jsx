@@ -13,9 +13,26 @@ import {
   XMarkIcon
 } from "@heroicons/react/24/outline";
 import salonLogo from "../../Assets/salonlogo.png";
-import heroBg from "../../Assets/hero-image.jpg";
 import { useAuth } from "../../contexts/AuthContext";
 import Footer from "../Shared/Footer";
+
+// Banner Images
+const BANNER_IMAGES = [
+  "/banner/Banner1.jpg",
+  "/banner/Banner2.jpg",
+  "/banner/Banner3.jpg",
+  "/banner/Banner4.jpg",
+  "/banner/Banner5.jpg"
+];
+
+// Elegant carousel typography pairings
+const BANNER_CONTENT = [
+  { title: "Tap into Beauty & Wellness", subtitle: "Your journey to self-care starts here. Book premium appointments instantly.", tag: "Discover Your Glow" },
+  { title: "Elevate Your Style", subtitle: "Expert stylists and modern techniques tailored specifically for your lifestyle.", tag: "Signature Looks" },
+  { title: "Unwind & Destress", subtitle: "Immerse yourself in deeply relaxing spa treatments designed to rejuvenate your soul.", tag: "Serene Escapes" },
+  { title: "Precision & Care", subtitle: "Experience world-class nail care, aesthetics, and grooming by verified professionals.", tag: "Flawless Execution" },
+  { title: "Luxury at Your Fingertips", subtitle: "Seamlessly browse, book, and pay for your favorite salon services all in one place.", tag: "Modern Convenience" }
+];
 
 const Home = () => {
   const { user: authUser, logout, firebaseUser } = useAuth();
@@ -25,7 +42,16 @@ const Home = () => {
   const [isGuest, setIsGuest] = useState(false);
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
+
+  // Carousel Auto-Play Effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev === BANNER_IMAGES.length - 1 ? 0 : prev + 1));
+    }, 5000); // 5 seconds per slide
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const guestUser = localStorage.getItem("guestUser");
@@ -85,15 +111,23 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50">
-      {/* Hero Section with Navigation */}
-      <div
-        className="relative bg-dark-900 min-h-[500px] lg:min-h-[600px] xl:min-h-[700px] flex flex-col"
-        style={{
-          backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6)), url(${heroBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
+      {/* Hero Section with Navigation and Slider */}
+      <div className="relative bg-dark-900 min-h-[500px] lg:min-h-[600px] xl:min-h-[700px] flex flex-col overflow-hidden">
+
+        {/* Animated Background Slider */}
+        {BANNER_IMAGES.map((img, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-[2000ms] ease-in-out ${index === currentSlide ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-slate-900/40 z-10" />
+            <img
+              src={img}
+              alt={`Salon Banner ${index + 1}`}
+              className="w-full h-full object-cover object-center transform scale-105 animate-[kenburns_20s_ease-out_infinite]"
+            />
+          </div>
+        ))}
         {/* Navigation Bar */}
         <header className="px-6 py-4 flex items-center justify-between border-b border-white/10 z-20">
           <div
@@ -209,17 +243,29 @@ const Home = () => {
         </header>
 
         {/* Hero Content */}
-        <main className="flex-grow flex items-center justify-center px-6 py-20 lg:py-32 relative z-10 text-center">
-          <div className="max-w-4xl mx-auto flex flex-col items-center slide-up">
-            <span className="text-primary-300 font-semibold tracking-wider uppercase text-sm mb-4">Discover Your Glow</span>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight font-heading">
-              Tap into Beauty <br className="hidden sm:block" />& Wellness
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-2xl font-light">
-              Your journey to self-care starts here. Book premium appointments at top-rated salons and spas instantly.
-            </p>
+        <main className="flex-grow flex items-center justify-center px-4 sm:px-6 py-20 lg:py-32 relative z-10 text-center w-full overflow-hidden">
+          <div className="w-full max-w-7xl mx-auto flex flex-col items-center">
 
-            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center px-4 sm:px-0">
+            <div className="relative h-[250px] sm:h-[300px] md:h-[350px] w-full flex flex-col items-center justify-center">
+              {BANNER_CONTENT.map((content, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ease-in-out transform w-full px-2 sm:px-8 ${index === currentSlide ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-24 scale-90 pointer-events-none'}`}
+                >
+                  <span className="text-primary-300 font-extrabold tracking-[0.25em] uppercase text-xs sm:text-base mb-4 sm:mb-6 drop-shadow-[0_2px_4px_rgba(0,0,0,1)] z-10">
+                    {content.tag}
+                  </span>
+                  <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black text-white mb-6 leading-[1.1] font-heading drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] text-center w-full max-w-6xl z-10">
+                    {content.title}
+                  </h1>
+                  <p className="text-lg sm:text-xl md:text-2xl text-gray-50 mb-8 max-w-4xl font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] text-center w-full leading-relaxed z-10">
+                    {content.subtitle}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center px-4 sm:px-0 mt-4 md:mt-8 relative z-20">
               <button
                 className="btn-primary py-4 px-8 text-lg w-full sm:w-auto shadow-primary-600/30 font-semibold"
                 onClick={() => {
@@ -232,13 +278,25 @@ const Home = () => {
               >
                 Find a Salon
               </button>
-              <button className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 py-4 px-8 text-lg w-full sm:w-auto rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5">
+              <button className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 py-4 px-8 text-lg w-full sm:w-auto rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-xl">
                 <DevicePhoneMobileIcon className="w-5 h-5 opacity-80" />
                 Download App
               </button>
             </div>
           </div>
         </main>
+
+        {/* Carousel Indicators */}
+        <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-3">
+          {BANNER_IMAGES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`transition-all duration-300 rounded-full ${index === currentSlide ? 'w-8 h-2.5 bg-primary-500 shadow-[0_0_10px_rgba(var(--color-primary-500),0.5)]' : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'}`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Features Spotlight */}

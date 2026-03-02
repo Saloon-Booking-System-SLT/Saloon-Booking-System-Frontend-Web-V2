@@ -36,6 +36,15 @@ module.exports = {
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.5rem',
+      },
+      keyframes: {
+        kenburns: {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.05)' },
+        }
+      },
+      animation: {
+        kenburns: 'kenburns 20s ease-out infinite',
       }
     },
   },

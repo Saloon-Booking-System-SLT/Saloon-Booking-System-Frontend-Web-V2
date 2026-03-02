@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Fragment } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Dialog, Transition } from '@headlessui/react';
 import {
   CalendarDaysIcon,
@@ -10,10 +10,11 @@ import {
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
-  XMarkIcon
+  XMarkIcon,
+  PhoneIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import Footer from '../Shared/Footer';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -22,12 +23,14 @@ const Profile = () => {
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     gender: "",
+    profilePicture: null
   });
 
   useEffect(() => {
@@ -42,6 +45,7 @@ const Profile = () => {
         email: parsed.email || "",
         phone: parsed.phone || "",
         gender: parsed.gender || "",
+        profilePicture: null
       });
       fetchFavorites();
     }
@@ -68,7 +72,7 @@ const Profile = () => {
         setFavorites(data.favorites);
       }
     } catch (err) {
- console.error("Error fetching favorites:", err);
+      console.error("Error fetching favorites:", err);
     } finally {
       setFavoritesLoading(false);
     }
@@ -91,37 +95,71 @@ const Profile = () => {
         setFavorites(favorites.filter(salon => salon._id !== salonId));
       }
     } catch (err) {
- console.error("Error removing favorite:", err);
+      console.error("Error removing favorite:", err);
     }
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === 'profilePicture') {
+      setFormData({ ...formData, profilePicture: e.target.files[0] });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
   const handleUpdateProfile = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('email', formData.email);
+      data.append('phone', formData.phone);
+      data.append('gender', formData.gender);
+      if (formData.profilePicture) {
+        data.append('image', formData.profilePicture);
+      }
+
+      const token = localStorage.getItem("token");
+      const userId = user.id || user._id;
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: data,
       });
 
       if (res.ok) {
         const updated = await res.json();
-        localStorage.setItem("user", JSON.stringify(updated));
-        setUser(updated);
+        const userData = updated.user || updated; // Fallback in case backend behavior changes
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
         setEditPopup(false);
       } else {
-        alert("Failed to update profile.");
+        const errorText = await res.text();
+        console.error("Profile update failed:", errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          alert(`Failed to update profile: ${errorJson.message || 'Unknown error'}`);
+        } catch (e) {
+          alert(`Failed to update profile: ${errorText}`);
+        }
       }
     } catch (err) {
-      alert("Update failed");
+      console.error("Update exception:", err);
+      alert(`Update failed: ${err.message}`);
     }
   };
 
   // Switch tabs
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "profile");
+
+  // In case location state changes while already on the page
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -133,15 +171,9 @@ const Profile = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
 
       {/* Sidebar matching searchsalon.js */}
-      <aside className="w-full md:w-72 bg-white border-r border-gray-100 flex-shrink-0 flex flex-col z-20 sticky top-0 md:h-screen">
-        <div className="p-8 border-b border-gray-100">
-          <div
-            className="text-3xl font-black text-dark-900 tracking-tighter cursor-pointer select-none"
-            onClick={() => navigate("/")}
-          >
-
-          </div>
-          <div className="mt-6 flex items-center gap-3">
+      <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-100 flex-shrink-0 flex flex-col z-20 md:sticky md:top-0 md:h-screen">
+        <div className="p-4 md:p-8 border-b border-gray-100 flex items-center justify-between md:block">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-inner overflow-hidden">
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -151,44 +183,54 @@ const Profile = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-gray-900 leading-tight block">{user?.name || "User"}</span>
-              <span className="text-xs text-gray-500">{user?.email || "Customer"}</span>
+              <span className="text-xs text-gray-500 hidden md:block">{user?.email || "Customer"}</span>
             </div>
           </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              navigate("/login");
+            }}
+            className="md:hidden p-2 text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors"
+            title="Log out"
+          >
+            <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
+        <div className="w-full overflow-x-auto md:overflow-y-auto py-3 md:py-6 px-4 flex flex-row md:flex-col gap-2 scrollbar-none">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "profile" || activeTab === "address"
+            className={`flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === "profile" || activeTab === "address"
               ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
           >
-            <UserCircleIcon className="w-5 h-5" />
+            <UserCircleIcon className="w-5 h-5 shrink-0" />
             Profile & Settings
           </button>
 
           <button
             onClick={() => navigate("/appointments")}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold"
+            className="flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold whitespace-nowrap shrink-0"
           >
-            <CalendarDaysIcon className="w-5 h-5" />
+            <CalendarDaysIcon className="w-5 h-5 shrink-0" />
             Appointments
           </button>
 
           <button
             onClick={() => setActiveTab("favorites")}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "favorites"
+            className={`flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === "favorites"
               ? "bg-dark-900 text-white shadow-md shadow-dark-900/10"
               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
           >
-            <HeartIconOutline className="w-5 h-5" />
+            <HeartIconOutline className="w-5 h-5 shrink-0" />
             Favorites
           </button>
         </div>
 
-        <div className="p-4 border-t border-gray-100 mt-auto">
+        <div className="p-4 border-t border-gray-100 mt-auto hidden md:block">
           <button
             onClick={() => {
               localStorage.removeItem("user");
@@ -196,7 +238,7 @@ const Profile = () => {
             }}
             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-bold"
           >
-            <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+            <ArrowLeftOnRectangleIcon className="w-5 h-5 shrink-0" />
             Log out
           </button>
         </div>
@@ -252,7 +294,7 @@ const Profile = () => {
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
-                            <span className="text-gray-400">📱</span>
+                            <PhoneIcon className="w-5 h-5 text-gray-400" />
                           </div>
                           <div>
                             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Number</div>
@@ -262,7 +304,7 @@ const Profile = () => {
 
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
-                            <span className="text-gray-400">👤</span>
+                            <UserIcon className="w-5 h-5 text-gray-400" />
                           </div>
                           <div>
                             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gender</div>
@@ -434,6 +476,16 @@ const Profile = () => {
 
                   <div className="space-y-4">
                     <div>
+                      <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Profile Picture</label>
+                      <input
+                        type="file"
+                        name="profilePicture"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-dark-900 focus:border-transparent outline-none transition-all font-medium text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-dark-900 file:text-white hover:file:bg-black"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
                       <input
                         type="text"
@@ -527,14 +579,21 @@ const AddAddressPopup = ({ isOpen, close, user, setUser }) => {
     const updated = { ...user, address: [...(user.address || []), { type, text }] };
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${user._id}`, {
+      const token = localStorage.getItem("token");
+      const userId = user.id || user._id;
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(updated),
       });
       const data = await res.json();
-      localStorage.setItem("user", JSON.stringify(data));
-      setUser(data);
+      const userData = data.user || data;
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
       close();
       setText(""); // reset
     } catch (err) {
@@ -624,8 +683,6 @@ const AddAddressPopup = ({ isOpen, close, user, setUser }) => {
           </div>
         </div>
       </Dialog>
-
-      <Footer />
     </Transition>
   );
 };

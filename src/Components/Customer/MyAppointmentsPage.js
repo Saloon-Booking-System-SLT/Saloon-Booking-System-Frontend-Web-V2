@@ -10,11 +10,11 @@ import {
   ScissorsIcon,
   CheckBadgeIcon,
   XCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  HeartIcon as HeartIconOutline
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
-import Footer from '../Shared/Footer';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ?
   process.env.REACT_APP_API_URL.replace(/\/api$/, '') :
@@ -43,7 +43,7 @@ const MyAppointmentsPage = () => {
 
       return hoursDifference <= 24 && hoursDifference > 0;
     } catch (error) {
- console.error("Error checking time:", error);
+      console.error("Error checking time:", error);
       return false;
     }
   };
@@ -58,7 +58,7 @@ const MyAppointmentsPage = () => {
 
       return appointmentDateTime < now;
     } catch (error) {
- console.error("Error checking if appointment is past:", error);
+      console.error("Error checking if appointment is past:", error);
       return false;
     }
   };
@@ -90,7 +90,7 @@ const MyAppointmentsPage = () => {
 
         setAppointments(activeAppointments);
       } catch (err) {
- console.error("Failed to fetch appointments", err);
+        console.error("Failed to fetch appointments", err);
       }
     };
 
@@ -250,43 +250,59 @@ const MyAppointmentsPage = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
 
       {/* Sidebar matching searchsalon.js */}
-      <aside className="w-full md:w-72 bg-white border-r border-gray-100 flex-shrink-0 flex flex-col z-20 sticky top-0 md:h-screen">
-        <div className="p-8 border-b border-gray-100">
-          <div
-            className="text-3xl font-black text-dark-900 tracking-tighter cursor-pointer select-none"
-            onClick={() => navigate("/", { replace: true })}
-          >
-
-          </div>
-          <div className="mt-6 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-inner">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+      <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-100 flex-shrink-0 flex flex-col z-20 md:sticky md:top-0 md:h-screen">
+        <div className="p-4 md:p-8 border-b border-gray-100 flex items-center justify-between md:block">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-inner overflow-hidden">
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0)?.toUpperCase() || "U"
+              )}
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-gray-900 leading-tight block">{user?.name || "User"}</span>
-              <span className="text-xs text-gray-500">{user?.email || "Customer"}</span>
+              <span className="text-xs text-gray-500 hidden md:block">{user?.email || "Customer"}</span>
             </div>
           </div>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              navigate("/login", { replace: true });
+            }}
+            className="md:hidden p-2 text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors"
+            title="Log out"
+          >
+            <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
+        <div className="w-full overflow-x-auto md:overflow-y-auto py-3 md:py-6 px-4 flex flex-row md:flex-col gap-2 scrollbar-none">
           <button
             onClick={() => navigate("/profile", { replace: true })}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold"
+            className="flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold whitespace-nowrap shrink-0"
           >
-            <UserCircleIcon className="w-5 h-5" />
+            <UserCircleIcon className="w-5 h-5 shrink-0" />
             Profile
           </button>
 
           <button
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-dark-900 text-white font-bold shadow-md shadow-dark-900/10"
+            className="flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl bg-dark-900 text-white font-bold shadow-md shadow-dark-900/10 whitespace-nowrap shrink-0"
           >
-            <CalendarDaysIcon className="w-5 h-5" />
+            <CalendarDaysIcon className="w-5 h-5 shrink-0" />
             Appointments
+          </button>
+
+          <button
+            onClick={() => navigate("/profile", { state: { activeTab: "favorites" }, replace: true })}
+            className="flex items-center gap-2 md:gap-3 w-fit md:w-full px-4 py-2.5 md:py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold whitespace-nowrap shrink-0"
+          >
+            <HeartIconOutline className="w-5 h-5 shrink-0" />
+            Favorites
           </button>
         </div>
 
-        <div className="p-4 border-t border-gray-100 mt-auto">
+        <div className="p-4 border-t border-gray-100 mt-auto hidden md:block">
           <button
             onClick={() => {
               localStorage.clear();
@@ -294,15 +310,14 @@ const MyAppointmentsPage = () => {
             }}
             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-bold"
           >
-            <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+            <ArrowLeftOnRectangleIcon className="w-5 h-5 shrink-0" />
             Log out
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 sm:p-8 lg:p-12 relative">
-        <div className="max-w-5xl mx-auto space-y-8 fade-in slide-up">
+      <main className="flex-1 h-screen overflow-y-auto bg-gray-50/50 p-4 sm:p-8 lg:p-12 relative">
+        <div className="max-w-5xl mx-auto space-y-8 fade-in slide-up pb-20">
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -365,9 +380,9 @@ const MyAppointmentsPage = () => {
                             alt={a.salonId?.name || "Salon"}
                             className="w-16 h-16 rounded-2xl object-cover border border-gray-100 shadow-sm"
                           />
-                          <div className="min-w-0 pr-16"> {/* pr-16 for status pill space */}
-                            <h4 className="text-lg font-black text-gray-900 line-clamp-1">{a.salonId?.name}</h4>
-                            <p className="text-sm text-gray-500 font-medium line-clamp-1 flex items-center gap-1 mt-0.5">
+                          <div className="min-w-0 pr-12 sm:pr-16"> {/* pr-16 for status pill space */}
+                            <h4 className="text-base sm:text-lg font-black text-gray-900 line-clamp-2 sm:line-clamp-1">{a.salonId?.name}</h4>
+                            <p className="text-xs sm:text-sm text-gray-500 font-medium line-clamp-1 flex items-center gap-1 mt-0.5">
                               <MapPinIcon className="w-4 h-4 shrink-0" />
                               {a.salonId?.location || 'Location not available'}
                             </p>
@@ -387,41 +402,40 @@ const MyAppointmentsPage = () => {
                       </div>
 
                       {/* Right: Services & Actions */}
-                      <div className="w-full md:w-2/3 flex flex-col">
+                      <div className="w-full md:w-2/3 flex flex-col pt-6 md:pt-0">
                         <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Booked Services</h5>
 
                         <div className="space-y-3 mb-6 flex-1">
                           {a.services.map((s, i) => (
-                            <div key={i} className="flex justify-between items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100/60">
-                              <div className="flex gap-3">
+                            <div key={i} className="flex justify-between items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100/60 overflow-hidden break-words">
+                              <div className="flex gap-3 min-w-0 pr-4">
                                 <ScissorsIcon className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                                <span className="text-sm font-bold text-gray-900">{s.name}</span>
+                                <span className="text-sm font-bold text-gray-900 line-clamp-2 md:line-clamp-none break-words">{s.name}</span>
                               </div>
-                              <span className="text-sm font-black text-dark-900 shrink-0">LKR {s.price.toLocaleString()}</span>
+                              <span className="text-sm font-black text-dark-900 shrink-0 whitespace-nowrap">LKR {s.price.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-gray-100">
-                          <div className="flex items-center gap-3 w-full sm:w-auto text-center sm:text-left">
+                        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 pt-6 border-t border-gray-100 mt-auto">
+                          <div className="flex flex-row xl:flex-col items-center xl:items-start gap-4 w-full xl:w-auto text-left justify-between xl:justify-start">
                             <div className="text-sm font-bold text-gray-500">Total</div>
-                            <div className="text-2xl font-black text-dark-900">
+                            <div className="text-xl sm:text-2xl font-black text-dark-900 shrink-0">
                               LKR {a.services.reduce((total, s) => total + s.price, 0).toLocaleString()}
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
-                            {/* Reschedule */}
+                          <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full xl:w-auto xl:justify-end">
                             <button
                               disabled={rescheduleInfo.disabled}
                               title={rescheduleInfo.title}
                               onClick={() => handleReschedule(a)}
-                              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${rescheduleInfo.disabled
+                              className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all w-full sm:w-auto sm:flex-1 xl:flex-none ${rescheduleInfo.disabled
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                                 : "bg-white text-dark-900 border border-gray-200 hover:border-dark-900 hover:bg-gray-50 shadow-sm"
                                 }`}
                             >
-                              <ArrowPathIcon className="w-4 h-4" />
+                              <ArrowPathIcon className="w-4 h-4 shrink-0" />
                               {rescheduleInfo.text}
                             </button>
 
@@ -431,12 +445,12 @@ const MyAppointmentsPage = () => {
                                 disabled={cancelDisabled}
                                 title={cancelDisabled ? "Cannot cancel this appointment" : "Click to cancel this appointment"}
                                 onClick={() => !cancelDisabled && handleCancel(a._id)}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${cancelDisabled
+                                className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all w-full sm:w-auto sm:flex-1 xl:flex-none ${cancelDisabled
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                                   : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white"
                                   }`}
                               >
-                                <XCircleIcon className="w-4 h-4" />
+                                <XCircleIcon className="w-4 h-4 shrink-0" />
                                 {cancelText}
                               </button>
                             )}
@@ -446,17 +460,16 @@ const MyAppointmentsPage = () => {
                               disabled={isReviewDisabled(a)}
                               title={a.status?.toLowerCase() !== "completed" ? "Review available after appointment is completed" : "Click to add review"}
                               onClick={() => openFeedbackPopup(a)}
-                              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${isReviewDisabled(a)
+                              className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold transition-all w-full sm:w-auto sm:flex-1 xl:flex-none ${isReviewDisabled(a)
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 hidden sm:flex" // hide on mobile if disabled
                                 : "bg-dark-900 text-white shadow-xl shadow-dark-900/20 hover:bg-black"
                                 }`}
                             >
-                              <CheckBadgeIcon className="w-4 h-4" />
+                              <CheckBadgeIcon className="w-4 h-4 shrink-0" />
                               {getReviewButtonText(a)}
                             </button>
                           </div>
                         </div>
-
                       </div>
                     </div>
                   </div>
@@ -556,8 +569,6 @@ const MyAppointmentsPage = () => {
           </div>
         </Dialog>
       </Transition>
-
-      <Footer />
     </div>
   );
 };
