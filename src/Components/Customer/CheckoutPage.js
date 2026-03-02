@@ -86,37 +86,9 @@ const CheckoutPage = () => {
       if (result.success && result.data) {
         // 3. Auto-Submit Form to PayHere
         submitPayHereForm(result.data);
-      } else {
-        alert('Failed to initiate payment. Please try again.');
- console.error('Payment init failed:', result);
-      }
-    } catch (error) {
- console.error('Error initiating PayHere payment:', error);
-      alert('An error occurred. Please check your connection.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const submitPayHereForm = (data) => {
-    console.log('Submitting PayHere form with data:', data);
-    
-    // Append mandatory return_url and cancel_url if missing
-    const formData = {
-      ...data,
-      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
-      cancel_url: data.cancel_url || window.location.href,
-    };
-
-    console.log('Final PayHere form data:', formData);
-
-    const form = document.createElement('form');
-    form.setAttribute('method', 'POST');
-    form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-    form.style.display = 'none';
-
-    Object.keys(formData).forEach(key => {
-      const input = document.createElement('input');
+        
+        // Show popup notification
+        alert('Payment window opened. Please complete your payment in the new window.');
       input.setAttribute('type', 'hidden');
       input.setAttribute('name', key);
       input.setAttribute('value', formData[key]);
@@ -125,6 +97,11 @@ const CheckoutPage = () => {
 
     document.body.appendChild(form);
     form.submit();
+    
+    // Remove form after submission
+    setTimeout(() => {
+      document.body.removeChild(form);
+    }, 1000);
   };
 
   // Helper to render single item summary
