@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 import axiosInstance from "../../Api/axios";
 import { EnvelopeIcon, LockClosedIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import loginImage from "../../Assets/login-image.jpg";
@@ -25,48 +27,82 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting admin login...');
-      const res = await axiosInstance.post('/admin/login', formData);
+      console.log('Attempting Firebase admin login...');
+      
+      // Step 1: Firebase email/password authentication
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+      
+      console.log('Firebase authentication successful:', { email: user.email, uid: user.uid });
+      
+      // Step 2: Verify this is an admin email
+      if (user.email !== 'admin@saloonbooking.lk') {
+        setError('Access denied. This email is not authorized for admin access.');
+        await auth.signOut();
+        setLoading(false);
+        return;
+      }
 
-      const { token, admin } = res.data;
+      // Step 3: Get backend JWT token using Firebase info
+      try {
+        const backendResponse = await axiosInstance.post('/admin/firebase-login', {
+          name: 'Admin',
+          email: user.email,
+          photoURL: user.photoURL,
+          uid: user.uid
+        });
 
-      console.log('Admin login response:', { token: !!token, admin });
+        if (backendResponse.data.success) {
+          const { token, admin } = backendResponse.data;
+          
+          // Prepare admin user data
+          const adminUserData = {
+            ...admin,
+            role: 'admin',
+            id: admin.id || 'admin',
+            uid: user.uid
+          };
 
-      // Prepare admin user data (similar to salon owner)
-      const adminUserData = {
-        ...admin,
-        role: 'admin',
-        id: admin.id || 'admin'
-      };
+          console.log('Got backend token, saving admin user data:', adminUserData);
 
-      console.log('Saving admin user data:', adminUserData);
+          // Save to localStorage (backend token, not Firebase token)
+          localStorage.setItem('token', token);
+          localStorage.setItem('userRole', 'admin');
+          localStorage.setItem('userEmail', admin.email);
+          localStorage.setItem('userName', admin.username || admin.name);
+          localStorage.setItem('userId', admin.id || 'admin');
 
-      // Save everything to localStorage BEFORE calling login()
-      localStorage.setItem('token', token);
-      localStorage.setItem('userRole', 'admin');
-      localStorage.setItem('userEmail', admin.email);
-      localStorage.setItem('userName', admin.username || admin.name);
-      localStorage.setItem('userId', admin.id || 'admin');
+          console.log('Saved admin session to localStorage');
 
-      console.log('Saved to localStorage:');
-      console.log('- token:', !!localStorage.getItem('token'));
-      console.log('- userRole:', localStorage.getItem('userRole'));
-      console.log('- userEmail:', localStorage.getItem('userEmail'));
-      console.log('- userName:', localStorage.getItem('userName'));
+          // Call the auth context login
+          login(token, adminUserData);
 
-      // Call the auth context login
-      login(token, adminUserData);
-
-      console.log('Navigating to admin dashboard...');
-      navigate("/admin-dashboard");
+          console.log('Navigating to admin dashboard...');
+          navigate("/admin-dashboard");
+        } else {
+          throw new Error('Backend authentication failed');
+        }
+      } catch (backendError) {
+        console.error('Backend authentication error:', backendError);
+        if (backendError.response?.status === 404) {
+          setError('Admin authentication service is not available. Please contact support.');
+        } else {
+          setError('Failed to authenticate with backend. Please try again.');
+        }
+        await auth.signOut(); // Sign out from Firebase if backend fails
+      }
+      
     } catch (err) {
-      console.error("Admin login error:", err);
-      if (err.response?.status === 401) {
-        setError("Invalid admin credentials. Please check your email and password.");
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      console.error("Firebase login error:", err);
+      
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('Invalid admin email or password.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later.');
       } else {
-        setError("Login failed. Please try again.");
+        setError(err.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
