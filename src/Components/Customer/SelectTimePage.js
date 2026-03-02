@@ -712,7 +712,7 @@ const SelectTimePage = () => {
 
   // Render
   return (
-    <div className="min-h-screen bg-gray-50/50 font-sans pb-24 relative" key={renderKey}>
+    <div className="min-h-screen bg-gray-50/50 font-sans pb-28 lg:pb-12 relative" key={renderKey}>
       {/* Simple Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -772,7 +772,7 @@ const SelectTimePage = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:gap-12">
 
           {/* Main Content (Left) */}
           <div className="lg:col-span-8 flex flex-col">
@@ -961,8 +961,8 @@ const SelectTimePage = () => {
 
           </div>
 
-          {/* Sidebar / Summary (Right) */}
-          <div className="lg:col-span-4 mt-8 lg:mt-0 relative">
+          {/* Sidebar / Summary — DESKTOP ONLY */}
+          <div className="hidden lg:block lg:col-span-4 relative">
             <div className="sticky top-28 bg-white rounded-[2rem] p-6 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col min-h-[400px]">
 
               {/* Salon Preview */}
@@ -974,7 +974,9 @@ const SelectTimePage = () => {
                 />
                 <div className="flex flex-col min-w-0 pr-2">
                   <h4 className="text-sm font-black text-gray-900 line-clamp-1 truncate">{salon?.name || "Salon"}</h4>
-                  <p className="text-xs text-gray-500 line-clamp-1 truncate">{salon?.location || "Location"}</p>
+                  <p className="text-xs text-gray-500 line-clamp-1 truncate">
+                    {typeof salon?.location === 'string' ? salon.location : salon?.location?.district || "Unknown Location"}
+                  </p>
                 </div>
               </div>
 
@@ -1088,6 +1090,44 @@ const SelectTimePage = () => {
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl px-4 pt-3 pb-5">
+        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-gray-400 truncate">
+              {currentService.name}
+            </p>
+            <p className="text-lg font-black text-dark-900">
+              {selectedTimes[serviceKey] ? `LKR ${displayTotalAmount}` : "Select a time"}
+            </p>
+          </div>
+          {isGuest ? (
+            <button
+              className="shrink-0 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 text-sm bg-gray-100 text-gray-500 border border-gray-200"
+              onClick={() => setShowGuestAlert(true)}
+            >
+              <LockClosedIcon className="w-4 h-4" /> Sign In
+            </button>
+          ) : (
+            <button
+              className={`shrink-0 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 text-sm transition-all ${
+                !selectedTimes[serviceKey] || loading || !isUserAuthorized
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-dark-900 text-white hover:bg-black active:scale-95"
+              }`}
+              onClick={handleContinue}
+              disabled={!selectedTimes[serviceKey] || loading || !isUserAuthorized}
+            >
+              {loading ? "..." : isReschedule ? "Reschedule" :
+                currentServiceIndex.current + 1 < selectedServices.length
+                  ? `Next (${currentServiceIndex.current + 1}/${selectedServices.length})`
+                  : "Checkout"
+              } <ChevronRightIcon className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>

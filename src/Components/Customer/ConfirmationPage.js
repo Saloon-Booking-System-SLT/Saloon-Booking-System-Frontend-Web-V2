@@ -1,8 +1,7 @@
-// ConfirmationPage.jsx - PayHere Integrated Version
+// ConfirmationPage.jsx - Responsive Tailwind Version
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { UserIcon, CreditCardIcon, DevicePhoneMobileIcon, MapPinIcon, ClockIcon, UsersIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import "./ConfirmationPage.css";
+import { MapPinIcon, ClockIcon, UsersIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -11,40 +10,24 @@ const ConfirmationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // State for data source (either from router state or fetched from API)
   const [bookingData, setBookingData] = useState(location.state || null);
-  const [loading, setLoading] = useState(!location.state); // Load if no state
+  const [loading, setLoading] = useState(!location.state);
   const [error, setError] = useState("");
-
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState("pending");
 
-  // Get Order ID from URL if available (returned from PayHere)
   const orderIdFromUrl = searchParams.get('order_id');
 
-  // Fetch booking details if not in state but order_id is present
   useEffect(() => {
-    if (bookingData) {
-      setLoading(false);
-      return;
-    }
-
-    if (!orderIdFromUrl) {
-      setLoading(false);
-      return; // No data and no ID to fetch
-    }
+    if (bookingData) { setLoading(false); return; }
+    if (!orderIdFromUrl) { setLoading(false); return; }
 
     const fetchBookingDetails = async () => {
       setLoading(true);
       try {
-        // Assumption: Backend endpoint to get booking by PayHere Order ID
         const response = await fetch(`${API_BASE_URL}/appointments/order/${orderIdFromUrl}`);
         const result = await response.json();
-
         if (result.success) {
-          // Transform API response to match component's expected data structure
-          // This mapping depends on what the backend actually returns. 
-          // I am mapping it based on the fields used in this component.
           const data = result.data;
           setBookingData({
             salonName: data.salon?.name || "Salon",
@@ -54,18 +37,18 @@ const ConfirmationPage = () => {
             customerName: data.customerName || data.user?.name || "Guest",
             isGroupBooking: !!data.isGroupBooking,
             salonLocation: data.salon?.location || "",
-            professionalName: "Professional", // Fallback logic might be needed
+            professionalName: "Professional",
             salon: data.salon,
             user: data.user,
-            appointmentId: data._id, // If single appointment
+            appointmentId: data._id,
             isReschedule: data.isReschedule
           });
-          setSaveStatus("success"); // Assume if we fetched it, it's saved/confirmed
+          setSaveStatus("success");
         } else {
-          setError("Could not retrieve booking details. Please contact support.");
+          setError("Could not retrieve booking details.");
         }
       } catch (err) {
- console.error("Error fetching booking:", err);
+        console.error("Error fetching booking:", err);
         setError("Network error. Please check your connection.");
       } finally {
         setLoading(false);
@@ -75,8 +58,6 @@ const ConfirmationPage = () => {
     fetchBookingDetails();
   }, [orderIdFromUrl, bookingData]);
 
-
-  // Destructure from bookingData with defaults, ONLY if bookingData exists
   const {
     salonName = "Our Salon",
     appointmentDetails = [],
@@ -92,21 +73,12 @@ const ConfirmationPage = () => {
     isReschedule
   } = bookingData || {};
 
-
-  // Re-run save logic ONLY if we have data from State (New Booking flow)
-  // If we fetched from API, we assume it's already saved.
   useEffect(() => {
-    // Only save if:
-    // 1. We have data from location state (implies flow from checkout)
-    // 2. We NOT fetching from URL (which implies return flow)
-    // 3. It's a group booking (as per original logic)
     if (!location.state || orderIdFromUrl) return;
 
-    // ... Original Save Logic Preserved ...
     const saveAppointmentsToBackend = async () => {
       if (!isGroupBooking) {
         setSaveStatus("skipped");
-        // Clear local storage logic
         localStorage.removeItem('selectedServices');
         localStorage.removeItem('selectedProfessional');
         localStorage.removeItem('selectedSalon');
@@ -114,16 +86,10 @@ const ConfirmationPage = () => {
         return;
       }
 
-      if (appointmentDetails.length === 0) {
-        setSaveStatus("error");
-        return;
-      }
+      if (appointmentDetails.length === 0) { setSaveStatus("error"); return; }
 
       const savedKey = `appointments_saved_${bookingId}`;
-      if (localStorage.getItem(savedKey)) {
-        setSaveStatus("success");
-        return;
-      }
+      if (localStorage.getItem(savedKey)) { setSaveStatus("success"); return; }
 
       setIsSaving(true);
       setSaveStatus("pending");
@@ -156,21 +122,16 @@ const ConfirmationPage = () => {
         });
 
         const result = await response.json();
-
         if (result.success) {
           setSaveStatus("success");
           localStorage.setItem(savedKey, "true");
-          localStorage.removeItem('bookedAppointments');
-          localStorage.removeItem('selectedServices');
-          localStorage.removeItem('selectedProfessional');
-          localStorage.removeItem('selectedSalon');
-          localStorage.removeItem('isGroupBooking');
-          localStorage.removeItem('groupMembers');
+          ['bookedAppointments', 'selectedServices', 'selectedProfessional',
+            'selectedSalon', 'isGroupBooking', 'groupMembers'].forEach(k => localStorage.removeItem(k));
         } else {
           setSaveStatus("error");
         }
       } catch (error) {
- console.error("Error saving group appointments:", error);
+        console.error("Error saving group appointments:", error);
         setSaveStatus("error");
       } finally {
         setIsSaving(false);
@@ -178,21 +139,16 @@ const ConfirmationPage = () => {
     };
 
     saveAppointmentsToBackend();
-  }, [bookingData, location.state, orderIdFromUrl]); // depend on bookingData wrapper
-
-  // ---- Helper Functions ----
+  }, [bookingData, location.state, orderIdFromUrl]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date not specified";
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
+      return new Date(dateString).toLocaleDateString('en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       });
-    } catch (error) { return "Invalid date"; }
+    } catch { return "Invalid date"; }
   };
-
-  const getTotalServices = () => appointmentDetails.length;
 
   const getTotalDuration = () => {
     return appointmentDetails.reduce((total, appointment) => {
@@ -208,35 +164,35 @@ const ConfirmationPage = () => {
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours > 0 && mins > 0) return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins > 1 ? 's' : ''}`;
-    else if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-    else return `${mins} minute${mins > 1 ? 's' : ''}`;
+    if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
+    return `${mins} min`;
   };
 
   const getStatusMessage = () => {
     if (isSaving) return "Saving your appointments...";
-    if (saveStatus === "success") return "✅ Booking Confirmed!";
-    if (saveStatus === "skipped") return "✅ Booking Confirmed!";
-    if (saveStatus === "error") return "Issue verification pending. Please check 'My Bookings'.";
+    if (saveStatus === "success" || saveStatus === "skipped") return "✅ Booking Confirmed!";
+    if (saveStatus === "error") return "Verification pending. Check 'My Bookings'.";
     return "Processing...";
   };
 
-  const getHeaderMessage = () => isReschedule ? "Appointment Rescheduled!" : "Booking Confirmed!";
+  const getHeaderMessage = () => isReschedule ? "Rescheduled!" : "Booking Confirmed!";
+  const getThankYouMessage = () =>
+    isReschedule
+      ? `Your appointment at ${salonName} has been rescheduled!`
+      : `Thank you for choosing ${salonName}!`;
 
-  const getThankYouMessage = () => {
-    if (isReschedule) return `Your appointment has been successfully rescheduled at ${salonName}!`;
-    return `Thank you for choosing ${salonName}! Your ${isGroupBooking ? 'group booking' : 'appointment'} has been successfully paid and booked.`;
-  };
-
-
-  // ---- Render Phases ----
+  const salonLocationText =
+    typeof salonLocation === "string"
+      ? salonLocation
+      : salonLocation?.district || "";
 
   if (loading) {
     return (
-      <div className="confirmation-container">
-        <div className="confirmation-card">
-          <div className="loading-spinner"></div>
-          <p style={{ textAlign: 'center', marginTop: '20px' }}>Verifying payment details...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-dark-900 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Verifying payment details...</p>
         </div>
       </div>
     );
@@ -244,11 +200,14 @@ const ConfirmationPage = () => {
 
   if (error || !bookingData) {
     return (
-      <div className="confirmation-container">
-        <div className="confirmation-card">
-          <h2 style={{ color: '#ef4444', textAlign: 'center' }}>Unable to Load Booking</h2>
-          <p style={{ textAlign: 'center' }}>{error || "No booking information found."}</p>
-          <button className="btn-primary" onClick={() => navigate("/")} style={{ marginTop: '20px', width: '100%' }}>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center border border-gray-100">
+          <h2 className="text-xl font-black text-red-500 mb-2">Unable to Load Booking</h2>
+          <p className="text-gray-500 mb-6 text-sm">{error || "No booking information found."}</p>
+          <button
+            className="w-full py-3 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+            onClick={() => navigate("/")}
+          >
             Return to Home
           </button>
         </div>
@@ -257,89 +216,163 @@ const ConfirmationPage = () => {
   }
 
   return (
-    <div className="confirmation-container">
-      <div className="confirmation-card">
-        <div className="confirmation-header">
-          <div className="success-icon">✅</div>
-          <h1>{getHeaderMessage()}</h1>
-          <p className="thank-you-message">{getThankYouMessage()}</p>
-          <div className={`save-status ${saveStatus}`}>
-            {getStatusMessage()}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 font-sans">
+      <div className="max-w-2xl mx-auto">
+
+        {/* Success Header Card */}
+        <div className="bg-dark-900 rounded-[2rem] p-6 sm:p-8 text-white text-center mb-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircleIcon className="w-9 h-9 text-white" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black mb-2">{getHeaderMessage()}</h1>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed max-w-sm mx-auto">
+              {getThankYouMessage()}
+            </p>
+            <div className={`mt-4 inline-block px-4 py-1.5 rounded-full text-xs font-bold ${saveStatus === "success" || saveStatus === "skipped"
+                ? "bg-green-500/20 text-green-300 border border-green-400/30"
+                : saveStatus === "error"
+                  ? "bg-red-500/20 text-red-300 border border-red-400/30"
+                  : "bg-white/20 text-gray-300"
+              }`}>
+              {getStatusMessage()}
+            </div>
           </div>
         </div>
 
-        <div className="confirmation-details">
-          <div className="booking-summary">
-            <h2>Booking Summary</h2>
-            <div className="summary-grid">
-              <div className="summary-item"><span>Customer Name:</span><strong>{customerName}</strong></div>
-              <div className="summary-item"><span>Salon:</span><strong>{salonName}</strong></div>
-              {salonLocation && <div className="summary-item"><span>Location:</span><span>{salonLocation}</span></div>}
-              <div className="summary-item"><span>Total Services:</span><strong>{getTotalServices()}</strong></div>
-              <div className="summary-item"><span>Total Duration:</span><strong>{formatDuration(getTotalDuration())}</strong></div>
-              {(appointmentId || bookingId) && (
-                <div className="summary-item">
-                  <span>Booking Reference:</span>
-                  <strong>{bookingId || appointmentId}</strong>
-                </div>
-              )}
-            </div>
+        {/* Booking Summary */}
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl p-5 sm:p-6 mb-5">
+          <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-5">
+            Booking Summary
+          </h2>
 
-            {appointmentDetails.length > 0 && (
-              <div className="appointments-list">
-                <h3>{isGroupBooking ? 'Group Appointments Details' : 'Appointment Details'}</h3>
-                {appointmentDetails.map((appointment, index) => (
-                  <div key={index} className="appointment-card">
+          <div className="space-y-3 mb-5">
+            {[
+              { label: "Customer", value: customerName },
+              { label: "Salon", value: salonName },
+              ...(salonLocationText ? [{ label: "Location", value: salonLocationText }] : []),
+              { label: "Total Services", value: appointmentDetails.length },
+              { label: "Total Duration", value: formatDuration(getTotalDuration()) },
+              ...(appointmentId || bookingId ? [{ label: "Booking Ref", value: (bookingId || appointmentId).toString().slice(-8).toUpperCase() }] : []),
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between items-start gap-4 py-2.5 border-b border-gray-50 last:border-0">
+                <span className="text-sm font-medium text-gray-500">{label}</span>
+                <span className="text-sm font-bold text-gray-900 text-right max-w-[60%] break-words">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Appointment Details */}
+        {appointmentDetails.length > 0 && (
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl p-5 sm:p-6 mb-5">
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-5">
+              {isGroupBooking ? "Group Appointments" : "Appointment Details"}
+            </h2>
+
+            <div className="space-y-4">
+              {appointmentDetails.map((appointment, index) => (
+                <div key={index} className="bg-gray-50 rounded-2xl p-4 border border-gray-100 relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-dark-900 rounded-l-2xl" />
+                  <div className="pl-3">
                     {isGroupBooking && (
-                      <div className="member-info">
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="h-5 w-5 text-gray-600" />
-                          <strong>{appointment.memberName || customerName}</strong>
-                        </div>
-                        {appointment.memberCategory && <span className="member-category">({appointment.memberCategory})</span>}
+                      <div className="flex items-center gap-2 mb-2">
+                        <UsersIcon className="w-4 h-4 text-gray-500 shrink-0" />
+                        <span className="font-bold text-sm text-gray-900">{appointment.memberName || customerName}</span>
+                        {appointment.memberCategory && (
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{appointment.memberCategory}</span>
+                        )}
                       </div>
                     )}
-                    <div className="appointment-details-grid">
-                      <div className="detail-row"><span className="detail-label">Service:</span><span className="detail-value">{appointment.serviceName || "Service"}</span></div>
-                      <div className="detail-row"><span className="detail-label">Professional:</span><span className="detail-value">{appointment.professionalName || professionalName}</span></div>
-                      <div className="detail-row"><span className="detail-label">Date:</span><span className="detail-value">{formatDate(appointment.date)}</span></div>
-                      <div className="detail-row"><span className="detail-label">Time:</span><span className="detail-value">{appointment.startTime} - {appointment.endTime}</span></div>
-                      <div className="detail-row price-row"><span className="detail-label">Price:</span><span className="detail-value price">LKR {appointment.price?.toLocaleString() || "0"}</span></div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Service</p>
+                        <p className="text-sm font-bold text-gray-900">{appointment.serviceName || "Service"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Professional</p>
+                        <p className="text-sm font-bold text-gray-900">{appointment.professionalName || professionalName}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Date</p>
+                        <p className="text-sm font-bold text-gray-900">{new Date(appointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Time</p>
+                        <p className="text-sm font-bold text-gray-900">{appointment.startTime} – {appointment.endTime}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Price</span>
+                      <span className="text-base font-black text-dark-900">LKR {appointment.price?.toLocaleString() || "0"}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
 
-            <div className="total-amount-section">
-              <div className="total-amount"><span>Total Amount:</span><strong>LKR {totalAmount.toLocaleString()}</strong></div>
+            <div className="mt-5 pt-5 border-t border-gray-100 flex justify-between items-center">
+              <span className="text-sm font-bold text-gray-500">Total Amount</span>
+              <span className="text-2xl font-black text-dark-900">LKR {totalAmount.toLocaleString()}</span>
             </div>
           </div>
+        )}
 
-          {/* Notes Section Preserved */}
-          <div className="important-notes">
-            <h3>Important Information</h3>
-            <ul>
-              <li className="flex items-center gap-2"><MapPinIcon className="h-4 w-4 text-blue-600" />Please arrive 10-15 minutes before your scheduled appointment</li>
-              <li className="flex items-center gap-2"><ClockIcon className="h-4 w-4 text-orange-600" />Late arrivals may result in reduced service time</li>
-              <li className="flex items-center gap-2"><CreditCardIcon className="h-4 w-4 text-green-600" />Payment has been processed via PayHere</li>
-              {isGroupBooking && <li className="flex items-center gap-2"><UsersIcon className="h-4 w-4 text-purple-600" />All group members should arrive together</li>}
-              <li className="flex items-center gap-2"><DevicePhoneMobileIcon className="h-4 w-4 text-blue-600" />You will receive a confirmation SMS and email shortly</li>
-            </ul>
-          </div>
+        {/* Important Notes */}
+        <div className="bg-amber-50 rounded-[2rem] border border-amber-200 p-5 sm:p-6 mb-5">
+          <h3 className="text-xs font-black text-amber-700 uppercase tracking-widest mb-4">
+            Important Information
+          </h3>
+          <ul className="space-y-2.5">
+            {[
+              { icon: <MapPinIcon className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />, text: "Please arrive 10–15 minutes before your scheduled time" },
+              { icon: <ClockIcon className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />, text: "Late arrivals may result in reduced service time" },
+              ...(isGroupBooking ? [{ icon: <UsersIcon className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />, text: "All group members should arrive together" }] : []),
+            ].map(({ icon, text }) => (
+              <li key={text} className="flex items-start gap-2.5 text-sm text-amber-800 leading-relaxed">
+                {icon}
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="confirmation-actions">
-          <button className="btn-primary" onClick={() => navigate("/")} disabled={isSaving}>Back to Home</button>
-          <button className="btn-secondary" onClick={() => navigate("/appointments")} disabled={isSaving}>View My Bookings</button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <button
+            className="flex-1 py-4 bg-dark-900 text-white font-bold rounded-2xl hover:bg-black transition-colors disabled:opacity-60"
+            onClick={() => navigate("/")}
+            disabled={isSaving}
+          >
+            Back to Home
+          </button>
+          <button
+            className="flex-1 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-colors disabled:opacity-60"
+            onClick={() => navigate("/appointments")}
+            disabled={isSaving}
+          >
+            View My Bookings
+          </button>
         </div>
 
-        <div className="confirmation-footer">
-          <p className="flex items-center justify-center gap-2">We can't wait to see you at {salonName}!<SparklesIcon className="h-5 w-5 text-yellow-500" /></p>
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-gray-500 text-sm flex items-center justify-center gap-2">
+            We can't wait to see you at {salonName}!
+            <SparklesIcon className="h-4 w-4 text-yellow-500" />
+          </p>
         </div>
+
       </div>
+
       {isSaving && isGroupBooking && (
-        <div className="loading-overlay"><div className="loading-spinner"></div><p>Finalizing booking...</p></div>
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-dark-900 rounded-full animate-spin mb-4" />
+          <p className="text-gray-900 font-bold">Finalizing booking...</p>
+        </div>
       )}
     </div>
   );
