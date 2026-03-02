@@ -87,6 +87,36 @@ const AdminLogin = () => {
     setError('');
     setLoading(true);
 
+    // Support for legacy 'admin' / 'admin123' without Firebase
+    if (email === 'admin' || !email.includes('@')) {
+      try {
+        const response = await axios.post('/admin/login', {
+          username: email,
+          password: password
+        });
+
+        if (response.data.success) {
+          const { token, admin } = response.data;
+          await login(token, {
+            ...admin,
+            role: 'admin',
+            id: admin.id || 'admin'
+          });
+          navigate('/admin-dashboard');
+          return;
+        }
+      } catch (err) {
+        if (err.response?.status === 404) {
+          setError('Legacy login endpoint /admin/login not found. Please deploy backend.');
+        } else {
+          setError('Invalid admin credentials.');
+        }
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Standard Firebase email/password
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       await processGoogleAuthResult(result);
@@ -125,8 +155,16 @@ const AdminLogin = () => {
     } catch (err) {
       console.error('Admin login error:', err);
 
-      if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the backend is running on port 5000.');
+      if (err.response?.status === 404) {
+        setError(
+          <>
+            Backend endpoint <b>/admin/google-login</b> not found (404).
+            <br />
+            Please make sure you have deployed your updated backend to Vercel.
+          </>
+        );
+      } else if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please make sure the backend is running.');
       } else {
         setError(err.response?.data?.message || 'Unauthorized access. You are not an administrator.');
       }
