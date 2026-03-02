@@ -163,14 +163,31 @@ const Home = () => {
                         </div>
                         <button
                           className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
-                          onClick={() => navigate("/login")}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            navigate("/login/customer");
+                          }}
                         >
                           Login or Sign Up
                         </button>
-                        <button className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
+                        <button
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            // Assuming there might be a download page in the future
+                            alert("App downloads coming soon!");
+                          }}
+                        >
                           Download the App
                         </button>
-                        <button className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
+                        <button
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            // Assuming there's a support page or email anchor
+                            window.location.href = "mailto:support@saloonbooking.com";
+                          }}
+                        >
                           Help & Support
                         </button>
                         <div className="h-px bg-gray-100 my-2"></div>
