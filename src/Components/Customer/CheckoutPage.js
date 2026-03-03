@@ -139,15 +139,29 @@ const CheckoutPage = () => {
     window.payhere.onError = function onError(error) {
       console.log("Error:" + error);
       setIsLoading(false);
-      alert("Payment Error: " + error + ". \n\nIf you see 'Unauthorized payment request', the sandbox domain is not whitelisted in your PayHere Dashboard.");
+      alert("Payment Error: " + error);
     };
 
-    // Append return_url and cancel_url just in case, though SDK doesn't redirect
+    // Construct exact payment object needed by PayHere SDK
     const payment = {
-      ...data,
-      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
-      cancel_url: data.cancel_url || window.location.href,
-      notify_url: data.notify_url || "https://sandbox.payhere.lk" // Assuming backed configured this properly fallback
+      sandbox: true,
+      merchant_id: data.merchant_id,
+      return_url: `${window.location.origin}/confirmationpage`,
+      cancel_url: window.location.href,
+      notify_url: "https://sandbox.payhere.lk/pay/checkout", // Typically backend notify URL
+      order_id: data.order_id,
+      items: data.items || "Salon Service",
+      amount: data.amount,
+      currency: "LKR",
+      hash: data.hash,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      email: data.email,
+      phone: data.phone,
+      address: "No Address Provided",
+      city: "Colombo",
+      country: "Sri Lanka",
+      ...data // fallback for any extra props returned by backend
     };
 
     console.log('Final PayHere form data:', payment);
