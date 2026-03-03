@@ -29,11 +29,13 @@ const SelectProfessionalPage = () => {
   const [viewReviewsPro, setViewReviewsPro] = useState(null);
   const [selectedProReviews, setSelectedProReviews] = useState([]);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0);
+  const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(true);
 
   const currentService = selectedServices?.[currentServiceIndex] || {};
 
   useEffect(() => {
     if (!salon?._id) return;
+    setIsLoadingProfessionals(true);
     fetch(`${API_BASE_URL}/api/professionals/${salon._id}/with-ratings`)
       .then((res) => res.json())
       .then((data) => {
@@ -44,7 +46,8 @@ const SelectProfessionalPage = () => {
         });
         setReviews(reviewsObj);
       })
-      .catch((err) => console.error("Failed to fetch professionals", err));
+      .catch((err) => console.error("Failed to fetch professionals", err))
+      .finally(() => setIsLoadingProfessionals(false));
   }, [salon]);
 
   const getAverageRating = (proId) => {
@@ -234,67 +237,89 @@ const SelectProfessionalPage = () => {
                 </div>
               </div>
 
-              {/* Professionals */}
-              {professionals.map((pro) => {
-                const proReviews = reviews[pro._id] || [];
-                const avgRating = getAverageRating(pro._id);
-                const reviewCount = proReviews.length;
-                const isSelected = getSelectedProfessionalForService()?._id === pro._id;
+              {/* Loading Skeleton */}
+              {isLoadingProfessionals ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="group relative bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-100 flex items-center gap-3 sm:gap-4 animate-pulse">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-xl shrink-0"></div>
+                      <div className="flex-grow min-w-0 pr-20 sm:pr-24 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/4 mt-2"></div>
+                      </div>
+                      <div className="absolute right-10 sm:right-12 top-1/2 -translate-y-1/2">
+                        <div className="w-8 h-6 bg-gray-200 rounded-lg"></div>
+                      </div>
+                      <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 shrink-0">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-200 rounded-full"></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                /* Professionals */
+                professionals.map((pro) => {
+                  const proReviews = reviews[pro._id] || [];
+                  const avgRating = getAverageRating(pro._id);
+                  const reviewCount = proReviews.length;
+                  const isSelected = getSelectedProfessionalForService()?._id === pro._id;
 
-                return (
-                  <div
-                    key={pro._id}
-                    onClick={() => handleSelectProfessional(pro)}
-                    className={`group relative bg-white p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 sm:gap-4 cursor-pointer transition-all duration-200 ${isSelected
-                      ? "border-dark-900 ring-1 ring-dark-900 shadow-md"
-                      : "border-gray-100 hover:border-gray-300 hover:shadow-md"
-                      }`}
-                  >
-                    <img
-                      src={getProfessionalImageUrl(pro.image, pro.name)}
-                      alt={pro.name}
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shrink-0 border border-gray-100"
-                    />
+                  return (
+                    <div
+                      key={pro._id}
+                      onClick={() => handleSelectProfessional(pro)}
+                      className={`group relative bg-white p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 sm:gap-4 cursor-pointer transition-all duration-200 ${isSelected
+                        ? "border-dark-900 ring-1 ring-dark-900 shadow-md"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-md"
+                        }`}
+                    >
+                      <img
+                        src={getProfessionalImageUrl(pro.image, pro.name)}
+                        alt={pro.name}
+                        className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shrink-0 border border-gray-100"
+                      />
 
-                    <div className="flex-grow min-w-0 pr-20 sm:pr-24">
-                      <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-0.5 truncate">{pro.name}</h4>
-                      <p className="text-xs text-gray-500 mb-1 truncate">{pro.role || "Stylist"}</p>
-                      <div className="flex items-center gap-1 text-xs font-medium">
-                        {reviewCount > 0 ? (
-                          <>
-                            <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-gray-900">{avgRating}</span>
-                            <span className="text-gray-400">({reviewCount})</span>
-                          </>
+                      <div className="flex-grow min-w-0 pr-20 sm:pr-24">
+                        <h4 className="text-sm sm:text-base font-bold text-gray-900 mb-0.5 truncate">{pro.name}</h4>
+                        <p className="text-xs text-gray-500 mb-1 truncate">{pro.role || "Stylist"}</p>
+                        <div className="flex items-center gap-1 text-xs font-medium">
+                          {reviewCount > 0 ? (
+                            <>
+                              <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+                              <span className="text-gray-900">{avgRating}</span>
+                              <span className="text-gray-400">({reviewCount})</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">New</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Reviews button */}
+                      <div className="absolute right-10 sm:right-12 top-1/2 -translate-y-1/2">
+                        <button
+                          className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg border border-gray-200 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openReviewPopup(pro);
+                          }}
+                        >
+                          ★
+                        </button>
+                      </div>
+
+                      <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 shrink-0">
+                        {isSelected ? (
+                          <CheckCircleSolid className="w-6 h-6 sm:w-7 sm:h-7 text-dark-900" />
                         ) : (
-                          <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">New</span>
+                          <CheckCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 text-gray-300 group-hover:text-gray-400" />
                         )}
                       </div>
                     </div>
-
-                    {/* Reviews button */}
-                    <div className="absolute right-10 sm:right-12 top-1/2 -translate-y-1/2">
-                      <button
-                        className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg border border-gray-200 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openReviewPopup(pro);
-                        }}
-                      >
-                        ★
-                      </button>
-                    </div>
-
-                    <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 shrink-0">
-                      {isSelected ? (
-                        <CheckCircleSolid className="w-6 h-6 sm:w-7 sm:h-7 text-dark-900" />
-                      ) : (
-                        <CheckCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 text-gray-300 group-hover:text-gray-400" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
             {/* Multi-service mobile summary (above bottom bar) */}

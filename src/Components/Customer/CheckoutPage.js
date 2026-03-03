@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../../Api/axios';
-import { ShieldCheckIcon, CreditCardIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, CreditCardIcon, ArrowLeftIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Dynamically load PayHere JS SDK
+    const script = document.createElement('script');
+    script.src = 'https://www.payhere.lk/lib/payhere.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   // Safety check for missing state
   if (!location.state) {
@@ -84,92 +96,69 @@ const CheckoutPage = () => {
       const result = response.data;
 
       if (result.success && result.data) {
-        // 3. Auto-Submit Form to PayHere
+        // 3. Auto-Submit Form to PayHere using SDK
         submitPayHereForm(result.data);
-        
-        // Show popup notification
-        alert('Payment window will open shortly. Please complete your payment there.');
       } else {
         alert('Failed to initiate payment. Please try again.');
         console.error('Payment init failed:', result);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error initiating PayHere payment:', error);
       alert('An error occurred. Please check your connection.');
-    } finally {
       setIsLoading(false);
     }
   };
 
   const submitPayHereForm = (data) => {
-    console.log('Submitting PayHere form with data:', data);
-    
-    // Append mandatory return_url and cancel_url if missing
-    const formData = {
-      ...data,
-      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
-      cancel_url: data.cancel_url || window.location.href,
-    };
+    console.log('Starting PayHere payment with data:', data);
 
-    console.log('Final PayHere form data:', formData);
-
-    // Try to open new window first (must be done synchronously with user interaction)
-    const paymentWindow = window.open('about:blank', 'payhere_payment', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    
-    if (!paymentWindow || paymentWindow.closed) {
-      // Fallback: Submit in current tab if popup blocked
-      alert('Popup blocked. Payment will open in current tab. Please use browser back button to return after payment.');
-      const fallbackForm = document.createElement('form');
-      fallbackForm.setAttribute('method', 'POST');
-      fallbackForm.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-      fallbackForm.style.display = 'none';
-
-      Object.keys(formData).forEach(key => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'hidden');
-        input.setAttribute('name', key);
-        input.setAttribute('value', formData[key]);
-        fallbackForm.appendChild(input);
-      });
-
-      document.body.appendChild(fallbackForm);
-      fallbackForm.submit();
+    // Ensure payhere is loaded
+    if (!window.payhere) {
+      alert("Payment gateway is still loading. Please try again in a moment.");
+      setIsLoading(false);
       return;
     }
 
-    // Create form for popup window
-    const form = document.createElement('form');
-    form.setAttribute('method', 'POST');
-    form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-    form.setAttribute('target', 'payhere_payment');
-    form.style.display = 'none';
+    // Assign event handlers
+    window.payhere.onCompleted = function onCompleted(orderId) {
+      console.log("Payment completed. OrderID:" + orderId);
+      setIsLoading(false);
+      // Construct an appointment parameter correctly and pass it along
+      navigate("/confirmationpage?order_id=" + orderId, {
+        state: location.state // pass original booking data for confirmation
+      });
+    };
 
-    Object.keys(formData).forEach(key => {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'hidden');
-      input.setAttribute('name', key);
-      input.setAttribute('value', formData[key]);
-      form.appendChild(input);
-    });
+    window.payhere.onDismissed = function onDismissed() {
+      console.log("Payment dismissed");
+      setIsLoading(false);
+      alert("Payment was closed or dismissed.");
+    };
 
-    // Submit form to popup window
-    document.body.appendChild(form);
-    
+    window.payhere.onError = function onError(error) {
+      console.log("Error:" + error);
+      setIsLoading(false);
+      alert("Payment Error: " + error + ". \n\nIf you see 'Unauthorized payment request', the sandbox domain is not whitelisted in your PayHere Dashboard.");
+    };
+
+    // Append return_url and cancel_url just in case, though SDK doesn't redirect
+    const payment = {
+      ...data,
+      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
+      cancel_url: data.cancel_url || window.location.href,
+      notify_url: data.notify_url || "https://sandbox.payhere.lk" // Assuming backed configured this properly fallback
+    };
+
+    console.log('Final PayHere form data:', payment);
+
     try {
-      form.submit();
-      console.log('PayHere form submitted successfully to popup');
-    } catch (error) {
-      console.error('Error submitting PayHere form:', error);
-      paymentWindow.close();
-      alert('Failed to open payment window. Please try again.');
+      window.payhere.startPayment(payment);
+    } catch (e) {
+      console.error("Error launching PayHere:", e);
+      alert("Failed to open payment gateway.");
+      setIsLoading(false);
     }
-    
-    // Remove form after submission
-    setTimeout(() => {
-      if (document.body.contains(form)) {
-        document.body.removeChild(form);
-      }
-    }, 1000);
   };
 
   // Helper to render single item summary
@@ -239,10 +228,10 @@ const CheckoutPage = () => {
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black mb-1">Checkout</h1>
+                <h1 className="text-3xl font-black mb-1 text-white">Checkout</h1>
                 <p className="text-gray-300 text-sm font-medium">Complete your {isGroupBooking ? 'group booking' : 'appointment'} securely</p>
               </div>
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm shadow-inner rounded-2xl flex items-center justify-center border border-white/20">
                 <CreditCardIcon className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -273,9 +262,9 @@ const CheckoutPage = () => {
               <button
                 onClick={handlePayHereCheckout}
                 disabled={isLoading}
-                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${isLoading
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                    : 'bg-primary-500 text-white hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30'
+                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 transform ${isLoading
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                  : 'bg-primary-500 text-white hover:bg-primary-600 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary-500/20 active:scale-95'
                   }`}
               >
                 {isLoading ? (
@@ -289,9 +278,15 @@ const CheckoutPage = () => {
               </button>
             </div>
 
-            <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 py-2 px-4 rounded-full w-fit mx-auto border border-green-100">
-              <ShieldCheckIcon className="w-4 h-4" />
-              <span>Payments are secure & encrypted</span>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 py-2 px-4 rounded-full border border-green-100">
+                <ShieldCheckIcon className="w-4 h-4" />
+                <span>Payments are secure & encrypted</span>
+              </div>
+              <p className="text-[10px] text-gray-400 flex items-start gap-1 max-w-sm text-center">
+                <InformationCircleIcon className="w-3 h-3 shrink-0 mt-0.5" />
+                Note: If you receive an "Unauthorized payment" error, the merchant must whitelist this domain in their PayHere Dashboard.
+              </p>
             </div>
 
           </div>
