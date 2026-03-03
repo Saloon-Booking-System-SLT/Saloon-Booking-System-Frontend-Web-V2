@@ -146,9 +146,9 @@ const CheckoutPage = () => {
     const payment = {
       sandbox: true,
       merchant_id: data.merchant_id,
-      return_url: `${window.location.origin}/confirmationpage`,
-      cancel_url: window.location.href,
-      notify_url: "https://sandbox.payhere.lk/pay/checkout", // Typically backend notify URL
+      return_url: undefined, // Important: must be undefined for popup checkout
+      cancel_url: undefined, // Important: must be undefined for popup checkout
+      notify_url: data.notify_url || "https://sandbox.payhere.lk/pay/notify",
       order_id: data.order_id,
       items: data.items || "Salon Service",
       amount: data.amount,
@@ -160,8 +160,7 @@ const CheckoutPage = () => {
       phone: data.phone,
       address: "No Address Provided",
       city: "Colombo",
-      country: "Sri Lanka",
-      ...data // fallback for any extra props returned by backend
+      country: "Sri Lanka"
     };
 
     console.log('Final PayHere form data:', payment);
