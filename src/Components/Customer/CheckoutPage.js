@@ -86,9 +86,6 @@ const CheckoutPage = () => {
       if (result.success && result.data) {
         // 3. Auto-Submit Form to PayHere
         submitPayHereForm(result.data);
-        
-        // Show popup notification
-        alert('Payment window will open shortly. Please complete your payment there.');
       } else {
         alert('Failed to initiate payment. Please try again.');
         console.error('Payment init failed:', result);
