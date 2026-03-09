@@ -86,9 +86,6 @@ const CheckoutPage = () => {
       if (result.success && result.data) {
         // 3. Auto-Submit Form to PayHere
         submitPayHereForm(result.data);
-        
-        // Show popup notification
-        alert('Payment window will open shortly. Please complete your payment there.');
       } else {
         alert('Failed to initiate payment. Please try again.');
         console.error('Payment init failed:', result);
@@ -111,65 +108,46 @@ const CheckoutPage = () => {
       cancel_url: data.cancel_url || window.location.href,
     };
 
-    console.log('Final PayHere form data:', formData);
+    // Determine the correct PayHere action URL based on sandbox flag from backend
+    const actionUrl = data.sandbox 
+      ? 'https://sandbox.payhere.lk/pay/checkout' 
+      : 'https://www.payhere.lk/pay/checkout';
 
-    // Try to open new window first (must be done synchronously with user interaction)
-    const paymentWindow = window.open('about:blank', 'payhere_payment', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    
-    if (!paymentWindow || paymentWindow.closed) {
-      // Fallback: Submit in current tab if popup blocked
-      alert('Popup blocked. Payment will open in current tab. Please use browser back button to return after payment.');
-      const fallbackForm = document.createElement('form');
-      fallbackForm.setAttribute('method', 'POST');
-      fallbackForm.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-      fallbackForm.style.display = 'none';
+    console.log(`Final PayHere form data submitting to ${actionUrl}:`, formData);
 
-      Object.keys(formData).forEach(key => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'hidden');
-        input.setAttribute('name', key);
-        input.setAttribute('value', formData[key]);
-        fallbackForm.appendChild(input);
-      });
-
-      document.body.appendChild(fallbackForm);
-      fallbackForm.submit();
-      return;
-    }
-
-    // Create form for popup window
+    // Create a hidden form to submit directly in the current tab
     const form = document.createElement('form');
     form.setAttribute('method', 'POST');
-    form.setAttribute('action', 'https://sandbox.payhere.lk/pay/checkout');
-    form.setAttribute('target', 'payhere_payment');
+    form.setAttribute('action', actionUrl);
     form.style.display = 'none';
 
-    Object.keys(formData).forEach(key => {
+    // Remove the sandbox key as it's not a valid PayHere POST parameter
+    const submitData = { ...formData };
+    delete submitData.sandbox;
+
+    Object.keys(submitData).forEach(key => {
       const input = document.createElement('input');
       input.setAttribute('type', 'hidden');
       input.setAttribute('name', key);
-      input.setAttribute('value', formData[key]);
+      input.setAttribute('value', submitData[key]);
       form.appendChild(input);
     });
 
-    // Submit form to popup window
     document.body.appendChild(form);
     
     try {
+      // Submit the form which will redirect the current window to PayHere
       form.submit();
-      console.log('PayHere form submitted successfully to popup');
+      console.log('Redirecting to PayHere gateway...');
     } catch (error) {
       console.error('Error submitting PayHere form:', error);
-      paymentWindow.close();
-      alert('Failed to open payment window. Please try again.');
-    }
-    
-    // Remove form after submission
-    setTimeout(() => {
+      alert('Failed to redirect to payment gateway. Please try again.');
+      
+      // Cleanup on failure
       if (document.body.contains(form)) {
         document.body.removeChild(form);
       }
-    }, 1000);
+    }
   };
 
   // Helper to render single item summary
