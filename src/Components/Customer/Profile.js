@@ -15,8 +15,10 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { useAuth } from "../../contexts/AuthContext";
 
 const Profile = () => {
+  const {logout} = useAuth();
   const [user, setUser] = useState(null);
   const [editPopup, setEditPopup] = useState(false);
   const [addressPopup, setAddressPopup] = useState(false);
@@ -187,10 +189,7 @@ const Profile = () => {
             </div>
           </div>
           <button
-            onClick={() => {
-              localStorage.removeItem("user");
-              navigate("/login");
-            }}
+            onClick={() => {logout()}}
             className="md:hidden p-2 text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors"
             title="Log out"
           >
