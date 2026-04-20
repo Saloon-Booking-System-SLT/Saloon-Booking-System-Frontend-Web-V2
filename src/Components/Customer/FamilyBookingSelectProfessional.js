@@ -187,13 +187,7 @@ const SelectProfessionalPage = () => {
                       }
                     >
                       <img
-                        src={
-                          pro.image
-                            ? pro.image.startsWith("http")
-                              ? pro.image
-                              : `${API_BASE_URL}/uploads/professionals/${pro.image}`
-                            : "https://via.placeholder.com/150"
-                        }
+                        src={getProfessionalImageUrl(pro.image, pro.name)}
                         alt={pro.name}
                         className="select-services-image"
                       />
