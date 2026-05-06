@@ -43,11 +43,16 @@ const Footer = () => {
                     >
                         Privacy Policy
                     </Link>
-                    
-                    
-                    <a href="#" className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors">
+
+                    <Link
+                        to="/help"
+                        className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
+                    >
                         Help & Support
-                    </a>
+                    </Link>
+                    
+                    
+                   
                 </nav>
 
                 {/* Divider */}
