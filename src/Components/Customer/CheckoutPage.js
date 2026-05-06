@@ -54,8 +54,8 @@ const CheckoutPage = () => {
       const finalId = idToProcess || "TEMP_ID";
 
       const finalAmount = isGroupBooking
-        ? parseFloat(totalAmount || 0).toFixed(2)
-        : parseFloat(service?.price || 0).toFixed(2);
+        ? parseFloat(String(totalAmount || 0).replace(/,/g, '')).toFixed(2)
+        : parseFloat(String(service?.price || 0).replace(/,/g, '')).toFixed(2);
 
       const itemsDescription = isGroupBooking
         ? `Group Booking (${appointmentDetails?.length || 0} services)`
