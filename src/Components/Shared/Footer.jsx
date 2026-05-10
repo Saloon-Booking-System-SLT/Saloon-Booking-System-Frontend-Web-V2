@@ -31,15 +31,28 @@ const Footer = () => {
                     <Link to="/searchsalon" className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors">
                         Find Salons
                     </Link>
-                    <a href="#" className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors">
-                        Term of Service
-                    </a>
-                    <a href="#" className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors">
+                    <Link
+                        to="/terms"
+                        className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
+                    >
+                        Terms of Service
+                    </Link>
+                    <Link
+                        to="/privacy-policy"
+                        className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
+                    >
                         Privacy Policy
-                    </a>
-                    <a href="#" className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors">
+                    </Link>
+
+                    <Link
+                        to="/help"
+                        className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
+                    >
                         Help & Support
-                    </a>
+                    </Link>
+                    
+                    
+                   
                 </nav>
 
                 {/* Divider */}

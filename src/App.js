@@ -26,7 +26,9 @@ import FamilyBookingSelectTimePage from './Components/Customer/FamilyBookingSele
 import BookSelectionPage from './Components/Customer/BookSelectionPage';
 import CheckoutPage from './Components/Customer/CheckoutPage';
 import ConfirmationPage from './Components/Customer/ConfirmationPage';
-
+import TermsAndConditions from "./Components/Shared/TermsAndConditions";
+import PrivacyPolicy from './Components/Shared/PrivacyPolicy';
+import HelpSupport from './Components/Shared/HelpSupport';
 // Owner Components
 import OwnerLogin from "./Components/Owner/OwnerLogin";
 import RegisterPage1 from "./Components/Owner/RegisterPage1";
@@ -67,6 +69,11 @@ function App() {
           <Route path="/login/customer" element={<CustomerLogin />} />
           <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/help" element={<HelpSupport />} />
+
+
           {/* <Route path="/unauthorized" element={<Unauthorized />} /> */}
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
