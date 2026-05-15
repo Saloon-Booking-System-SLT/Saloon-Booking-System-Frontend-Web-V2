@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useEffect, useState, Fragment, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Dialog, Transition } from '@headlessui/react';
 import {
@@ -12,7 +12,10 @@ import {
   TrashIcon,
   XMarkIcon,
   PhoneIcon,
-  UserIcon
+  UserIcon,
+  CameraIcon,
+  PhotoIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
@@ -22,6 +25,14 @@ const Profile = () => {
   const [addressPopup, setAddressPopup] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [viewPicPopup, setViewPicPopup] = useState(false);
+  const [cameraPopup, setCameraPopup] = useState(false);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -107,34 +118,93 @@ const Profile = () => {
     }
   };
 
-  const handleUpdateProfile = async () => {
+  const extractPublicId = (url) => {
     try {
-      const data = new FormData();
-      data.append('name', formData.name);
-      data.append('email', formData.email);
-      data.append('phone', formData.phone);
-      data.append('gender', formData.gender);
-      if (formData.profilePicture) {
-        data.append('image', formData.profilePicture);
+      const urlObj = new URL(url);
+      const paths = urlObj.pathname.split('/');
+      const uploadIdx = paths.indexOf('upload');
+      if (uploadIdx === -1) return null;
+      let startIdx = uploadIdx + 1;
+      if (paths[startIdx] && paths[startIdx].startsWith('v') && !isNaN(paths[startIdx].substring(1))) {
+        startIdx++;
       }
+      const publicIdWithExt = paths.slice(startIdx).join('/');
+      return publicIdWithExt.split('.')[0];
+    } catch (e) {
+      console.error('Could not extract public_id:', e);
+      return null;
+    }
+  };
 
+  const handleUpdateProfile = async () => {
+    setIsUpdating(true);
+    try {
+      let finalPhotoURL = user?.photoURL || "";
       const token = localStorage.getItem("token");
       const userId = user.id || user._id;
+
+      if (removeImage) {
+        if (finalPhotoURL && finalPhotoURL.includes('res.cloudinary.com')) {
+          const publicId = extractPublicId(finalPhotoURL);
+          if (publicId) {
+            try {
+              await fetch(`${process.env.REACT_APP_API_URL}/users/profile-picture`, {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ publicId })
+              });
+            } catch(e) {
+              console.error('Failed to delete image from backend', e);
+            }
+          }
+        }
+        finalPhotoURL = "";
+      } else if (formData.profilePicture) {
+        const cloudData = new FormData();
+        cloudData.append('file', formData.profilePicture);
+        cloudData.append('upload_preset', 'saloon_profile_pics');
+        cloudData.append('folder', 'saloon_app/profile_pictures');
+
+        const cloudRes = await fetch('https://api.cloudinary.com/v1_1/dr4ejckm0/image/upload', {
+          method: 'POST',
+          body: cloudData
+        });
+        const cloudJson = await cloudRes.json();
+        if (cloudRes.ok && cloudJson.secure_url) {
+          finalPhotoURL = cloudJson.secure_url;
+        } else {
+          throw new Error('Cloudinary upload failed: ' + (cloudJson.error?.message || 'Unknown error'));
+        }
+      }
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        photoURL: finalPhotoURL
+      };
 
       const res = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
         method: "PUT",
         headers: {
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: data,
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
         const updated = await res.json();
-        const userData = updated.user || updated; // Fallback in case backend behavior changes
+        const userData = updated.user || updated;
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
         setEditPopup(false);
+        setRemoveImage(false);
+        setCapturedImage(null);
       } else {
         const errorText = await res.text();
         console.error("Profile update failed:", errorText);
@@ -148,8 +218,68 @@ const Profile = () => {
     } catch (err) {
       console.error("Update exception:", err);
       alert(`Update failed: ${err.message}`);
+    } finally {
+      setIsUpdating(false);
     }
   };
+
+  const handleEditPopupClose = () => {
+    setEditPopup(false);
+    setRemoveImage(false);
+    setCapturedImage(null);
+    setFormData({ ...formData, profilePicture: null });
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      alert("Error accessing camera: " + err.message);
+      setCameraPopup(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      canvasRef.current.width = videoRef.current.videoWidth;
+      canvasRef.current.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+      setCapturedImage(dataUrl);
+      
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+          setFormData({ ...formData, profilePicture: file });
+          setRemoveImage(false);
+        });
+      
+      stopCamera();
+      setCameraPopup(false);
+    }
+  };
+
+  useEffect(() => {
+    if (cameraPopup) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [cameraPopup]);
 
   // Switch tabs
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || "profile");
@@ -440,7 +570,7 @@ const Profile = () => {
 
       {/* Edit Profile Modal */}
       <Transition appear show={editPopup} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={() => setEditPopup(false)}>
+        <Dialog as="div" className="relative z-50" onClose={handleEditPopupClose}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -469,7 +599,7 @@ const Profile = () => {
                     <Dialog.Title as="h3" className="text-xl font-black text-gray-900 tracking-tight">
                       Edit Profile
                     </Dialog.Title>
-                    <button onClick={() => setEditPopup(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                    <button onClick={handleEditPopupClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
                       <XMarkIcon className="w-6 h-6" />
                     </button>
                   </div>
@@ -477,13 +607,75 @@ const Profile = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Profile Picture</label>
-                      <input
-                        type="file"
-                        name="profilePicture"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-dark-900 focus:border-transparent outline-none transition-all font-medium text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-dark-900 file:text-white hover:file:bg-black"
-                      />
+                      <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                        <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
+                          {capturedImage ? (
+                            <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+                          ) : formData.profilePicture ? (
+                            <img src={URL.createObjectURL(formData.profilePicture)} alt="Selected" className="w-full h-full object-cover" />
+                          ) : removeImage ? (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-2xl">
+                              {user.name?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
+                          ) : (
+                            <img src={user.photoURL || "https://ui-avatars.com/api/?name=" + user.name + "&background=random&size=200&color=fff"} alt="Current" className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {!removeImage && (user.photoURL || formData.profilePicture || capturedImage) && (
+                            <button
+                              type="button"
+                              onClick={() => setViewPicPopup(true)}
+                              className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-1.5 transition-colors"
+                            >
+                              <EyeIcon className="w-4 h-4" /> View
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current.click()}
+                            className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-1.5 transition-colors"
+                          >
+                            <PhotoIcon className="w-4 h-4" /> Gallery
+                          </button>
+                          <input
+                            type="file"
+                            name="profilePicture"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            onChange={(e) => {
+                              handleChange(e);
+                              if(e.target.files.length > 0) {
+                                setRemoveImage(false);
+                                setCapturedImage(null);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setCameraPopup(true)}
+                            className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-1.5 transition-colors"
+                          >
+                            <CameraIcon className="w-4 h-4" /> Camera
+                          </button>
+                          {!removeImage && (user.photoURL || formData.profilePicture || capturedImage) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRemoveImage(true);
+                                setCapturedImage(null);
+                                setFormData({ ...formData, profilePicture: null });
+                                if (fileInputRef.current) fileInputRef.current.value = "";
+                              }}
+                              className="px-3 py-1.5 text-xs font-bold bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1.5 transition-colors"
+                            >
+                              <TrashIcon className="w-4 h-4" /> Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
@@ -535,18 +727,124 @@ const Profile = () => {
                     <button
                       type="button"
                       className="w-full py-3.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-                      onClick={() => setEditPopup(false)}
+                      onClick={handleEditPopupClose}
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
-                      className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-dark-900/20"
+                      disabled={isUpdating}
+                      className={`w-full py-3.5 font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 ${isUpdating ? 'bg-gray-400 text-white shadow-none cursor-not-allowed' : 'bg-dark-900 text-white hover:bg-black shadow-dark-900/20'}`}
                       onClick={handleUpdateProfile}
                     >
-                      Save Changes
+                      {isUpdating ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : "Save Changes"}
                     </button>
                   </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* View Picture Modal */}
+      <Transition appear show={viewPicPopup} as={Fragment}>
+        <Dialog as="div" className="relative z-[60]" onClose={() => setViewPicPopup(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-[2rem] bg-transparent text-center align-middle shadow-2xl transition-all relative">
+                  <button onClick={() => setViewPicPopup(false)} className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 rounded-full">
+                    <XMarkIcon className="w-6 h-6" />
+                  </button>
+                  <img 
+                    src={
+                      capturedImage ? capturedImage : 
+                      formData.profilePicture ? URL.createObjectURL(formData.profilePicture) : 
+                      user.photoURL || "https://ui-avatars.com/api/?name=" + user.name + "&background=random&size=800&color=fff"
+                    } 
+                    alt="Profile" 
+                    className="w-full h-auto max-h-[80vh] object-contain mx-auto rounded-xl"
+                  />
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Camera Capture Modal */}
+      <Transition appear show={cameraPopup} as={Fragment}>
+        <Dialog as="div" className="relative z-[60]" onClose={() => setCameraPopup(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-[2rem] bg-white p-6 text-center align-middle shadow-2xl transition-all">
+                  <div className="flex items-center justify-between mb-4">
+                    <Dialog.Title as="h3" className="text-xl font-black text-gray-900 tracking-tight">
+                      Take Photo
+                    </Dialog.Title>
+                    <button onClick={() => setCameraPopup(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                      <XMarkIcon className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  <div className="w-full bg-black rounded-2xl overflow-hidden aspect-video relative mb-6">
+                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+                    <canvas ref={canvasRef} className="hidden"></canvas>
+                  </div>
+                  
+                  <button
+                    onClick={capturePhoto}
+                    className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg shadow-dark-900/20 flex items-center justify-center gap-2"
+                  >
+                    <CameraIcon className="w-5 h-5" /> Capture Photo
+                  </button>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
