@@ -10,7 +10,8 @@ import {
   BuildingStorefrontIcon,
   CreditCardIcon,
   UserCircleIcon,
-  XMarkIcon
+  XMarkIcon,
+  HeartIcon
 } from "@heroicons/react/24/outline";
 import salonLogo from "../../Assets/salonlogo.png";
 import { useAuth } from "../../contexts/AuthContext";
@@ -92,6 +93,15 @@ const Home = () => {
       navigate("/dashboard");
     } else {
       navigate("/appointments");
+    }
+    setMenuOpen(false);
+  };
+
+  const handleNavigateToFavorites = () => {
+    if (user && user.role === 'owner') {
+      navigate(`/profile/${user.id || user._id}`, { state: { activeTab: 'favorites' } });
+    } else {
+      navigate("/profile", { state: { activeTab: 'favorites' } });
     }
     setMenuOpen(false);
   };
@@ -239,6 +249,9 @@ const Home = () => {
                           </button>
                           <button onClick={handleNavigateToAppointments} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 rounded-lg transition-colors flex items-center gap-3">
                             <CalendarDaysIcon className="h-4 w-4" /> Appointments
+                          </button>
+                          <button onClick={handleNavigateToFavorites} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 rounded-lg transition-colors flex items-center gap-3">
+                            <HeartIcon className="h-4 w-4" /> Favorites
                           </button>
                         </>
                       )}
