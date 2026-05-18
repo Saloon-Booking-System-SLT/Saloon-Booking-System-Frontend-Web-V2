@@ -81,6 +81,15 @@ const SearchSalon = () => {
     setMenuOpen(false);
   };
 
+  const handleNavigateToFavorites = () => {
+    if (user && user.role === 'owner') {
+      navigate(`/profile/${user.id || user._id}`, { state: { activeTab: 'favorites' } });
+    } else {
+      navigate("/profile", { state: { activeTab: 'favorites' } });
+    }
+    setMenuOpen(false);
+  };
+
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
@@ -665,6 +674,9 @@ const SearchSalon = () => {
                             </li>
                             <li className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-dark-900 rounded-lg cursor-pointer transition-colors flex items-center gap-3" onClick={handleNavigateToAppointments}>
                               <CalendarDaysIcon className="h-4 w-4" /> Appointments
+                            </li>
+                            <li className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-dark-900 rounded-lg cursor-pointer transition-colors flex items-center gap-3" onClick={handleNavigateToFavorites}>
+                              <HeartIcon className="h-4 w-4" /> Favorites
                             </li>
                           </>
                         )}

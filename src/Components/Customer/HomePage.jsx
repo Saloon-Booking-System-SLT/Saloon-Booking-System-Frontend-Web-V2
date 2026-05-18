@@ -10,7 +10,8 @@ import {
   BuildingStorefrontIcon,
   CreditCardIcon,
   UserCircleIcon,
-  XMarkIcon
+  XMarkIcon,
+  HeartIcon
 } from "@heroicons/react/24/outline";
 import salonLogo from "../../Assets/salonlogo.png";
 import { useAuth } from "../../contexts/AuthContext";
@@ -43,6 +44,7 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const navigate = useNavigate();
 
   // Carousel Auto-Play Effect
@@ -91,6 +93,15 @@ const Home = () => {
       navigate("/dashboard");
     } else {
       navigate("/appointments");
+    }
+    setMenuOpen(false);
+  };
+
+  const handleNavigateToFavorites = () => {
+    if (user && user.role === 'owner') {
+      navigate(`/profile/${user.id || user._id}`, { state: { activeTab: 'favorites' } });
+    } else {
+      navigate("/profile", { state: { activeTab: 'favorites' } });
     }
     setMenuOpen(false);
   };
@@ -174,8 +185,7 @@ const Home = () => {
                           className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
                           onClick={() => {
                             setMenuOpen(false);
-                            // Assuming there might be a download page in the future
-                            alert("App downloads coming soon!");
+                            setShowDownloadModal(true);
                           }}
                         >
                           Download the App
@@ -239,6 +249,9 @@ const Home = () => {
                           <button onClick={handleNavigateToAppointments} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 rounded-lg transition-colors flex items-center gap-3">
                             <CalendarDaysIcon className="h-4 w-4" /> Appointments
                           </button>
+                          <button onClick={handleNavigateToFavorites} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 rounded-lg transition-colors flex items-center gap-3">
+                            <HeartIcon className="h-4 w-4" /> Favorites
+                          </button>
                         </>
                       )}
 
@@ -295,7 +308,10 @@ const Home = () => {
               >
                 Find a Salon
               </button>
-              <button className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 py-4 px-8 text-lg w-full sm:w-auto rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-xl">
+              <button
+                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 py-4 px-8 text-lg w-full sm:w-auto rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-xl"
+                onClick={() => setShowDownloadModal(true)}
+              >
                 <DevicePhoneMobileIcon className="w-5 h-5 opacity-80" />
                 Download App
               </button>
@@ -344,6 +360,88 @@ const Home = () => {
       </section>
 
       <Footer />
+
+      {/* Download App — Coming Soon Modal */}
+      {showDownloadModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowDownloadModal(false)}
+        >
+          <div
+            className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header Gradient */}
+            <div className="bg-gradient-to-br from-slate-900 via-primary-900 to-primary-700 px-8 pt-10 pb-12 text-center">
+              <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto mb-5">
+                <DevicePhoneMobileIcon className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-white mb-2">App Coming Soon!</h2>
+              <p className="text-white/70 text-sm leading-relaxed">
+                Our mobile app is currently under development and will be available on both stores shortly.
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-8 py-7">
+              {/* Store Badges */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-4">Available Soon On</p>
+              <div className="flex flex-col sm:flex-row gap-3 mb-7">
+                {/* Google Play Badge */}
+                <div className="flex-1 flex items-center gap-3 border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 opacity-60 cursor-not-allowed select-none">
+                  <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M3.18 23.5c.37.21.8.23 1.19.07l11.7-6.76-2.58-2.58L3.18 23.5z" fill="#EA4335"/>
+                    <path d="M20.82 10.3c-.43-.26-1.1-.26-1.53 0l-2.22 1.28-2.85-2.85 2.85-2.85 2.22 1.28c.43.25.86.67.86 1.28s-.43 1.03-.33.86z" fill="#FBBC04"/>
+                    <path d="M3.18.5C2.82.7 2.5 1.1 2.5 1.63v20.74c0 .53.32.93.68 1.13l11.31-11.5L3.18.5z" fill="#4285F4"/>
+                    <path d="M4.37 23.57l11.7-6.76-2.58-2.58-9.12 9.34z" fill="#34A853"/>
+                    <path d="M17.07 6.27l-2.58 2.46-9.31-9.23L17.07 6.27z" fill="#34A853"/>
+                  </svg>
+                  <div>
+                    <div className="text-[10px] text-gray-500 leading-none">Get it on</div>
+                    <div className="text-sm font-bold text-gray-800 leading-snug">Google Play</div>
+                  </div>
+                </div>
+                {/* App Store Badge */}
+                <div className="flex-1 flex items-center gap-3 border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 opacity-60 cursor-not-allowed select-none">
+                  <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                  </svg>
+                  <div>
+                    <div className="text-[10px] text-gray-500 leading-none">Download on the</div>
+                    <div className="text-sm font-bold text-gray-800 leading-snug">App Store</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info note */}
+              <div className="flex items-start gap-3 bg-primary-50 border border-primary-100 rounded-2xl px-4 py-3 mb-6">
+                <span className="text-primary-500 text-lg mt-0.5">🔔</span>
+                <p className="text-sm text-primary-800 leading-relaxed">
+                  We're working hard to bring the app to your phone. Stay tuned — it'll be worth the wait!
+                </p>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setShowDownloadModal(false)}
+                className="w-full btn-primary py-3.5 text-base font-semibold rounded-xl"
+              >
+                Got it, I'll wait!
+              </button>
+            </div>
+
+            {/* Close X */}
+            <button
+              onClick={() => setShowDownloadModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              aria-label="Close modal"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
