@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import "./OwnerLogin.css"; // Reuse the same styles
 import loginImage from "../../Assets/login-image.jpg"; // Add this import
@@ -7,7 +7,13 @@ import loginImage from "../../Assets/login-image.jpg"; // Add this import
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const ResetPassword = () => {
-  const { token } = useParams();
+  const { token: pathToken } = useParams();
+  const [searchParams] = useSearchParams();
+  const queryToken = searchParams.get("token");
+  
+  const token = pathToken || queryToken;
+  const isCustomer = !!queryToken;
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     password: "",
@@ -25,47 +31,67 @@ const ResetPassword = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setMessage("");
+    e.preventDefault();
+    setError("");
+    setMessage("");
 
-  if (formData.password !== formData.confirmPassword) {
-    setError("Passwords do not match");
-    return;
-  }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
-  if (formData.password.length < 6) {
-    setError("Password must be at least 6 characters long");
-    return;
-  }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
 
-  setLoading(true);
+    if (!token) {
+      setError("Invalid or missing password reset token.");
+      return;
+    }
 
-  try {
- console.log(" Sending reset password request with token:", token);
-    const res = await axios.post(`${API_BASE_URL}/salons/reset-password/${token}`, {
-      password: formData.password
-    });
+    setLoading(true);
 
- console.log(" Reset password response:", res.data);
-    setMessage(res.data.message);
-    
-    // Wait a bit before redirecting
-    setTimeout(() => {
- console.log(" Redirecting to /owner-login");
-      navigate("/owner-login");
-    }, 3000);
-  } catch (err) {
- console.error(" Reset password error:", {
-      message: err.message,
-      response: err.response?.data,
-      status: err.response?.status
-    });
-    setError(err.response?.data?.message || "Failed to reset password. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      console.log(`Sending reset password request for ${isCustomer ? 'Customer' : 'Salon Owner'} with token:`, token);
+      let res;
+      if (isCustomer) {
+        // Customer reset password endpoint
+        res = await axios.post(`${API_BASE_URL}/users/reset-password`, {
+          token: token,
+          newPassword: formData.password
+        });
+      } else {
+        // Salon Owner reset password endpoint
+        res = await axios.post(`${API_BASE_URL}/salons/reset-password/${token}`, {
+          password: formData.password
+        });
+      }
+
+      console.log("Reset password response:", res.data);
+      setMessage(res.data.message || "Password reset successfully!");
+      
+      // Wait a bit before redirecting
+      setTimeout(() => {
+        if (isCustomer) {
+          console.log("Redirecting to customer login: /login/customer");
+          navigate("/login/customer");
+        } else {
+          console.log("Redirecting to owner login: /OwnerLogin");
+          navigate("/OwnerLogin");
+        }
+      }, 3000);
+    } catch (err) {
+      console.error("Reset password error:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      setError(err.response?.data?.message || "Failed to reset password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="owner-login-container">
@@ -134,7 +160,7 @@ const ResetPassword = () => {
 
         <p className="owner-redirect-text">
           Remember your password?{" "}
-          <a href="/owner-login" className="owner-redirect-link">
+          <a href={isCustomer ? "/login/customer" : "/OwnerLogin"} className="owner-redirect-link">
             Login here
           </a>
         </p>
