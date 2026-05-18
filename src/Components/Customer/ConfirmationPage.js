@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MapPinIcon, ClockIcon, UsersIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import axios from "../../Api/axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 const ConfirmationPage = () => {
   const location = useLocation();
@@ -25,8 +25,8 @@ const ConfirmationPage = () => {
     const fetchBookingDetails = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/appointments/order/${orderIdFromUrl}`);
-        const result = await response.json();
+        const response = await axios.get(`/appointments/order/${orderIdFromUrl}`);
+        const result = response.data;
         if (result.success) {
           const data = result.data;
           setBookingData({
@@ -114,14 +114,8 @@ const ConfirmationPage = () => {
           })),
           isGroupBooking: true
         };
-
-        const response = await fetch(`${API_BASE_URL}/api/appointments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(appointmentData),
-        });
-
-        const result = await response.json();
+        const response = await axios.post(`/appointments`, appointmentData);
+        const result = response.data;
         if (result.success) {
           setSaveStatus("success");
           localStorage.setItem(savedKey, "true");
