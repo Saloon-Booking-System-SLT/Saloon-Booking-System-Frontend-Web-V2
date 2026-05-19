@@ -69,6 +69,7 @@ function App() {
           <Route path="/OwnerLogin" element={<OwnerLogin />} />
           {/* <Route path="/unauthorized" element={<Unauthorized />} /> */}
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Customer Protected Routes */}
           <Route path="/searchsalon" element={<Searchsalon />} />
