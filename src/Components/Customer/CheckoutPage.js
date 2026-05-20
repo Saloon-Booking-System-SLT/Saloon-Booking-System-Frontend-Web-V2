@@ -30,7 +30,6 @@ const CheckoutPage = () => {
   }
 
   const {
-    appointmentId,
     service,
     professional,
     selectedDate,
@@ -42,49 +41,72 @@ const CheckoutPage = () => {
     // Group booking props
     isGroupBooking,
     appointmentDetails,
-    bookingId,
-    totalAmount
+    totalAmount,
+    // Raw pending appointment data (not yet in DB)
+    pendingAppointments,
   } = location.state;
 
   const handlePayHereCheckout = async () => {
     setIsLoading(true);
     try {
-      // Determine Identifier and Amount
-      const idToProcess = isGroupBooking ? bookingId : appointmentId;
-      const finalId = idToProcess || "TEMP_ID";
-
       const finalAmount = isGroupBooking
         ? parseFloat(totalAmount || 0).toFixed(2)
         : parseFloat(service?.price || 0).toFixed(2);
 
       const itemsDescription = isGroupBooking
         ? `Group Booking (${appointmentDetails?.length || 0} services)`
-        : service?.name || "Salon Service";
+        : service?.name || 'Salon Service';
 
-      // 1. Prepare Request Payload
+      // Build the appointments payload to be created AFTER payment succeeds
+      const appointmentsToCreate = pendingAppointments || (appointmentDetails?.length > 0
+        ? appointmentDetails.map(appt => ({
+            salonId: appt.salonId || salon?._id,
+            professionalId: appt.professionalId,
+            professionalName: appt.professionalName,
+            serviceName: appt.serviceName,
+            serviceId: appt.serviceId,
+            price: appt.price,
+            duration: appt.duration,
+            date: appt.date,
+            startTime: appt.startTime,
+            endTime: appt.endTime,
+            memberName: appt.memberName || customerName,
+            phone: appt.phone || customerPhone || '',
+            email: appt.email || customerEmail || '',
+          }))
+        : null);
+
+      // Prepare Request Payload - include pending appointment data so backend can create it after payment
       const payload = {
-        appointmentId: finalId,
-        isGroupBooking: !!isGroupBooking,
         amount: finalAmount,
-        currency: "LKR",
+        currency: 'LKR',
         items: itemsDescription,
         customer: {
-          first_name: customerName?.split(' ')[0] || "Guest",
-          last_name: customerName?.split(' ').slice(1).join(' ') || "User",
-          email: customerEmail || "no-email@example.com",
-          phone: customerPhone || "0000000000",
-          address: "No Address Provided",
-          city: "Colombo",
-          country: "Sri Lanka"
-        }
+          first_name: customerName?.split(' ')[0] || 'Guest',
+          last_name: customerName?.split(' ').slice(1).join(' ') || 'User',
+          email: customerEmail || 'no-email@example.com',
+          phone: customerPhone || '0000000000',
+          address: 'No Address Provided',
+          city: 'Colombo',
+          country: 'Sri Lanka',
+        },
+        // Embed pending appointment data - backend creates appointment only after payment
+        pendingAppointments: appointmentsToCreate,
+        customerInfo: {
+          name: customerName,
+          phone: customerPhone,
+          email: customerEmail,
+        },
+        isGroupBooking: !!isGroupBooking,
+        salonId: salon?._id,
       };
 
-      // 2. Call Backend to Init Payment
+      // Call Backend to Init Payment (and pre-register the pending appointments)
       const response = await axios.post('/payments/payhere/initiate', payload);
       const result = response.data;
 
       if (result.success && result.data) {
-        // 3. Auto-Submit Form to PayHere
+        // Auto-Submit Form to PayHere
         submitPayHereForm(result.data);
       } else {
         alert('Failed to initiate payment. Please try again.');
@@ -100,17 +122,18 @@ const CheckoutPage = () => {
 
   const submitPayHereForm = (data) => {
     console.log('Submitting PayHere form with data:', data);
-    
-    // Append mandatory return_url and cancel_url if missing
+
+    // Build return_url with order_id so ConfirmationPage can poll for appointment creation
+    const orderId = data.order_id;
     const formData = {
       ...data,
-      return_url: data.return_url || `${window.location.origin}/confirmationpage`,
-      cancel_url: data.cancel_url || window.location.href,
+      return_url: `${window.location.origin}/confirmationpage?order_id=${orderId}`,
+      cancel_url: data.cancel_url || `${window.location.origin}/`,
     };
 
     // Determine the correct PayHere action URL based on sandbox flag from backend
-    const actionUrl = data.sandbox 
-      ? 'https://sandbox.payhere.lk/pay/checkout' 
+    const actionUrl = data.sandbox
+      ? 'https://sandbox.payhere.lk/pay/checkout'
       : 'https://www.payhere.lk/pay/checkout';
 
     console.log(`Final PayHere form data submitting to ${actionUrl}:`, formData);
@@ -134,16 +157,13 @@ const CheckoutPage = () => {
     });
 
     document.body.appendChild(form);
-    
+
     try {
-      // Submit the form which will redirect the current window to PayHere
       form.submit();
       console.log('Redirecting to PayHere gateway...');
     } catch (error) {
       console.error('Error submitting PayHere form:', error);
       alert('Failed to redirect to payment gateway. Please try again.');
-      
-      // Cleanup on failure
       if (document.body.contains(form)) {
         document.body.removeChild(form);
       }
@@ -236,7 +256,14 @@ const CheckoutPage = () => {
               <span className="text-sm font-bold text-gray-900 text-right">{salon?.name || 'Salon unavailable'}</span>
             </div>
 
-            <div className="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            {/* Payment notice */}
+            <div className="mt-6 bg-blue-50 rounded-2xl p-4 border border-blue-100">
+              <p className="text-xs text-blue-700 font-medium text-center">
+                🔒 Your booking will only be confirmed after successful payment. No charges until you complete payment.
+              </p>
+            </div>
+
+            <div className="mt-6 bg-gray-50 rounded-2xl p-6 border border-gray-100">
               <div className="flex justify-between items-end">
                 <span className="text-sm font-bold text-gray-500">Total Amount</span>
                 <span className="text-3xl font-black text-dark-900">
@@ -269,7 +296,7 @@ const CheckoutPage = () => {
 
             <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 py-2 px-4 rounded-full w-fit mx-auto border border-green-100">
               <ShieldCheckIcon className="w-4 h-4" />
-              <span>Payments are secure & encrypted</span>
+              <span>Payments are secure &amp; encrypted</span>
             </div>
 
           </div>

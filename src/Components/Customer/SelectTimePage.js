@@ -551,92 +551,70 @@ const SelectTimePage = () => {
         }
       }
     } else {
-      // All services booked, add final appointment and create all appointments
+      // All services selected — navigate to checkout WITHOUT creating appointments yet
       const currentAppointment = getCurrentAppointmentData();
       const finalAppointments = [...bookedAppointments, currentAppointment];
 
-      console.log(" Final appointments to create:", finalAppointments.length);
+      console.log(" Final appointments (pending, not yet in DB):", finalAppointments.length);
 
-      // Create all appointments
-      await createAllAppointments(finalAppointments);
+      // Navigate to checkout with raw data — appointment created only after payment
+      navigateToCheckout(finalAppointments);
     }
   };
 
-  // Create all appointments and navigate to confirmation
-  const createAllAppointments = async (appointments) => {
-    setLoading(true);
-    try {
-      const createdAppointments = [];
-
-      // Create each appointment individually
-      for (const appointmentData of appointments) {
-        console.log(" Creating appointment:", appointmentData.serviceName);
-
-        const createdAppointment = await createAppointment(appointmentData);
-        createdAppointments.push(createdAppointment);
-
-        console.log(" Created appointment:", createdAppointment._id);
-      }
-
-      console.log(" All appointments created successfully:", createdAppointments.length);
-
-      // Navigate to confirmation with all appointments
-      navigateToConfirmation(createdAppointments);
-
-    } catch (error) {
-      console.error(" Failed to create appointments:", error);
-      alert("❌ Failed to create appointments: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Navigate to confirmation for multi-service booking
-  const navigateToConfirmation = (createdAppointments) => {
-    // Prepare state for CheckoutPage
-    const isMulti = createdAppointments.length > 1;
+  // Navigate to checkout with RAW booking data (NO DB creation yet - happens after payment)
+  const navigateToCheckout = (appointments) => {
+    const isMulti = appointments.length > 1;
 
     // For single appointment, we need specific props expected by CheckoutPage
     const singleProps = !isMulti ? {
       service: {
-        name: createdAppointments[0].services[0].name,
-        price: createdAppointments[0].services[0].price,
-        duration: createdAppointments[0].services[0].duration
+        name: appointments[0].serviceName,
+        price: appointments[0].price,
+        duration: appointments[0].duration
       },
       professional: {
-        name: resolveProfessionalForService(createdAppointments[0].services[0].serviceId)?.name || "Any Professional"
+        name: appointments[0].professionalName || "Any Professional"
       },
-      selectedDate: createdAppointments[0].date,
-      selectedTime: createdAppointments[0].startTime,
+      selectedDate: appointments[0].date,
+      selectedTime: appointments[0].startTime,
       salon: salon
     } : {};
 
-    const confirmationData = {
+    const checkoutData = {
       ...singleProps,
       salonName: salon?.name || "Our Salon",
-      appointmentDetails: createdAppointments.map(appointment => ({
-        serviceName: appointment.services[0].name,
-        price: appointment.services[0].price,
-        duration: appointment.services[0].duration,
-        date: appointment.date,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        professionalName: resolveProfessionalForService(appointment.services[0].serviceId)?.name || "Any Professional",
-        memberName: user?.name || "Guest"
+      // Raw appointment data - not yet saved to DB
+      pendingAppointments: appointments,
+      appointmentDetails: appointments.map(appt => ({
+        serviceName: appt.serviceName,
+        price: appt.price,
+        duration: appt.duration,
+        date: appt.date,
+        startTime: appt.startTime,
+        endTime: appt.endTime,
+        professionalName: appt.professionalName || "Any Professional",
+        professionalId: appt.professionalId,
+        salonId: appt.salonId,
+        serviceId: appt.serviceId,
+        memberName: appt.memberName || user?.name || "Guest",
+        phone: user?.phone || "",
+        email: user?.email || "",
       })),
       totalAmount: totalAmount,
-      bookingId: createdAppointments[0]?._id, // For group/multi use this as ID
-      appointmentId: createdAppointments[0]?._id, // For single use this
       customerName: user?.name || "Guest",
-      customerPhone: user?.phone, // Added for CheckoutPage
-      customerEmail: user?.email, // Added for CheckoutPage
+      customerPhone: user?.phone,
+      customerEmail: user?.email,
       isGroupBooking: isMulti,
       salonLocation: salon?.location,
       salon: salon,
-      user: user
+      user: user,
+      // Mark as pending - no appointmentId yet
+      appointmentId: null,
+      bookingId: null,
     };
 
-    console.log(" Navigating to checkout with data:", confirmationData);
+    console.log(" Navigating to checkout with PENDING data (no DB yet):", checkoutData);
 
     // Clear localStorage
     localStorage.removeItem('selectedServices');
@@ -644,7 +622,7 @@ const SelectTimePage = () => {
     localStorage.removeItem('selectedSalon');
     localStorage.removeItem('pendingBookingData');
 
-    navigate("/checkoutpage", { state: confirmationData });
+    navigate("/checkoutpage", { state: checkoutData });
   };
 
   // Get all appointments for display (booked + current)
