@@ -22,6 +22,7 @@ const SelectTimePage = () => {
   const [isGuest, setIsGuest] = useState(false);
   const [showGuestAlert, setShowGuestAlert] = useState(false);
   const [rescheduleError, setRescheduleError] = useState("");
+  const [conflictModalData, setConflictModalData] = useState(null);
 
   const [selectedServices, setSelectedServices] = useState(passedServices);
   const [selectedProfessional, setSelectedProfessional] = useState(passedProfessional);
@@ -329,29 +330,78 @@ const SelectTimePage = () => {
 
         // Check if there's an existing backend conflict
         let isBooked = slot.conflicting;
+        let insufficientGap = slot.insufficientGap || false;
+        let availableGapMins = slot.availableGapMins || null;
+        let nextAppointmentTime = slot.nextAppointmentTime || null;
+
+        // If it is an insufficient gap conflict, we don't treat it as hard-booked.
+        // We want the user to be able to click it and see the informative alert modal.
+        if (isBooked && insufficientGap) {
+          isBooked = false;
+        }
 
         // Check if there's a local conflict with other selected services in this multi-service session
-        if (!isBooked && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
-          const hasLocalConflict = bookedAppointments.some((appt) => {
+        if (!isBooked && !insufficientGap && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
+          // Check if slot start time is covered by any session appointment
+          const isLocalConflictingAtStart = bookedAppointments.some((appt) => {
             if (appt.date !== selectedDate) return false;
-            // Only conflict if it is the same professional
             const apptProId = appt.professionalId;
             if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
 
-            const newStart = timeStringToMinutes(displayStartTime);
-            const newEnd = newStart + slotDurationMins;
+            const startMins = timeStringToMinutes(displayStartTime);
             const bStart = timeStringToMinutes(appt.startTime);
             const bEnd = timeStringToMinutes(appt.endTime);
 
-            return newStart < bEnd && newEnd > bStart;
+            return startMins >= bStart && startMins < bEnd;
           });
 
-          if (hasLocalConflict) {
-            isBooked = true;
+          if (isLocalConflictingAtStart) {
+            isBooked = true; // Fully booked locally
+          } else {
+            // Check if the full duration overlaps
+            const hasLocalOverlap = bookedAppointments.some((appt) => {
+              if (appt.date !== selectedDate) return false;
+              const apptProId = appt.professionalId;
+              if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
+
+              const newStart = timeStringToMinutes(displayStartTime);
+              const newEnd = newStart + slotDurationMins;
+              const bStart = timeStringToMinutes(appt.startTime);
+              const bEnd = timeStringToMinutes(appt.endTime);
+
+              return newStart < bEnd && newEnd > bStart;
+            });
+
+            if (hasLocalOverlap) {
+              // It is an insufficient gap conflict!
+              insufficientGap = true;
+              
+              // Find the next session appointment that starts after this slot
+              const slotStartMins = timeStringToMinutes(displayStartTime);
+              const futureAppts = bookedAppointments.filter((appt) => {
+                if (appt.date !== selectedDate) return false;
+                const apptProId = appt.professionalId;
+                if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
+                return timeStringToMinutes(appt.startTime) > slotStartMins;
+              });
+
+              futureAppts.sort((a, b) => timeStringToMinutes(a.startTime) - timeStringToMinutes(b.startTime));
+              const nextAppt = futureAppts[0];
+              if (nextAppt) {
+                nextAppointmentTime = nextAppt.startTime;
+                availableGapMins = timeStringToMinutes(nextAppt.startTime) - slotStartMins;
+              }
+            }
           }
         }
 
-        return { ...slot, isBooked };
+        return { 
+          ...slot, 
+          isBooked, 
+          insufficientGap, 
+          availableGapMins, 
+          nextAppointmentTime 
+        };
       });
   }, [safeSlots, selectedDate, isPastTimeSlot, bookedAppointments, professionalId, currentService.duration]);
 
@@ -363,8 +413,24 @@ const SelectTimePage = () => {
     fetchTimeSlots(profId, fullDate, service?.duration);
   };
 
-  const handleTimeClick = (serviceId, slotId, isBooked) => {
+  const handleTimeClick = (serviceId, slotId, isBooked, slot) => {
     if (isBooked) return;
+
+    if (slot?.insufficientGap) {
+      // Trigger the beautiful interactive warning modal
+      const currentService = selectedServices[currentServiceIndex.current];
+      const pro = resolveProfessionalForService(serviceId);
+      setConflictModalData({
+        serviceName: currentService?.name || "Service",
+        requiredDuration: currentService?.duration || "30 minutes",
+        availableGapMins: slot.availableGapMins,
+        nextAppointmentTime: slot.nextAppointmentTime,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        proName: pro?.name || "Professional"
+      });
+      return;
+    }
 
     // Check if rescheduling within 24 hours
     if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
@@ -805,6 +871,50 @@ const SelectTimePage = () => {
         </div>
       )}
 
+      {/* Conflict Warning Modal */}
+      {conflictModalData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm" onClick={() => setConflictModalData(null)}></div>
+          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-amber-100">
+            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <ClockIcon className="w-8 h-8 text-amber-500 animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Insufficient Time</h3>
+            <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+              <p className="mb-4">
+                Your selected service (<span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>) requires <span className="font-bold text-gray-800">{conflictModalData.requiredDuration}</span>.
+              </p>
+              <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-left text-amber-900 space-y-2 mb-4">
+                <div className="flex justify-between text-xs font-medium opacity-80">
+                  <span>Available Time Slot:</span>
+                  <span className="font-bold">{conflictModalData.startTime}</span>
+                </div>
+                <div className="flex justify-between text-xs font-medium opacity-80">
+                  <span>Next Appointment Starts:</span>
+                  <span className="font-bold">{conflictModalData.nextAppointmentTime}</span>
+                </div>
+                <hr className="border-amber-100" />
+                <div className="flex justify-between text-xs font-black">
+                  <span>Free Window Duration:</span>
+                  <span className="text-amber-700">{conflictModalData.availableGapMins} mins</span>
+                </div>
+              </div>
+              <p>
+                However, <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is only free for <span className="font-black text-amber-700">{conflictModalData.availableGapMins} minutes</span> before their next booked appointment.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button
+                className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                onClick={() => setConflictModalData(null)}
+              >
+                Got it, Choose Another Time
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
@@ -961,6 +1071,7 @@ const SelectTimePage = () => {
                       const serviceId = currentService._id;
                       const isSelected = selectedTimes[serviceId] === slotId;
                       const isBooked = !!slot.isBooked;
+                      const isLimited = !!slot.insufficientGap;
                       const displayStartTime = slot.startTime || slot.start;
                       const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
                       const isDisabled = isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
@@ -974,20 +1085,25 @@ const SelectTimePage = () => {
                               setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
                               return;
                             }
-                            handleTimeClick(currentService._id, slotId, isBooked);
+                            handleTimeClick(currentService._id, slotId, isBooked, slot);
                           }}
                           className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
+                            isLimited ? "bg-amber-50/50 border-amber-200 hover:border-amber-400 text-amber-900 shadow-sm" :
                             isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
                               "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
                             } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                         >
-                          <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : 'text-gray-900'}`}>
+                          <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
                             {displayStartTime}
                           </span>
 
-                          {/* Booked indicator */}
+                          {/* Booked / Limited indicator */}
                           {isBooked ? (
                             <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
+                          ) : isLimited ? (
+                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-amber-600 flex items-center gap-0.5 animate-pulse">
+                              <span>⚠️</span> Limited
+                            </span>
                           ) : (
                             <span className={`text-[10px] font-medium mt-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
                               LKR {currentService.price}
