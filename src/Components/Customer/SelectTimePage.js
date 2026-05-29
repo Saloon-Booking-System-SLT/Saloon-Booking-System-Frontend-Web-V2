@@ -1,8 +1,8 @@
-// Individual Booking SelectTimePage.jsx - Fixed for Multiple Services
+// Individual Booking SelectTimePage.jsx - Updated for Dynamic Conflict-Based Slots
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDaysIcon, ClockIcon, ChevronRightIcon, ShieldExclamationIcon, LockClosedIcon } from '@heroicons/react/24/outline';
-import { filterMatchingSlots } from "../../Utils/slotUtils";
+import { durationToMinutes, timeStringToMinutes } from "../../Utils/slotUtils";
 
 import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
 
@@ -35,10 +35,10 @@ const SelectTimePage = () => {
   // Store all booked appointments for multi-service booking
   const [bookedAppointments, setBookedAppointments] = useState([]);
 
-  // Stable dates for next 7 days - MOVED TO TOP to be initialized first
+  // Stable dates for next 14 days (extended from 7 to match architecture)
   const dates = useMemo(() => {
     const days = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
       days.push({
@@ -120,31 +120,57 @@ const SelectTimePage = () => {
     return null;
   }, [selectedProfessional]);
 
-  // Fetch time slots
-  const fetchTimeSlots = useCallback(async (professionalId, date) => {
-    if (!professionalId || !date) {
-      console.warn("fetchTimeSlots called without professionalId or date", { professionalId, date });
+  // Fetch time slots — passes duration so backend generates correctly-sized slots
+  const fetchTimeSlots = useCallback(async (professionalId, date, serviceDuration) => {
+    if (!date) {
+      console.warn("fetchTimeSlots: missing date");
       return;
     }
+    if (!serviceDuration) {
+      console.warn("fetchTimeSlots: missing serviceDuration");
+      return;
+    }
+
+    // Convert duration string to minutes
+    const durationMins = typeof serviceDuration === "number"
+      ? serviceDuration
+      : durationToMinutes(serviceDuration);
+
+    // Build query URL
+    let url;
+    if (!professionalId || professionalId === "any") {
+      // "Any professional" mode — backend picks the first available pro for each slot
+      const sId = salon?._id;
+      if (!sId) {
+        console.warn("fetchTimeSlots: salonId needed for 'any' professional mode");
+        return;
+      }
+      url = `${API_BASE_URL}/api/timeslots?professionalId=any&salonId=${sId}&date=${date}&duration=${durationMins}`;
+    } else {
+      url = `${API_BASE_URL}/api/timeslots?professionalId=${professionalId}&date=${date}&duration=${durationMins}`;
+    }
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/timeslots?professionalId=${professionalId}&date=${date}`);
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const key = `${professionalId}-${date}`;
+      const key  = `${professionalId || "any"}-${date}-${durationMins}`;
 
+      // Backend returns { startTime, endTime, conflicting, assignedProfessionalId? }
+      // Filter out past time slots before setting state
       const filteredData = Array.isArray(data) ? data.filter(slot => {
         if (!slot.startTime) return false;
         return !isPastTimeSlot(date, slot.startTime);
       }) : [];
 
       setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
-      console.debug("Fetched and filtered slots", key, filteredData.length, "of", data.length);
+      console.debug(`[timeslots] fetched key=${key} total=${data.length} visible=${filteredData.length}`);
     } catch (err) {
       console.error("Error fetching time slots:", err);
-      const key = `${professionalId}-${date}`;
+      const key = `${professionalId || "any"}-${date}-${durationMins}`;
       setAvailableSlots(prev => ({ ...prev, [key]: [] }));
     }
-  }, [isPastTimeSlot]);
+  }, [isPastTimeSlot, salon]);
 
   // Check user authentication status on mount and when location changes
   useEffect(() => {
@@ -225,7 +251,7 @@ const SelectTimePage = () => {
     }
   }, [user, isGuest]);
 
-  // Update the useEffect that fetches slots to use service-specific professional
+  // Fetch initial slots when component loads
   useEffect(() => {
     if (selectedServices.length === 0) return;
 
@@ -235,11 +261,6 @@ const SelectTimePage = () => {
     const professional = resolveProfessionalForService(currentService._id);
     const professionalId = professional?._id;
 
-    if (!professionalId) {
-      console.error("No professional ID found for service:", currentService.name);
-      return;
-    }
-
     // For reschedule: use the appointment's date, otherwise use today
     const defaultDate = isReschedule && rescheduleAppointment?.date
       ? rescheduleAppointment.date
@@ -248,9 +269,9 @@ const SelectTimePage = () => {
     if (defaultDate) {
       setSelectedDates((prev) => ({ ...prev, [currentService._id]: defaultDate }));
       setSelectedTimes(prev => ({ ...prev, [currentService._id]: null }));
-      fetchTimeSlots(professionalId, defaultDate);
+      fetchTimeSlots(professionalId, defaultDate, currentService.duration);
     }
-  }, [selectedServices, currentServiceIndex.current, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, resolveProfessionalForService]);
+  }, [selectedServices, isReschedule, rescheduleAppointment, dates, fetchTimeSlots, resolveProfessionalForService]);
 
   // Initialize reschedule data
   useEffect(() => {
@@ -288,24 +309,58 @@ const SelectTimePage = () => {
   const professional = resolveProfessionalForService(serviceKey);
   const professionalId = professional?._id;
   const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;
-  const slotKey = professionalId && selectedDate ? `${professionalId}-${selectedDate}` : null;
-  const rawSlots = slotKey ? availableSlots[slotKey] : [];
-  const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
-  const filteredSlots = currentService.duration ? filterMatchingSlots(safeSlots, currentService.duration) : safeSlots;
 
-  // Filter out past time slots from displayed slots
+  // Build cache key — includes duration so different services don't share cached slots
+  const durationMins = durationToMinutes(currentService.duration);
+  const slotKey = selectedDate ? `${professionalId || "any"}-${selectedDate}-${durationMins}` : null;
+  const rawSlots = slotKey ? (availableSlots[slotKey] || []) : [];
+  const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
+
+  // Backend already returns correctly-sized slots — no need to filter by duration.
+  // Map `conflicting` flag to `isBooked` for rendering consistency.
+  // Also check against local `bookedAppointments` to prevent conflicts within the same booking session.
   const displaySlots = useMemo(() => {
-    return filteredSlots.filter(slot => {
-      if (!slot.startTime) return false;
-      return !isPastTimeSlot(selectedDate, slot.startTime);
-    });
-  }, [filteredSlots, selectedDate, isPastTimeSlot]);
+    return safeSlots
+      .filter(slot => slot.startTime && !isPastTimeSlot(selectedDate, slot.startTime))
+      .map(slot => {
+        const displayStartTime = slot.startTime;
+        const slotDurationMins = durationToMinutes(currentService.duration);
+        const resolvedProId = slot.assignedProfessionalId || professionalId;
+
+        // Check if there's an existing backend conflict
+        let isBooked = slot.conflicting;
+
+        // Check if there's a local conflict with other selected services in this multi-service session
+        if (!isBooked && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
+          const hasLocalConflict = bookedAppointments.some((appt) => {
+            if (appt.date !== selectedDate) return false;
+            // Only conflict if it is the same professional
+            const apptProId = appt.professionalId;
+            if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
+
+            const newStart = timeStringToMinutes(displayStartTime);
+            const newEnd = newStart + slotDurationMins;
+            const bStart = timeStringToMinutes(appt.startTime);
+            const bEnd = timeStringToMinutes(appt.endTime);
+
+            return newStart < bEnd && newEnd > bStart;
+          });
+
+          if (hasLocalConflict) {
+            isBooked = true;
+          }
+        }
+
+        return { ...slot, isBooked };
+      });
+  }, [safeSlots, selectedDate, isPastTimeSlot, bookedAppointments, professionalId, currentService.duration]);
 
   // Handlers
   const handleDateClick = (serviceId, profId, fullDate) => {
     setSelectedDates(prev => ({ ...prev, [serviceId]: fullDate }));
     setSelectedTimes(prev => ({ ...prev, [serviceId]: null }));
-    fetchTimeSlots(profId, fullDate);
+    const service = selectedServices.find(s => s._id === serviceId);
+    fetchTimeSlots(profId, fullDate, service?.duration);
   };
 
   const handleTimeClick = (serviceId, slotId, isBooked) => {
@@ -359,6 +414,7 @@ const SelectTimePage = () => {
     const date = selectedDates[serviceId];
     const professional = resolveProfessionalForService(serviceId);
 
+    // For "any professional" bookings, use the assignedProfessionalId from the chosen slot
     const selectedSlot = displaySlots.find(s =>
       (s._id && s._id === slotId) ||
       (s.id && s.id === slotId) ||
@@ -366,17 +422,27 @@ const SelectTimePage = () => {
     );
 
     const startTime = selectedSlot?.startTime || selectedSlot?.start || "";
-    const endTime = computeEndFromStartAndDuration(startTime, currentService?.duration);
+    // Use backend-provided endTime if available, otherwise compute it
+    const endTime = selectedSlot?.endTime
+      ? selectedSlot.endTime
+      : computeEndFromStartAndDuration(startTime, currentService?.duration);
+
+    // For "any professional", the backend assigns which professional covers this slot
+    const resolvedProfessionalId = (
+      professional?._id === "any" || !professional?._id
+    ) ? selectedSlot?.assignedProfessionalId : professional?._id;
 
     console.log(" Current appointment data:", {
       startTime,
+      endTime,
       duration: currentService.duration,
-      calculatedEndTime: endTime
+      resolvedProfessionalId,
+      assignedFromSlot: selectedSlot?.assignedProfessionalId,
     });
 
     return {
       salonId: salon?._id,
-      professionalId: professional?._id,
+      professionalId: resolvedProfessionalId || professional?._id,
       professionalName: professional?.name || "Any Professional",
       serviceId: serviceId,
       serviceName: currentService?.name,
@@ -389,7 +455,7 @@ const SelectTimePage = () => {
       phone: user?.phone || "",
       email: user?.email || "",
     };
-  }, [selectedTimes, selectedDates, displaySlots, selectedServices, currentServiceIndex.current, salon, user, resolveProfessionalForService]);
+  }, [selectedTimes, selectedDates, displaySlots, selectedServices, currentServiceIndex.current, salon, user, resolveProfessionalForService, professional]);
 
   // Check if user is authorized to book
   const isUserAuthorized = !isGuest && (user?.id !== 'guest');
@@ -545,9 +611,9 @@ const SelectTimePage = () => {
         const nextProfessional = resolveProfessionalForService(nextServiceId);
         const nextProfessionalId = nextProfessional?._id;
         const nextDefaultDate = dates[0]?.fullDate;
-        if (nextProfessionalId && nextDefaultDate) {
+        if (nextDefaultDate) {
           setSelectedDates(prev => ({ ...prev, [nextServiceId]: nextDefaultDate }));
-          fetchTimeSlots(nextProfessionalId, nextDefaultDate);
+          fetchTimeSlots(nextProfessionalId, nextDefaultDate, nextService?.duration);
         }
       }
     } else {
