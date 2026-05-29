@@ -246,10 +246,14 @@ const SelectTimePage = () => {
           isBooked = false;
         }
 
+        let isSessionConflict = false;
+        let sessionConflictService = null;
+        let sessionConflictMember = null;
+
         // Check if there's a local conflict with other selected services in this multi-service session
-        if (!isBooked && !insufficientGap && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
+        if (!isBooked && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
           // Check if slot start time is covered by any session appointment
-          const isLocalConflictingAtStart = bookedAppointments.some((appt) => {
+          const localConflictingAppt = bookedAppointments.find((appt) => {
             if (appt.date !== selectedDate) return false;
             const apptProId = appt.professionalId;
             if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
@@ -261,11 +265,13 @@ const SelectTimePage = () => {
             return startMins >= bStart && startMins < bEnd;
           });
 
-          if (isLocalConflictingAtStart) {
-            isBooked = true; // Fully booked locally
+          if (localConflictingAppt) {
+            isSessionConflict = true;
+            sessionConflictService = localConflictingAppt.serviceName;
+            sessionConflictMember = localConflictingAppt.memberName;
           } else {
             // Check if the full duration overlaps
-            const hasLocalOverlap = bookedAppointments.some((appt) => {
+            const localOverlapAppt = bookedAppointments.find((appt) => {
               if (appt.date !== selectedDate) return false;
               const apptProId = appt.professionalId;
               if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
@@ -278,8 +284,7 @@ const SelectTimePage = () => {
               return newStart < bEnd && newEnd > bStart;
             });
 
-            if (hasLocalOverlap) {
-              // It is an insufficient gap conflict!
+            if (localOverlapAppt) {
               insufficientGap = true;
               
               // Find the next session appointment that starts after this slot
@@ -301,12 +306,20 @@ const SelectTimePage = () => {
           }
         }
 
+        if (isSessionConflict) {
+          isBooked = false;
+          insufficientGap = false;
+        }
+
         return { 
           ...slot, 
           isBooked, 
           insufficientGap, 
           availableGapMins, 
-          nextAppointmentTime 
+          nextAppointmentTime,
+          isSessionConflict,
+          sessionConflictService,
+          sessionConflictMember
         };
       });
   }, [safeSlots, selectedDate, isPastTimeSlot, bookedAppointments, professionalId, currentService.duration]);
@@ -320,6 +333,29 @@ const SelectTimePage = () => {
 
   const handleTimeClick = (serviceName, slotId, isBooked, slot) => {
     if (isBooked) return;
+
+    if (slot?.isSessionConflict) {
+      // Trigger the beautiful interactive session conflict modal
+      const currentService = selectedServices[currentServiceIndex.current];
+      
+      const getProName = () => {
+        if (!selectedProfessional) return "Any Professional";
+        if (selectedProfessional[serviceName]) {
+          return selectedProfessional[serviceName]?.name || "Professional";
+        }
+        return selectedProfessional?.name || "Professional";
+      };
+
+      setConflictModalData({
+        isSessionConflict: true,
+        serviceName: currentService?.name || "Service",
+        conflictService: slot.sessionConflictService,
+        conflictMember: slot.sessionConflictMember,
+        startTime: slot.startTime,
+        proName: getProName()
+      });
+      return;
+    }
 
     if (slot?.insufficientGap) {
       // Trigger the beautiful interactive warning modal
@@ -690,11 +726,12 @@ const SelectTimePage = () => {
               const isSelected = selectedTimes[serviceKey] === slotId;
               const isBooked = !!slot.isBooked;
               const isLimited = !!slot.insufficientGap;
+              const isSessionConflict = !!slot.isSessionConflict;
 
               return (
                 <div
                   key={slotId}
-                  className={`SelectTimePage-card ${isBooked ? "disabled" : isLimited ? "limited" : isSelected ? "selected" : ""}`}
+                  className={`SelectTimePage-card ${isBooked ? "disabled" : isSessionConflict ? "session-conflict" : isLimited ? "limited" : isSelected ? "selected" : ""}`}
                   onClick={() => {
                     if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
                       setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
@@ -710,6 +747,8 @@ const SelectTimePage = () => {
                   <p>{slot.startTime} - {slot.endTime}</p>
                   {isBooked ? (
                     <p>❌ Booked</p>
+                  ) : isSessionConflict ? (
+                    <p className="session-conflict-text">📅 {isGroupBooking ? `${slot.sessionConflictMember}'s Slot` : "Your Slot"}</p>
                   ) : isLimited ? (
                     <p className="limited-text">⚠️ Limited</p>
                   ) : (
@@ -799,43 +838,74 @@ const SelectTimePage = () => {
       {conflictModalData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm" onClick={() => setConflictModalData(null)}></div>
-          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-amber-100">
-            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-              <ClockIcon className="w-8 h-8 text-amber-500 animate-pulse" />
-            </div>
-            <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Insufficient Time</h3>
-            <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
-              <p className="mb-4">
-                Your selected service (<span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>) requires <span className="font-bold text-gray-800">{conflictModalData.requiredDuration}</span>.
-              </p>
-              <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-left text-amber-900 space-y-2 mb-4">
-                <div className="flex justify-between text-xs font-medium opacity-80">
-                  <span>Available Time Slot:</span>
-                  <span className="font-bold">{conflictModalData.startTime}</span>
-                </div>
-                <div className="flex justify-between text-xs font-medium opacity-80">
-                  <span>Next Appointment Starts:</span>
-                  <span className="font-bold">{conflictModalData.nextAppointmentTime}</span>
-                </div>
-                <hr className="border-amber-100" />
-                <div className="flex justify-between text-xs font-black">
-                  <span>Free Window Duration:</span>
-                  <span className="text-amber-700">{conflictModalData.availableGapMins} mins</span>
-                </div>
+          {conflictModalData.isSessionConflict ? (
+            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-indigo-100">
+              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <CalendarDaysIcon className="w-8 h-8 text-indigo-500 animate-pulse" />
               </div>
-              <p>
-                However, <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is only free for <span className="font-black text-amber-700">{conflictModalData.availableGapMins} minutes</span> before their next booked appointment.
-              </p>
+              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Time Already Selected</h3>
+              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                {isGroupBooking ? (
+                  <p className="mb-4">
+                    This time slot (<span className="font-bold text-gray-800">{conflictModalData.startTime}</span>) is already selected for <span className="font-black text-indigo-600">{conflictModalData.conflictMember}</span> (<span className="font-bold text-gray-800">{conflictModalData.conflictService}</span>) with <span className="font-bold text-gray-800">{conflictModalData.proName}</span>.
+                  </p>
+                ) : (
+                  <p className="mb-4">
+                    You have already selected this time slot (<span className="font-bold text-gray-800">{conflictModalData.startTime}</span>) for <span className="font-bold text-indigo-600">{conflictModalData.conflictService}</span> in this session.
+                  </p>
+                )}
+                <p>
+                  Since <span className="font-bold text-gray-800">{conflictModalData.proName}</span> cannot be double-booked, please choose a different time slot for <span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                  onClick={() => setConflictModalData(null)}
+                >
+                  Got it, Choose Another Time
+                </button>
+              </div>
             </div>
-            <div className="space-y-3">
-              <button
-                className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
-                onClick={() => setConflictModalData(null)}
-              >
-                Got it, Choose Another Time
-              </button>
+          ) : (
+            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-amber-100">
+              <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <ClockIcon className="w-8 h-8 text-amber-500 animate-pulse" />
+              </div>
+              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Insufficient Time</h3>
+              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                <p className="mb-4">
+                  Your selected service (<span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>) requires <span className="font-bold text-gray-800">{conflictModalData.requiredDuration}</span>.
+                </p>
+                <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-left text-amber-900 space-y-2 mb-4">
+                  <div className="flex justify-between text-xs font-medium opacity-80">
+                    <span>Available Time Slot:</span>
+                    <span className="font-bold">{conflictModalData.startTime}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-medium opacity-80">
+                    <span>Next Appointment Starts:</span>
+                    <span className="font-bold">{conflictModalData.nextAppointmentTime}</span>
+                  </div>
+                  <hr className="border-amber-100" />
+                  <div className="flex justify-between text-xs font-black">
+                    <span>Free Window Duration:</span>
+                    <span className="text-amber-700">{conflictModalData.availableGapMins} mins</span>
+                  </div>
+                </div>
+                <p>
+                  However, <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is only free for <span className="font-black text-amber-700">{conflictModalData.availableGapMins} minutes</span> before their next booked appointment.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                  onClick={() => setConflictModalData(null)}
+                >
+                  Got it, Choose Another Time
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
