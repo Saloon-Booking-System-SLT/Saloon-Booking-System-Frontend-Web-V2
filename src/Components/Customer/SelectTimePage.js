@@ -1085,22 +1085,32 @@ const SelectTimePage = () => {
                   {currentService && dates.map(day => {
                     const serviceId = currentService._id;
                     const isSelected = selectedDates[serviceId] === day.fullDate;
-                    const isDisabled = isGuest || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
+                    
+                    // Timezone-safe day of week parsing
+                    const [y, m, d] = day.fullDate.split("-").map(Number);
+                    const parsedDate = new Date(y, m - 1, d);
+                    const dayOfWeek = parsedDate.toLocaleDateString("en-US", { weekday: "long" });
+                    const isSalonClosed = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && dayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
+                    
+                    const isDisabled = isGuest || isSalonClosed || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
 
                     return (
                       <button
                         key={`${serviceId}-${day.fullDate}`}
                         onClick={() => professionalId && handleDateClick(serviceId, professionalId, day.fullDate)}
                         disabled={isDisabled}
-                        className={`flex flex-col flex-none items-center justify-center p-3 rounded-2xl border-2 min-w-[4.5rem] sm:min-w-[5rem] transition-all duration-200 ${isSelected
-                          ? 'bg-dark-900 border-dark-900 shadow-md shadow-dark-900/20 scale-105'
-                          : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`flex flex-col flex-none items-center justify-center p-3 rounded-2xl border-2 min-w-[4.5rem] sm:min-w-[5rem] transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-dark-900 border-dark-900 shadow-md shadow-dark-900/20 scale-105'
+                            : isSalonClosed
+                            ? 'bg-red-50/40 border-red-200 text-red-600'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        } ${isDisabled && !isSalonClosed ? 'opacity-50 cursor-not-allowed' : isSalonClosed ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                       >
-                        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
-                          {day.day}
+                        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-gray-300' : isSalonClosed ? 'text-red-500' : 'text-gray-400'}`}>
+                          {isSalonClosed ? "Closed" : day.day}
                         </span>
-                        <span className={`text-xl sm:text-2xl font-black ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                        <span className={`text-xl sm:text-2xl font-black ${isSelected ? 'text-white' : isSalonClosed ? 'text-red-700' : 'text-gray-900'}`}>
                           {day.date}
                         </span>
                       </button>
@@ -1111,84 +1121,96 @@ const SelectTimePage = () => {
             )}
 
             {/* Time Slots Grid */}
-            {professionalId && selectedDate && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <ClockIcon className="w-5 h-5 text-gray-400" />
-                  <h3 className="font-bold text-gray-900">Available Times</h3>
-                </div>
+            {professionalId && selectedDate && (() => {
+              const [selY, selM, selD] = selectedDate.split("-").map(Number);
+              const selParsedDate = new Date(selY, selM - 1, selD);
+              const selectedDayOfWeek = selParsedDate.toLocaleDateString("en-US", { weekday: "long" });
+              const isSalonClosedOnSelectedDate = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && selectedDayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
 
-                {displaySlots.length === 0 ? (
-                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-10 text-center">
-                    <p className="text-gray-500 font-medium">
-                      No available time slots on {new Date(selectedDate).toLocaleDateString()}.
-                    </p>
-                    {isPastTimeSlot(selectedDate, "23:59") && (
-                      <p className="text-sm mt-3 text-red-500 font-bold bg-red-50 py-1.5 px-3 rounded-lg inline-block">
-                        ⏰ Today's slots have passed. Please select a future date.
+              return (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <ClockIcon className="w-5 h-5 text-gray-400" />
+                    <h3 className="font-bold text-gray-900">Available Times</h3>
+                  </div>
+
+                  {isSalonClosedOnSelectedDate ? (
+                    <div className="bg-red-50/50 border border-red-200 rounded-2xl p-10 text-center">
+                      <p className="text-red-800 font-bold text-lg flex items-center justify-center gap-1.5">🔒 Salon is Closed</p>
+                      <p className="text-sm mt-2 text-red-600 font-medium">Our salon is closed on {salon.closedDay}s. Please select another date.</p>
+                    </div>
+                  ) : displaySlots.length === 0 ? (
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl p-10 text-center">
+                      <p className="text-gray-500 font-medium">
+                        No available time slots on {new Date(selectedDate).toLocaleDateString()}.
                       </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                    {displaySlots.map(slot => {
-                      const slotId = slot._id || slot.id || slot.startTime;
-                      const serviceId = currentService._id;
-                      const isSelected = selectedTimes[serviceId] === slotId;
-                      const isBooked = !!slot.isBooked;
-                      const isLimited = !!slot.insufficientGap;
-                      const isSessionConflict = !!slot.isSessionConflict;
-                      const displayStartTime = slot.startTime || slot.start;
-                      const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
-                      const isDisabled = isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
+                      {isPastTimeSlot(selectedDate, "23:59") && (
+                        <p className="text-sm mt-3 text-red-500 font-bold bg-red-50 py-1.5 px-3 rounded-lg inline-block">
+                          ⏰ Today's slots have passed. Please select a future date.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                      {displaySlots.map(slot => {
+                        const slotId = slot._id || slot.id || slot.startTime;
+                        const serviceId = currentService._id;
+                        const isSelected = selectedTimes[serviceId] === slotId;
+                        const isBooked = !!slot.isBooked;
+                        const isLimited = !!slot.insufficientGap;
+                        const isSessionConflict = !!slot.isSessionConflict;
+                        const displayStartTime = slot.startTime || slot.start;
+                        const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
+                        const isDisabled = isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
 
-                      return (
-                        <div
-                          key={slotId}
-                          onClick={() => {
-                            if (isDisabled) return;
-                            if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
-                              setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
-                              return;
-                            }
-                            handleTimeClick(currentService._id, slotId, isBooked, slot);
-                          }}
-                          className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
-                            isSessionConflict ? "bg-indigo-50/70 border-indigo-200 hover:border-indigo-400 text-indigo-900 shadow-sm" :
-                            isLimited ? "bg-amber-50/50 border-amber-200 hover:border-amber-400 text-amber-900 shadow-sm" :
-                            isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
-                              "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
-                            } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-                        >
-                          <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : isSessionConflict ? 'text-indigo-800' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
-                            {displayStartTime}
-                          </span>
+                        return (
+                          <div
+                            key={slotId}
+                            onClick={() => {
+                              if (isDisabled) return;
+                              if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
+                                setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
+                                return;
+                              }
+                              handleTimeClick(currentService._id, slotId, isBooked, slot);
+                            }}
+                            className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
+                              isSessionConflict ? "bg-indigo-50/70 border-indigo-200 hover:border-indigo-400 text-indigo-900 shadow-sm" :
+                              isLimited ? "bg-amber-50/50 border-amber-200 hover:border-amber-400 text-amber-900 shadow-sm" :
+                              isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
+                                "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
+                              } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                          >
+                            <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : isSessionConflict ? 'text-indigo-800' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
+                              {displayStartTime}
+                            </span>
 
-                          {/* Booked / Session / Limited indicator */}
-                          {isBooked ? (
-                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
-                          ) : isSessionConflict ? (
-                            <span className="text-[10px] uppercase font-black tracking-wider mt-1 text-indigo-600 flex items-center gap-0.5 animate-pulse">
-                              <span>📅</span> Your Slot
-                            </span>
-                          ) : isLimited ? (
-                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-amber-600 flex items-center gap-0.5 animate-pulse">
-                              <span>⚠️</span> Limited
-                            </span>
-                          ) : (
-                            <span className={`text-[10px] font-medium mt-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
-                              LKR {currentService.price}
-                            </span>
-                          )}
+                            {/* Booked / Session / Limited indicator */}
+                            {isBooked ? (
+                              <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
+                            ) : isSessionConflict ? (
+                              <span className="text-[10px] uppercase font-black tracking-wider mt-1 text-indigo-600 flex items-center gap-0.5 animate-pulse">
+                                <span>📅</span> Your Slot
+                              </span>
+                            ) : isLimited ? (
+                              <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-amber-600 flex items-center gap-0.5 animate-pulse">
+                                <span>⚠️</span> Limited
+                              </span>
+                            ) : (
+                              <span className={`text-[10px] font-medium mt-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                                LKR {currentService.price}
+                              </span>
+                            )}
 
-                          {isGuest && <LockClosedIcon className="absolute top-1.5 right-1.5 w-3 h-3 opacity-50" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                            {isGuest && <LockClosedIcon className="absolute top-1.5 right-1.5 w-3 h-3 opacity-50" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
           </div>
 

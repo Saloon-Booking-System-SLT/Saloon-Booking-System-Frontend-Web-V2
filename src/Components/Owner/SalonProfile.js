@@ -276,6 +276,24 @@ const SalonProfile = () => {
                           className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Weekly Closed Day</label>
+                        <select
+                          name="closedDay"
+                          value={formData.closedDay || 'Sunday'}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm"
+                        >
+                          <option value="None">None</option>
+                          <option value="Monday">Monday</option>
+                          <option value="Tuesday">Tuesday</option>
+                          <option value="Wednesday">Wednesday</option>
+                          <option value="Thursday">Thursday</option>
+                          <option value="Friday">Friday</option>
+                          <option value="Saturday">Saturday</option>
+                          <option value="Sunday">Sunday</option>
+                        </select>
+                      </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-bold text-gray-700 mb-2">Services (comma separated)</label>
                         <input
@@ -350,6 +368,13 @@ const SalonProfile = () => {
                             <div>
                               <p className="text-xs font-semibold text-gray-500">Working Hours</p>
                               <p className="text-sm font-bold text-gray-900">{salon.workingHours || 'Not provided'}</p>
+                            </div>
+                          </li>
+                          <li className="flex items-start gap-3">
+                            <ClockIcon className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500">Weekly Closed Day</p>
+                              <p className="text-sm font-bold text-red-600">{salon.closedDay || 'None'}</p>
                             </div>
                           </li>
                           <li className="flex items-start gap-3">

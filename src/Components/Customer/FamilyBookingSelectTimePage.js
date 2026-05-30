@@ -694,16 +694,24 @@ const SelectTimePage = () => {
         )}
 
         <div className="date-buttons">
-          {dates.map(day => (
-            <button
-              key={day.fullDate}
-              className={`date-button ${selectedDates[serviceKey] === day.fullDate ? "selected" : ""}`}
-              onClick={() => handleDateClick(serviceKey, professionalId, day.fullDate)}
-              disabled={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)}
-            >
-              <span>{day.date}</span><small>{day.day}</small>
-            </button>
-          ))}
+          {dates.map(day => {
+            const [y, m, d] = day.fullDate.split("-").map(Number);
+            const parsedDate = new Date(y, m - 1, d);
+            const dayOfWeek = parsedDate.toLocaleDateString("en-US", { weekday: "long" });
+            const isSalonClosed = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && dayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
+
+            return (
+              <button
+                key={day.fullDate}
+                className={`date-button ${selectedDates[serviceKey] === day.fullDate ? "selected" : ""} ${isSalonClosed ? "closed" : ""}`}
+                onClick={() => handleDateClick(serviceKey, professionalId, day.fullDate)}
+                disabled={isSalonClosed || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))}
+              >
+                <span>{day.date}</span>
+                <small>{isSalonClosed ? "Closed" : day.day}</small>
+              </button>
+            );
+          })}
         </div>
 
         <div className="SelectTimePage-list">
@@ -711,17 +719,35 @@ const SelectTimePage = () => {
             <p>No professional selected</p>
           ) : !selectedDate ? (
             <p>Please select a date</p>
-          ) : displaySlots.length === 0 ? (
-            <p>
-              No available time slots for {new Date(selectedDate).toLocaleDateString()}
-              {isPastTimeSlot(selectedDate, "23:59") && (
-                <span style={{ display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
-                  ⏰ Today's available slots have passed. Please select a future date.
-                </span>
-              )}
-            </p>
-          ) : (
-            displaySlots.map(slot => {
+          ) : (() => {
+            const [selY, selM, selD] = selectedDate.split("-").map(Number);
+            const selParsedDate = new Date(selY, selM - 1, selD);
+            const selectedDayOfWeek = selParsedDate.toLocaleDateString("en-US", { weekday: "long" });
+            const isSalonClosedOnSelectedDate = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && selectedDayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
+
+            if (isSalonClosedOnSelectedDate) {
+              return (
+                <div className="salon-closed-alert">
+                  <p className="alert-title">🔒 Salon is Closed</p>
+                  <p className="alert-desc">Our salon is closed on {salon.closedDay}s. Please select another date.</p>
+                </div>
+              );
+            }
+
+            if (displaySlots.length === 0) {
+              return (
+                <p>
+                  No available time slots for {new Date(selectedDate).toLocaleDateString()}
+                  {isPastTimeSlot(selectedDate, "23:59") && (
+                    <span style={{ display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
+                      ⏰ Today's available slots have passed. Please select a future date.
+                    </span>
+                  )}
+                </p>
+              );
+            }
+
+            return displaySlots.map(slot => {
               const slotId = slot._id || slot.id || slot.startTime;
               const isSelected = selectedTimes[serviceKey] === slotId;
               const isBooked = !!slot.isBooked;
@@ -759,8 +785,8 @@ const SelectTimePage = () => {
                   )}
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </div>
 

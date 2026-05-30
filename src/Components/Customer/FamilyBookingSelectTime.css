@@ -76,6 +76,42 @@
   font-weight: bold;
 }
 
+.date-button.closed {
+  background: #fdf2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+.date-button.closed:hover {
+  background: #fdf2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+.salon-closed-alert {
+  background: #fdf2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.salon-closed-alert .alert-title {
+  color: #b91c1c;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+}
+
+.salon-closed-alert .alert-desc {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
 /* Time Slot Cards */
 .services-list {
   display: flex;
