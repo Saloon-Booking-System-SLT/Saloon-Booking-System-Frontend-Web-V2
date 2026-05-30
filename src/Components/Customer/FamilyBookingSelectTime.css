@@ -1454,3 +1454,37 @@
   justify-content: center;
   margin-top: 4px;
 }
+
+/* Premium Off-Duty Staff Leaves Slot Styles */
+.SelectTimePage-card.off-duty {
+  background-color: #f9fafb !important; /* gray-50 */
+  border-color: #e5e7eb !important; /* gray-200 */
+  color: #9ca3af !important; /* gray-400 */
+  border-style: dashed !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.SelectTimePage-card.off-duty:hover {
+  border-color: #9ca3af !important; /* gray-400 */
+  transform: translateY(-2px);
+}
+
+.SelectTimePage-card.off-duty p {
+  color: #9ca3af !important;
+}
+
+.SelectTimePage-card.off-duty .off-duty-text {
+  color: #6b7280 !important; /* gray-500 */
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 4px;
+}

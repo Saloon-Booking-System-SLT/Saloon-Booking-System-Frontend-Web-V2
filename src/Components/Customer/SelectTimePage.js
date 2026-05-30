@@ -333,10 +333,12 @@ const SelectTimePage = () => {
         let insufficientGap = slot.insufficientGap || false;
         let availableGapMins = slot.availableGapMins || null;
         let nextAppointmentTime = slot.nextAppointmentTime || null;
+        let isLeave = slot.isLeave || false;
+        let leaveReason = slot.leaveReason || null;
 
-        // If it is an insufficient gap conflict, we don't treat it as hard-booked.
-        // We want the user to be able to click it and see the informative alert modal.
-        if (isBooked && insufficientGap) {
+        // If it is an insufficient gap conflict or a leave off-duty window, we don't treat it as hard-booked.
+        // We want the user to be able to click it and see the informative modal.
+        if (isBooked && (insufficientGap || isLeave)) {
           isBooked = false;
         }
 
@@ -414,7 +416,9 @@ const SelectTimePage = () => {
           sessionConflictService,
           sessionConflictMember,
           sessionConflictProId,
-          sessionConflictProName
+          sessionConflictProName,
+          isLeave,
+          leaveReason
         };
       });
   }, [safeSlots, selectedDate, isPastTimeSlot, bookedAppointments, professionalId, currentService.duration]);
@@ -429,6 +433,19 @@ const SelectTimePage = () => {
 
   const handleTimeClick = (serviceId, slotId, isBooked, slot) => {
     if (isBooked) return;
+
+    if (slot?.isLeave) {
+      const currentService = selectedServices[currentServiceIndex.current];
+      const pro = resolveProfessionalForService(serviceId);
+      setConflictModalData({
+        isLeave: true,
+        serviceName: currentService?.name || "Service",
+        startTime: slot.startTime,
+        proName: pro?.name || "Professional",
+        leaveReason: slot.leaveReason || "Off-Duty"
+      });
+      return;
+    }
 
     if (slot?.isSessionConflict) {
       // Trigger the beautiful interactive session conflict modal
@@ -909,7 +926,34 @@ const SelectTimePage = () => {
       {conflictModalData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm" onClick={() => setConflictModalData(null)}></div>
-          {conflictModalData.isSessionConflict ? (
+          {conflictModalData.isLeave ? (
+            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-gray-100">
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <ClockIcon className="w-8 h-8 text-gray-500 animate-pulse" />
+              </div>
+              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Staff Off-Duty</h3>
+              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                <p className="mb-4">
+                  <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is not available at <span className="font-bold text-gray-800">{conflictModalData.startTime}</span> because they are off-duty or on leave.
+                </p>
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-left text-gray-700 mb-4">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span>Reason for Absence:</span>
+                    <span className="text-gray-950 font-bold">{conflictModalData.leaveReason}</span>
+                  </div>
+                </div>
+                <p>Please select another available time slot or pick a different professional.</p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                  onClick={() => setConflictModalData(null)}
+                >
+                  Got it, Choose Another Time
+                </button>
+              </div>
+            </div>
+          ) : conflictModalData.isSessionConflict ? (
             <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-indigo-100">
               <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <CalendarDaysIcon className="w-8 h-8 text-indigo-500 animate-pulse" />
@@ -1159,6 +1203,7 @@ const SelectTimePage = () => {
                         const isBooked = !!slot.isBooked;
                         const isLimited = !!slot.insufficientGap;
                         const isSessionConflict = !!slot.isSessionConflict;
+                        const isLeave = !!slot.isLeave;
                         const displayStartTime = slot.startTime || slot.start;
                         const displayEndTime = computeEndFromStartAndDuration(displayStartTime, currentService.duration);
                         const isDisabled = isGuest || isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime));
@@ -1175,19 +1220,24 @@ const SelectTimePage = () => {
                               handleTimeClick(currentService._id, slotId, isBooked, slot);
                             }}
                             className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
+                              isLeave ? "bg-gray-50 border-gray-200 text-gray-400 border-dashed hover:border-gray-300" :
                               isSessionConflict ? "bg-indigo-50/70 border-indigo-200 hover:border-indigo-400 text-indigo-900 shadow-sm" :
                               isLimited ? "bg-amber-50/50 border-amber-200 hover:border-amber-400 text-amber-900 shadow-sm" :
                               isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
                                 "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
                               } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                           >
-                            <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : isBooked ? 'text-gray-400' : isSessionConflict ? 'text-indigo-800' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
+                            <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : (isBooked || isLeave) ? 'text-gray-400' : isSessionConflict ? 'text-indigo-800' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
                               {displayStartTime}
                             </span>
 
-                            {/* Booked / Session / Limited indicator */}
+                            {/* Booked / Session / Limited / Leave indicator */}
                             {isBooked ? (
                               <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
+                            ) : isLeave ? (
+                              <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-gray-500 flex items-center gap-0.5 animate-pulse">
+                                <span>💤</span> Off-Duty
+                              </span>
                             ) : isSessionConflict ? (
                               <span className="text-[10px] uppercase font-black tracking-wider mt-1 text-indigo-600 flex items-center gap-0.5 animate-pulse">
                                 <span>📅</span> Your Slot

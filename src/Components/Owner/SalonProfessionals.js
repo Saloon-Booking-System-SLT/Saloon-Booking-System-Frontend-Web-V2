@@ -44,6 +44,74 @@ const SalonProfessionals = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState(null);
 
+  const [leavesModalPro, setLeavesModalPro] = useState(null);
+  const [showLeavesModal, setShowLeavesModal] = useState(false);
+  const [newLeaveData, setNewLeaveData] = useState({
+    date: "",
+    type: "full",
+    startTime: "09:00",
+    endTime: "17:00",
+    reason: ""
+  });
+
+  const handleOpenLeavesModal = (pro) => {
+    setLeavesModalPro(pro);
+    setShowLeavesModal(true);
+    setNewLeaveData({
+      date: "",
+      type: "full",
+      startTime: "09:00",
+      endTime: "17:00",
+      reason: ""
+    });
+  };
+
+  const handleAddLeave = async () => {
+    if (!newLeaveData.date) {
+      alert("Please select a date.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(`/professionals/${leavesModalPro._id}/leaves`, newLeaveData);
+      if (response.data?.data) {
+        setProfessionals(prev => prev.map(pro => 
+          pro._id === leavesModalPro._id ? response.data.data : pro
+        ));
+        setLeavesModalPro(response.data.data);
+        alert("Leave added successfully!");
+        setNewLeaveData({
+          date: "",
+          type: "full",
+          startTime: "09:00",
+          endTime: "17:00",
+          reason: ""
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add leave: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeleteLeave = async (leaveId) => {
+    if (!window.confirm("Remove this leave?")) return;
+
+    try {
+      const response = await axios.delete(`/professionals/${leavesModalPro._id}/leaves/${leaveId}`);
+      if (response.data?.data) {
+        setProfessionals(prev => prev.map(pro => 
+          pro._id === leavesModalPro._id ? response.data.data : pro
+        ));
+        setLeavesModalPro(response.data.data);
+        alert("Leave removed successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete leave: " + (err.response?.data?.error || err.message));
+    }
+  };
+
   // Gender icon options
   const genderIcons = {
     Male: [
@@ -509,18 +577,27 @@ const SalonProfessionals = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex gap-3">
+                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 grid grid-cols-3 gap-2">
                     <button
                       onClick={() => handleEdit(pro)}
-                      className="flex-1 flex justify-center items-center gap-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
+                      className="flex justify-center items-center gap-1 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
+                      title="Edit Professional"
                     >
-                      <PencilSquareIcon className="w-4 h-4" /> Edit
+                      <PencilSquareIcon className="w-3.5 h-3.5" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleOpenLeavesModal(pro)}
+                      className="flex justify-center items-center gap-1 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-colors shadow-sm"
+                      title="Manage Leaves"
+                    >
+                      <ClockIcon className="w-3.5 h-3.5" /> Leaves
                     </button>
                     <button
                       onClick={() => handleDelete(pro._id)}
-                      className="flex-1 flex justify-center items-center gap-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm"
+                      className="flex justify-center items-center gap-1 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm"
+                      title="Remove Professional"
                     >
-                      <TrashIcon className="w-4 h-4" /> Remove
+                      <TrashIcon className="w-3.5 h-3.5" /> Remove
                     </button>
                   </div>
                 </div>
@@ -710,6 +787,142 @@ const SalonProfessionals = () => {
                 onClick={handleAddOrUpdate}
               >
                 {editingProfessional ? "Save Changes" : "Create Professional"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leaves Management Modal */}
+      {showLeavesModal && leavesModalPro && (
+        <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in overflow-y-auto" onClick={() => { setShowLeavesModal(false); setLeavesModalPro(null); }}>
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden relative my-8 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-emerald-600 to-emerald-800 p-6 text-white relative shrink-0">
+              <button
+                className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+                onClick={() => { setShowLeavesModal(false); setLeavesModalPro(null); }}
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+              <h2 className="text-2xl font-bold mb-1">Manage Leaves</h2>
+              <p className="text-emerald-100 text-sm opacity-90">Set off-duty holidays or short leaves for {leavesModalPro.name}</p>
+            </div>
+
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+              {/* Add New Leave Section */}
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <ClockIcon className="w-5 h-5 text-emerald-600" />
+                  Add New Off-Duty Leave
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Select Date</label>
+                      <input
+                        type="date"
+                        value={newLeaveData.date}
+                        onChange={(e) => setNewLeaveData(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Leave Type</label>
+                      <select
+                        value={newLeaveData.type}
+                        onChange={(e) => setNewLeaveData(prev => ({ ...prev, type: e.target.value }))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      >
+                        <option value="full">Full Day Holiday</option>
+                        <option value="short">Short Leave / Half-Day</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {newLeaveData.type === "short" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          value={newLeaveData.startTime}
+                          onChange={(e) => setNewLeaveData(prev => ({ ...prev, startTime: e.target.value }))}
+                          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">End Time</label>
+                        <input
+                          type="time"
+                          value={newLeaveData.endTime}
+                          onChange={(e) => setNewLeaveData(prev => ({ ...prev, endTime: e.target.value }))}
+                          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Reason / Note <span className="text-gray-400 font-normal">(Optional)</span></label>
+                    <input
+                      type="text"
+                      value={newLeaveData.reason}
+                      onChange={(e) => setNewLeaveData(prev => ({ ...prev, reason: e.target.value }))}
+                      placeholder="e.g. Medical, Vacation, Family Event"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleAddLeave}
+                    className="w-full py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/10"
+                  >
+                    Add Leave
+                  </button>
+                </div>
+              </div>
+
+              {/* Active Leaves List Section */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Active Leaves Outline</h3>
+                {!leavesModalPro.leaves || leavesModalPro.leaves.length === 0 ? (
+                  <div className="text-center py-6 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                    <p className="text-xs text-gray-400 font-semibold">No active leaves registered.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                    {leavesModalPro.leaves.map((leave) => (
+                      <div key={leave._id} className="flex justify-between items-center p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow transition-shadow">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-900">{new Date(leave.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${leave.type === "full" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>
+                              {leave.type === "full" ? "Full Day" : `${leave.startTime}-${leave.endTime}`}
+                            </span>
+                          </div>
+                          {leave.reason && <p className="text-xs text-gray-500 mt-1 italic">Reason: {leave.reason}</p>}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteLeave(leave._id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remove Leave"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0">
+              <button
+                className="px-5 py-2 rounded-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors text-xs"
+                onClick={() => { setShowLeavesModal(false); setLeavesModalPro(null); }}
+              >
+                Close Window
               </button>
             </div>
           </div>
