@@ -120,6 +120,57 @@ const SelectTimePage = () => {
     }
   }, []);
 
+  // Check if salon is closed (weekly or temporary range) on a date
+  const checkIsSalonClosed = useCallback((dateStr) => {
+    if (!salon) return { closed: false };
+
+    // 1. Check temporary closures
+    if (salon.temporaryClosures && salon.temporaryClosures.length > 0) {
+      const matchingClosure = salon.temporaryClosures.find(closure => {
+        return dateStr >= closure.startDate && dateStr <= closure.endDate;
+      });
+      if (matchingClosure && matchingClosure.type === "full") {
+        return {
+          closed: true,
+          reason: matchingClosure.reason || "Holiday",
+          closure: matchingClosure
+        };
+      }
+    }
+
+    // 2. Check weekly closed day
+    if (salon.closedDay && salon.closedDay.toLowerCase() !== "none") {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const parsedDate = new Date(y, m - 1, d);
+      const dayOfWeek = parsedDate.toLocaleDateString("en-US", { weekday: "long" });
+      if (dayOfWeek.toLowerCase() === salon.closedDay.toLowerCase()) {
+        return {
+          closed: true,
+          reason: `Weekly Closed Day (${salon.closedDay}s)`
+        };
+      }
+    }
+
+    return { closed: false };
+  }, [salon]);
+
+  // Get explanation message for salon closure
+  const getSalonClosedReason = useCallback((dateStr) => {
+    const result = checkIsSalonClosed(dateStr);
+    if (!result.closed) return null;
+
+    if (result.closure) {
+      const c = result.closure;
+      const reasonStr = c.reason ? ` (Reason: ${c.reason})` : "";
+      const rangeStr = c.startDate === c.endDate
+        ? `on ${c.startDate}`
+        : `from ${c.startDate} to ${c.endDate}`;
+      return `Our salon is closed ${rangeStr}${reasonStr}. Please select another date.`;
+    }
+
+    return `Our salon is closed on ${salon.closedDay}s. Please select another date.`;
+  }, [salon, checkIsSalonClosed]);
+
   const resolveProfessionalId = useCallback((prof, currentServiceName) => {
     if (!prof) return null;
     if (typeof prof === "string" && prof.trim()) return prof;
@@ -716,10 +767,7 @@ const SelectTimePage = () => {
 
         <div className="date-buttons">
           {dates.map(day => {
-            const [y, m, d] = day.fullDate.split("-").map(Number);
-            const parsedDate = new Date(y, m - 1, d);
-            const dayOfWeek = parsedDate.toLocaleDateString("en-US", { weekday: "long" });
-            const isSalonClosed = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && dayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
+            const isSalonClosed = checkIsSalonClosed(day.fullDate).closed;
 
             return (
               <button
@@ -741,16 +789,13 @@ const SelectTimePage = () => {
           ) : !selectedDate ? (
             <p>Please select a date</p>
           ) : (() => {
-            const [selY, selM, selD] = selectedDate.split("-").map(Number);
-            const selParsedDate = new Date(selY, selM - 1, selD);
-            const selectedDayOfWeek = selParsedDate.toLocaleDateString("en-US", { weekday: "long" });
-            const isSalonClosedOnSelectedDate = salon && salon.closedDay && salon.closedDay.toLowerCase() !== "none" && selectedDayOfWeek.toLowerCase() === salon.closedDay.toLowerCase();
+            const isSalonClosedOnSelectedDate = checkIsSalonClosed(selectedDate).closed;
 
             if (isSalonClosedOnSelectedDate) {
               return (
                 <div className="salon-closed-alert">
                   <p className="alert-title">🔒 Salon is Closed</p>
-                  <p className="alert-desc">Our salon is closed on {salon.closedDay}s. Please select another date.</p>
+                  <p className="alert-desc">{getSalonClosedReason(selectedDate)}</p>
                 </div>
               );
             }
