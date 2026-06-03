@@ -76,6 +76,42 @@
   font-weight: bold;
 }
 
+.date-button.closed {
+  background: #fdf2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+.date-button.closed:hover {
+  background: #fdf2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+.salon-closed-alert {
+  background: #fdf2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.salon-closed-alert .alert-title {
+  color: #b91c1c;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+}
+
+.salon-closed-alert .alert-desc {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
 /* Time Slot Cards */
 .services-list {
   display: flex;
@@ -1349,4 +1385,106 @@
 .SelectTimePage-card.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Premium Limited Amber Slot Styles */
+.SelectTimePage-card.limited {
+  background-color: #fffbeb !important; /* amber-50 */
+  border-color: #fde68a !important; /* amber-200 */
+  color: #78350f !important; /* amber-900 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.SelectTimePage-card.limited:hover {
+  border-color: #f59e0b !important; /* amber-500 */
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.1);
+  transform: translateY(-2px);
+}
+
+.SelectTimePage-card.limited p {
+  color: #78350f !important;
+}
+
+.SelectTimePage-card.limited .limited-text {
+  color: #d97706 !important; /* amber-600 */
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Premium Session Conflict Indigo Slot Styles */
+.SelectTimePage-card.session-conflict {
+  background-color: #f5f3ff !important; /* indigo-50 */
+  border-color: #c7d2fe !important; /* indigo-200 */
+  color: #312e81 !important; /* indigo-900 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.SelectTimePage-card.session-conflict:hover {
+  border-color: #6366f1 !important; /* indigo-500 */
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
+}
+
+.SelectTimePage-card.session-conflict p {
+  color: #312e81 !important;
+}
+
+.SelectTimePage-card.session-conflict .session-conflict-text {
+  color: #4f46e5 !important; /* indigo-600 */
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Premium Off-Duty Staff Leaves Slot Styles */
+.SelectTimePage-card.off-duty {
+  background-color: #f9fafb !important; /* gray-50 */
+  border-color: #e5e7eb !important; /* gray-200 */
+  color: #9ca3af !important; /* gray-400 */
+  border-style: dashed !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.SelectTimePage-card.off-duty:hover {
+  border-color: #9ca3af !important; /* gray-400 */
+  transform: translateY(-2px);
+}
+
+.SelectTimePage-card.off-duty p {
+  color: #9ca3af !important;
+}
+
+.SelectTimePage-card.off-duty .off-duty-text {
+  color: #6b7280 !important; /* gray-500 */
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 4px;
 }

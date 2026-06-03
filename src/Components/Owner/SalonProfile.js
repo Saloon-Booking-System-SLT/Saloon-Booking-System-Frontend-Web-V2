@@ -14,7 +14,9 @@ import {
   PhoneIcon,
   ClockIcon,
   ScissorsIcon,
-  CameraIcon
+  CameraIcon,
+  CalendarIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 const SalonProfile = () => {
@@ -27,6 +29,49 @@ const SalonProfile = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const imageFileRef = useRef(null);
+
+  const [showClosureModal, setShowClosureModal] = useState(false);
+  const [closureForm, setClosureForm] = useState({
+    startDate: "",
+    endDate: "",
+    type: "full",
+    startTime: "",
+    endTime: "",
+    reason: ""
+  });
+
+  const handleAddClosure = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(`${API_BASE_URL}/salons/${id}/closures`, closureForm);
+      setSalon(prev => ({ ...prev, temporaryClosures: res.data.temporaryClosures }));
+      setShowClosureModal(false);
+      setClosureForm({
+        startDate: "",
+        endDate: "",
+        type: "full",
+        startTime: "",
+        endTime: "",
+        reason: ""
+      });
+      alert("Temporary closure added successfully!");
+    } catch (err) {
+      console.error("Failed to add closure:", err);
+      alert(err.response?.data?.message || "Failed to add closure!");
+    }
+  };
+
+  const handleDeleteClosure = async (closureId) => {
+    if (!window.confirm("Are you sure you want to remove this temporary closure?")) return;
+    try {
+      const res = await axios.delete(`${API_BASE_URL}/salons/${id}/closures/${closureId}`);
+      setSalon(prev => ({ ...prev, temporaryClosures: res.data.temporaryClosures }));
+      alert("Temporary closure removed successfully!");
+    } catch (err) {
+      console.error("Failed to remove closure:", err);
+      alert("Failed to remove closure!");
+    }
+  };
 
   useEffect(() => {
     const fetchSalon = async () => {
@@ -276,6 +321,24 @@ const SalonProfile = () => {
                           className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Weekly Closed Day</label>
+                        <select
+                          name="closedDay"
+                          value={formData.closedDay || 'Sunday'}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm"
+                        >
+                          <option value="None">None</option>
+                          <option value="Monday">Monday</option>
+                          <option value="Tuesday">Tuesday</option>
+                          <option value="Wednesday">Wednesday</option>
+                          <option value="Thursday">Thursday</option>
+                          <option value="Friday">Friday</option>
+                          <option value="Saturday">Saturday</option>
+                          <option value="Sunday">Sunday</option>
+                        </select>
+                      </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-bold text-gray-700 mb-2">Services (comma separated)</label>
                         <input
@@ -353,6 +416,13 @@ const SalonProfile = () => {
                             </div>
                           </li>
                           <li className="flex items-start gap-3">
+                            <ClockIcon className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500">Weekly Closed Day</p>
+                              <p className="text-sm font-bold text-red-600">{salon.closedDay || 'None'}</p>
+                            </div>
+                          </li>
+                          <li className="flex items-start gap-3">
                             <BuildingStorefrontIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                             <div>
                               <p className="text-xs font-semibold text-gray-500">Salon Type</p>
@@ -366,8 +436,8 @@ const SalonProfile = () => {
                     </div>
 
                     {/* Right Column - Services */}
-                    <div className="lg:col-span-2">
-                      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-full">
+                    <div className="lg:col-span-2 space-y-6">
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
                           <ScissorsIcon className="w-6 h-6 text-primary-600" />
                           <h3 className="text-lg font-bold text-gray-900">Offered Services Outline</h3>
@@ -392,6 +462,71 @@ const SalonProfile = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Salon Closures & Holidays */}
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                        <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-6 h-6 text-primary-600" />
+                            <h3 className="text-lg font-bold text-gray-900">Salon Closures & Holidays</h3>
+                          </div>
+                          <button
+                            onClick={() => setShowClosureModal(true)}
+                            className="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            + Add Closure
+                          </button>
+                        </div>
+
+                        {salon.temporaryClosures && salon.temporaryClosures.length > 0 ? (
+                          <div className="space-y-3">
+                            {salon.temporaryClosures.map((closure) => (
+                              <div
+                                key={closure._id}
+                                className="flex justify-between items-center p-4 bg-gray-50 border border-gray-200 rounded-xl hover:border-primary-300 transition-colors"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded ${
+                                      closure.type === "full"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-amber-100 text-amber-800"
+                                    }`}>
+                                      {closure.type === "full" ? "Full Day" : "Partial Day"}
+                                    </span>
+                                    <span className="text-sm font-bold text-gray-800">
+                                      {closure.startDate === closure.endDate
+                                        ? closure.startDate
+                                        : `${closure.startDate} to ${closure.endDate}`}
+                                    </span>
+                                  </div>
+                                  {closure.type === "short" && (
+                                    <p className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+                                      <ClockIcon className="w-3.5 h-3.5" />
+                                      {closure.startTime} - {closure.endTime}
+                                    </p>
+                                  )}
+                                  {closure.reason && (
+                                    <p className="text-xs text-gray-600 italic">Reason: {closure.reason}</p>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteClosure(closure._id)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                  title="Remove closure"
+                                >
+                                  <TrashIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                            <CalendarIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 font-medium text-sm">No temporary closures or holidays scheduled.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -400,6 +535,115 @@ const SalonProfile = () => {
           )}
         </main>
       </div>
+
+      {/* Temporary Closure Modal */}
+      {showClosureModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 transform transition-all scale-100">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CalendarIcon className="w-6 h-6 text-primary-600" />
+                Add Temporary Closure
+              </h3>
+              <button
+                onClick={() => setShowClosureModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddClosure} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={closureForm.startDate}
+                    onChange={e => setClosureForm(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">End Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={closureForm.endDate}
+                    onChange={e => setClosureForm(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Closure Type</label>
+                <select
+                  value={closureForm.type}
+                  onChange={e => setClosureForm(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                >
+                  <option value="full">Full Day Closure</option>
+                  <option value="short">Custom Hours (Partial Day)</option>
+                </select>
+              </div>
+
+              {closureForm.type === "short" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Start Time</label>
+                    <input
+                      type="time"
+                      required={closureForm.type === "short"}
+                      value={closureForm.startTime}
+                      onChange={e => setClosureForm(prev => ({ ...prev, startTime: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">End Time</label>
+                    <input
+                      type="time"
+                      required={closureForm.type === "short"}
+                      value={closureForm.endTime}
+                      onChange={e => setClosureForm(prev => ({ ...prev, endTime: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Reason / Note</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Staff training, Holiday, Renovation"
+                  value={closureForm.reason}
+                  onChange={e => setClosureForm(prev => ({ ...prev, reason: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowClosureModal(false)}
+                  className="w-1/2 py-2 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 btn-primary py-2 font-bold"
+                >
+                  Save Closure
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
