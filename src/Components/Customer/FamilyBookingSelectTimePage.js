@@ -913,7 +913,14 @@ const SelectTimePage = () => {
                     "Reschedule Appointment") :
                   currentServiceIndex.current + 1 < selectedServices.length
                     ? "Continue to Next Member"
-                    : `Confirm the Booking (LKR ${totalAmount.toLocaleString()})`
+                   : <>
+    <span className="booking-title">
+      Confirm the Booking
+    </span>
+    <span className="booking-price">
+      (LKR {totalAmount.toLocaleString()})
+    </span>
+  </>
               }
             </button>
 
