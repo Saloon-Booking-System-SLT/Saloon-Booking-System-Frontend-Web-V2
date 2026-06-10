@@ -105,6 +105,38 @@ const PromotionsPage = () => {
     alert(`Promotion Details:\n\nName: ${promotion.name}\nSalon: ${promotion.salon}\nType: ${promotion.type}\nStatus: ${promotion.status}\nStart: ${promotion.startDate}\nEnd: ${promotion.endDate}${promotion.code ? '\nPromo Code: ' + promotion.code : ''}${promotion.discount ? '\nDiscount: ' + promotion.discount + '%' : ''}`);
   };
 
+  // Handle send broadcast (emails + push notifications)
+  const handleSendBroadcast = async (promoId) => {
+    try {
+      const target = window.prompt(
+        "Enter customer email(s) to target (comma-separated),\n" +
+        "or type 'recent' to target customers who booked in the last 6 months.\n" +
+        "Leave blank and click OK to send to ALL customers:",
+        ""
+      );
+      
+      // If user clicked cancel
+      if (target === null) return;
+      
+      let targetCustomers = 'all';
+      if (target.trim().toLowerCase() === 'recent') {
+        targetCustomers = 'recent';
+      } else if (target.trim() !== '') {
+        // Parse email list
+        targetCustomers = target.split(',').map(e => e.trim()).filter(e => e.length > 0);
+      }
+      
+      const response = await axios.post(`/promotions/${promoId}/send-emails`, {
+        targetCustomers
+      });
+      
+      alert(`Broadcast successful!\nSent to: ${response.data.stats.totalCustomers} customers.`);
+    } catch (err) {
+      console.error('Failed to send broadcast:', err);
+      alert(err.response?.data?.message || 'Failed to send broadcast. Please try again.');
+    }
+  };
+
   // Get status class
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
@@ -387,16 +419,29 @@ const PromotionsPage = () => {
                         <td className="date-cell">{promo.startDate}</td>
                         <td className="date-cell">{promo.endDate}</td>
                         <td>
-                          <button
-                            className="view-details-btn"
-                            onClick={() => handleViewDetails(promo)}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View Details
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              className="view-details-btn"
+                              onClick={() => handleViewDetails(promo)}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              View Details
+                            </button>
+
+                            <button
+                              className="view-details-btn"
+                              style={{ background: '#d1fae5', color: '#065f46' }}
+                              onClick={() => handleSendBroadcast(promo._id)}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                              </svg>
+                              Broadcast
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
