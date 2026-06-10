@@ -10,15 +10,26 @@ const API_BASE_URL = API_URL;
 const FamilyBookingSelectService = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { salon } = location.state || {};
+  const { salon, groupMembers = [] } = location.state || {};
 
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGender, setSelectedGender] = useState("Male");
 
+  // Current member tab index
+  const [currentMemberIndex, setCurrentMemberIndex] = useState(0);
+
+  // Map of memberId -> array of selected service IDs
+  const [memberServiceMap, setMemberServiceMap] = useState(() => {
+    const init = {};
+    groupMembers.forEach(m => { init[m.id] = []; });
+    return init;
+  });
+
   const isUnisex = salon?.salonType?.toLowerCase() === "unisex";
+  const currentMember = groupMembers[currentMemberIndex];
+  const isLastMember = currentMemberIndex === groupMembers.length - 1;
 
   useEffect(() => {
     if (!salon) return;
@@ -56,24 +67,55 @@ const FamilyBookingSelectService = () => {
     setFilteredServices(result);
   };
 
-  const toggleService = (id) => {
-    setSelectedServiceIds((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+  // Toggle a service for the current member
+  const toggleService = (serviceId) => {
+    if (!currentMember) return;
+    setMemberServiceMap(prev => {
+      const current = prev[currentMember.id] || [];
+      const updated = current.includes(serviceId)
+        ? current.filter(id => id !== serviceId)
+        : [...current, serviceId];
+      return { ...prev, [currentMember.id]: updated };
+    });
   };
 
-  const selectedServices = services.filter((s) =>
-    selectedServiceIds.includes(s._id)
-  );
+  // Get selected service IDs for current member
+  const currentSelectedIds = currentMember ? (memberServiceMap[currentMember.id] || []) : [];
 
-  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  // Get selected service objects for current member
+  const currentSelectedServices = services.filter(s => currentSelectedIds.includes(s._id));
 
+  const totalForCurrentMember = currentSelectedServices.reduce((sum, s) => sum + s.price, 0);
+
+  // Move to next member tab
+  const handleNextMember = () => {
+    if (currentSelectedIds.length === 0) {
+      alert(`Please select at least one service for ${currentMember?.name || 'this member'}`);
+      return;
+    }
+    setSearchQuery("");
+    setCurrentMemberIndex(prev => prev + 1);
+  };
+
+  // Final continue — navigate to professional selection
   const handleContinue = () => {
-    if (selectedServices.length === 0) return alert("Please select a service");
+    if (currentSelectedIds.length === 0) {
+      alert(`Please select at least one service for ${currentMember?.name || 'this member'}`);
+      return;
+    }
+
+    // Build an array: each member with their selected services
+    const membersWithServices = groupMembers.map(member => ({
+      ...member,
+      selectedServices: services.filter(s => (memberServiceMap[member.id] || []).includes(s._id))
+    }));
+
     navigate(`/familybookingselectprofessional/${salon._id}`, {
       state: {
         salon,
-        selectedServices,
+        membersWithServices,
+        // Keep backward compatibility: pass first member's services as selectedServices
+        selectedServices: membersWithServices[0]?.selectedServices || [],
       },
     });
   };
@@ -98,10 +140,10 @@ const FamilyBookingSelectService = () => {
           {/* Main Content (Left) */}
           <div className="lg:col-span-8 flex flex-col">
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
               <div>
                 <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-900 mb-2">Select Services</h1>
-                <p className="text-gray-500">Choose the perfect services for your group.</p>
+                <p className="text-gray-500">Choose services for each member of your group.</p>
               </div>
 
               <div className="relative w-full md:w-72 mt-4 md:mt-0">
@@ -116,9 +158,50 @@ const FamilyBookingSelectService = () => {
               </div>
             </div>
 
+            {/* ── Member Tabs ── */}
+            {groupMembers.length > 0 && (
+              <div className="flex gap-1 border-b border-gray-200 mb-6">
+                {groupMembers.map((member, index) => {
+                  const memberSelectedCount = (memberServiceMap[member.id] || []).length;
+                  const isActive = index === currentMemberIndex;
+                  return (
+                    <button
+                      key={member.id}
+                      onClick={() => setCurrentMemberIndex(index)}
+                      className={`relative px-5 py-3 text-sm font-bold transition-all duration-200 rounded-t-xl ${
+                        isActive
+                          ? 'text-dark-900 border-b-2 border-dark-900 bg-white -mb-px'
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {member.name}
+                      {memberSelectedCount > 0 && (
+                        <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-black bg-dark-900 text-white rounded-full">
+                          {memberSelectedCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Current member label */}
+            {currentMember && (
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-7 h-7 bg-dark-900 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+                  {currentMember.name.charAt(0).toUpperCase()}
+                </div>
+                <p className="text-sm font-bold text-gray-700">
+                  Selecting services for <span className="text-dark-900">{currentMember.name}</span>
+                  <span className="ml-2 text-xs text-gray-400 font-medium">({currentMember.category})</span>
+                </p>
+              </div>
+            )}
+
             {/* Gender Switch Content */}
             {isUnisex && (
-              <div className="flex p-1 bg-gray-100 rounded-xl w-full sm:w- fit mb-8 text-sm font-bold">
+              <div className="flex p-1 bg-gray-100 rounded-xl w-full sm:w-fit mb-8 text-sm font-bold">
                 <button
                   className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg transition-all duration-300 ${selectedGender === "Male"
                     ? "bg-white text-dark-900 shadow-sm"
@@ -144,7 +227,7 @@ const FamilyBookingSelectService = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               {filteredServices.length > 0 ? (
                 filteredServices.map((service) => {
-                  const isSelected = selectedServiceIds.includes(service._id);
+                  const isSelected = currentSelectedIds.includes(service._id);
                   return (
                     <div
                       key={service._id}
@@ -217,16 +300,19 @@ const FamilyBookingSelectService = () => {
                 </div>
               </div>
 
+              {/* Current member's selected services */}
               <div className="mb-6">
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Selected Services</h3>
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
+                  {currentMember?.name}'s Services
+                </h3>
 
-                {selectedServices.length === 0 ? (
+                {currentSelectedServices.length === 0 ? (
                   <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-100">
                     <p className="text-sm text-gray-400 font-medium">No services selected yet</p>
                   </div>
                 ) : (
-                  <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 hide-scrollbar">
-                    {selectedServices.map((s) => (
+                  <ul className="space-y-3 max-h-48 overflow-y-auto pr-2 hide-scrollbar">
+                    {currentSelectedServices.map((s) => (
                       <li key={s._id} className="flex justify-between items-start bg-gray-50 p-3 rounded-xl border border-gray-100">
                         <span className="text-sm font-bold text-gray-900 pr-4">{s.name}</span>
                         <span className="text-sm font-black text-dark-900 shrink-0">LKR {s.price.toLocaleString()}</span>
@@ -238,24 +324,39 @@ const FamilyBookingSelectService = () => {
 
               <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
                 <div className="flex justify-between items-end">
-                  <span className="text-gray-500 font-bold">Total Estimated</span>
-                  <span className="text-3xl font-black text-dark-900 tracking-tight">
-                    {totalPrice === 0 ? "free" : `LKR ${totalPrice.toLocaleString()}`}
+                  <span className="text-gray-500 font-bold text-sm">Member Total</span>
+                  <span className="text-2xl font-black text-dark-900 tracking-tight">
+                    {totalForCurrentMember === 0 ? "LKR 0" : `LKR ${totalForCurrentMember.toLocaleString()}`}
                   </span>
                 </div>
               </div>
 
-              <button
-                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${selectedServiceIds.length === 0
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                  : "bg-dark-900 text-white hover:bg-black hover:shadow-xl hover:shadow-dark-900/20 hover:-translate-y-0.5"
-                  }`}
-                onClick={handleContinue}
-                disabled={selectedServiceIds.length === 0}
-              >
-                <span>Continue</span>
-                <ArrowRightIcon className="w-5 h-5" />
-              </button>
+              {/* Next Member / Continue Button */}
+              {isLastMember ? (
+                <button
+                  className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${currentSelectedIds.length === 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                    : "bg-dark-900 text-white hover:bg-black hover:shadow-xl hover:shadow-dark-900/20 hover:-translate-y-0.5"
+                    }`}
+                  onClick={handleContinue}
+                  disabled={currentSelectedIds.length === 0}
+                >
+                  <span>Continue</span>
+                  <ArrowRightIcon className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${currentSelectedIds.length === 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                    : "bg-dark-900 text-white hover:bg-black hover:shadow-xl hover:shadow-dark-900/20 hover:-translate-y-0.5"
+                    }`}
+                  onClick={handleNextMember}
+                  disabled={currentSelectedIds.length === 0}
+                >
+                  <span>Next Member</span>
+                  <ArrowRightIcon className="w-5 h-5" />
+                </button>
+              )}
 
             </div>
           </div>
