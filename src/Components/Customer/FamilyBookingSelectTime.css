@@ -70,10 +70,23 @@
 }
 
 .date-button.selected {
-  background: #cce6f9;
-  border-color: #0069B4;
-  color: #0069B4;
+  background: #1f2937 !important;
+  border: 2px solid #1f2937 !important;
+  color: #ffffff !important;
   font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.date-button.selected:hover {
+  background: #1f2937 !important;
+  border-color: #1f2937 !important;
+}
+
+.date-button.selected *,
+.date-button.selected span,
+.date-button.selected small,
+.date-button.selected div {
+  color: #ffffff !important;
 }
 
 .date-button.closed {
@@ -113,46 +126,70 @@
 }
 
 /* Time Slot Cards */
-.services-list {
+.SelectTimePage-list {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.service-card {
+.SelectTimePage-card {
   display: flex;
-  justify-content: space-between;
-  padding: 14px 20px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
   background: #fff;
   border: 1.5px solid #ddd;
   border-radius: 12px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 100px;
+  min-height: 70px;
+  text-align: center;
 }
 
-.service-card:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+.SelectTimePage-card p:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 4px 0;
 }
 
-.service-card.disabled:hover {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+.SelectTimePage-card p {
+  margin: 2px 0;
+  font-size: 12px;
+}
+
+.SelectTimePage-card.disabled:hover {
+  box-shadow: none;
   transform: none;
 }
 
-.service-card.selected {
-  border-color: #0069B4;
-  background: #e1f0fa;
+.SelectTimePage-card.selected {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #ffffff;
 }
 
-.service-card.disabled {
+.SelectTimePage-card.selected p:first-child {
+  color: #ffffff;
+}
+
+.SelectTimePage-card.selected p {
+  color: #e5e7eb;
+}
+
+.SelectTimePage-card.disabled {
   background-color: #f9f9f9;
   color: #a1a1aa;
-  border: 1px dashed #ddd;
+  border: 1px dashed #060606;
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+
 
 /* Warning Message */
 .warning-message {
@@ -317,13 +354,13 @@
 }
 
 .date-button-small:hover {
-  border-color: #3b82f6;
+  border-color: #1f2937;
 }
 
 .date-button-small.selected {
-  background: #3b82f6;
+  background:  #1f2937;
   color: white;
-  border-color: #3b82f6;
+  border-color: #1f2937;
 }
 
 .date-button-small span {
@@ -1150,13 +1187,13 @@
 }
 
 .date-button-small:hover {
-  border-color: #3b82f6;
+  border-color: #1f2937;
 }
 
 .date-button-small.selected {
-  background: #3b82f6;
+  background: #1f2937;
   color: white;
-  border-color: #3b82f6;
+  border-color: #1f2937;
 }
 
 .date-button-small span {
@@ -1487,4 +1524,407 @@
   gap: 2px;
   justify-content: center;
   margin-top: 4px;
+}
+/* =========================================================
+   UPDATED UI OVERRIDES - Match SelectTimePage first image
+   Keep existing class names and logic. Only UI/CSS changed.
+   ========================================================= */
+
+:root {
+  --booking-bg: #f4f6f8;
+  --booking-dark: #0f172a;
+  --booking-dark-2: #111827;
+  --booking-text: #0f172a;
+  --booking-muted: #8b95a7;
+  --booking-border: #e5e7eb;
+  --booking-purple: #8b5cf6;
+  --booking-red: #ef4444;
+}
+
+.select-services-container,
+.SelectTimePage-container {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 380px !important;
+  gap: 32px !important;
+  padding: 28px 34px !important;
+  background: var(--booking-bg) !important;
+  font-family: 'Poppins', sans-serif !important;
+  min-height: 100vh !important;
+}
+
+.left-column {
+  padding-right: 0 !important;
+  overflow: visible !important;
+}
+
+.right-column {
+  position: sticky !important;
+  top: 28px !important;
+  align-self: start !important;
+}
+
+.breadcrumb {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--booking-dark) !important;
+  margin-bottom: 34px !important;
+}
+
+.heading-with-search,
+.left-column h1,
+.left-column h2 {
+  font-size: 36px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+  color: var(--booking-dark) !important;
+  margin: 0 0 4px !important;
+}
+
+.heading-with-search span,
+.left-column h1 span,
+.left-column h2 span {
+  color: var(--booking-purple) !important;
+}
+
+.time-selection-section h3,
+.left-column h3 {
+  color: var(--booking-dark) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  margin: 28px 0 16px !important;
+}
+
+.date-buttons {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 14px !important;
+  margin: 18px 0 14px !important;
+  overflow-x: auto !important;
+  padding-bottom: 14px !important;
+  scrollbar-width: thin !important;
+}
+
+.date-buttons::-webkit-scrollbar {
+  height: 6px !important;
+}
+
+.date-buttons::-webkit-scrollbar-track {
+  background: #edf0f5 !important;
+  border-radius: 999px !important;
+}
+
+.date-buttons::-webkit-scrollbar-thumb {
+  background: #cfd5df !important;
+  border-radius: 999px !important;
+}
+
+.date-button {
+  flex: 0 0 auto !important;
+  width: 80px !important;
+  height: 80px !important;
+  background: #ffffff !important;
+  border: 2px solid #e1e5eb !important;
+  border-radius: 22px !important;
+  color: var(--booking-dark) !important;
+  padding: 10px 8px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+  font-weight: 800 !important;
+}
+
+.date-button:hover {
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.date-button.selected {
+  background: var(--booking-dark) !important;
+  border-color: var(--booking-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.22) !important;
+}
+
+.date-button.selected *,
+.date-button.selected span,
+.date-button.selected small,
+.date-button.selected div {
+  color: #ffffff !important;
+}
+
+.date-button.closed {
+  background: #fff6f6 !important;
+  border-color: #fecaca !important;
+  color: var(--booking-red) !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+.date-button.closed *,
+.date-button.closed span,
+.date-button.closed small,
+.date-button.closed div {
+  color: var(--booking-red) !important;
+}
+
+.SelectTimePage-list {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(130px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+
+.SelectTimePage-card {
+  min-width: 0 !important;
+  height: 76px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 12px 18px !important;
+  background: #ffffff !important;
+  border: 2px solid #e1e5eb !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  color: var(--booking-dark) !important;
+  text-align: center !important;
+}
+
+.SelectTimePage-card:hover:not(.disabled) {
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px) !important;
+}
+
+.SelectTimePage-card p:first-child,
+.SelectTimePage-card h4 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--booking-dark) !important;
+  margin: 0 0 8px !important;
+}
+
+.SelectTimePage-card p,
+.SelectTimePage-card div {
+  font-size: 11px !important;
+  color: var(--booking-muted) !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+}
+
+.SelectTimePage-card.selected {
+  background: var(--booking-dark) !important;
+  border-color: var(--booking-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.22) !important;
+}
+
+.SelectTimePage-card.selected p,
+.SelectTimePage-card.selected p:first-child,
+.SelectTimePage-card.selected h4,
+.SelectTimePage-card.selected div,
+.SelectTimePage-card.selected span {
+  color: #ffffff !important;
+}
+
+.SelectTimePage-card.disabled {
+  background: #f9fafb !important;
+  border: 2px dashed #d1d5db !important;
+  color: #9ca3af !important;
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+.summary-box {
+  background: #ffffff !important;
+  border: 0 !important;
+  border-radius: 34px !important;
+  padding: 26px 24px !important;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08) !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.salon-image {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 16px !important;
+  object-fit: cover !important;
+  margin: 0 12px 0 0 !important;
+}
+
+.salon-info h4 {
+  color: var(--booking-dark) !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+}
+
+.salon-info p {
+  color: #7b8494 !important;
+  font-size: 12px !important;
+  margin: 2px 0 !important;
+}
+
+.appointment-details,
+.booking-summary-section {
+  background: #f8fafc !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 24px !important;
+  padding: 20px !important;
+  margin: 24px 0 !important;
+}
+
+.appointment-details h5,
+.summary-header h6 {
+  color: #8b95a7 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  text-align: left !important;
+  margin: 0 0 12px !important;
+}
+
+.familyappointment-item,
+.appointment-summary-item,
+.appointment-item {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-left: 0 !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
+  box-shadow: none !important;
+}
+
+.appointment-member,
+.member-name {
+  color: var(--booking-dark) !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+.appointment-service,
+.appointment-time,
+.member-category,
+.service-info,
+.time-info {
+  color: #7b8494 !important;
+  font-size: 13px !important;
+}
+
+.appointment-price,
+.total-value {
+  color: var(--booking-dark) !important;
+  font-weight: 800 !important;
+}
+
+.total-section,
+.total-amount-row {
+  border-top: 1px solid #e5e7eb !important;
+  padding-top: 20px !important;
+  margin-top: 22px !important;
+  color: var(--booking-dark) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+.continue-button,
+.add-appointment-side-btn,
+.add-appointment-button {
+  width: 100% !important;
+  height: 56px !important;
+  border-radius: 14px !important;
+  background: var(--booking-dark) !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.continue-button:hover:not(:disabled),
+.add-appointment-side-btn:hover,
+.add-appointment-button:hover {
+  background: #020617 !important;
+}
+
+.cancel-button,
+.remove-button,
+.remove-appointment-btn {
+  border-radius: 14px !important;
+}
+
+@media (max-width: 1100px) {
+  .select-services-container,
+  .SelectTimePage-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .right-column {
+    position: static !important;
+  }
+
+  .SelectTimePage-list {
+    grid-template-columns: repeat(3, minmax(120px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .select-services-container,
+  .SelectTimePage-container {
+    padding: 20px 16px !important;
+  }
+
+  .SelectTimePage-list {
+    grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+  }
+
+  .date-button {
+    width: 72px !important;
+    height: 72px !important;
+  }
+}
+
+/* Smaller Time Cards */
+.SelectTimePage-list {
+  gap: 14px !important;
+}
+
+.SelectTimePage-card {
+  width: 180px !important;
+  min-width: 180px !important;
+  height: 78px !important;
+  min-height: 78px !important;
+
+  padding: 6px 10px !important;
+  border-radius: 14px !important;
+}
+
+.SelectTimePage-card p:first-child,
+.SelectTimePage-card h4 {
+  font-size: 14px !important;
+  margin-bottom: 4px !important;
+}
+
+.SelectTimePage-card p,
+.SelectTimePage-card div,
+.SelectTimePage-card span {
+  font-size: 11px !important;
+}
+
+.booking-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.booking-price {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
 }

@@ -1,10 +1,9 @@
-// SelectTimePage.jsx - Family Booking Version - Dynamic Conflict-Based Slots
+// FamilyBookingSelectTimePage.js - Per-member date & time selection
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import "./FamilyBookingSelectTime.css";
 import { durationToMinutes, timeStringToMinutes } from "../../Utils/slotUtils";
-
 import { API_URL, getSalonImageUrl } from "../../Utils/apiConfig";
 
 const API_BASE_URL = API_URL;
@@ -13,58 +12,44 @@ const SelectTimePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const passedServices = location.state?.selectedServices || JSON.parse(localStorage.getItem("selectedServices")) || [];
-  const passedProfessional = location.state?.selectedProfessional || JSON.parse(localStorage.getItem("selectedProfessional")) || null;
   const salon = location.state?.salon || JSON.parse(localStorage.getItem("selectedSalon")) || null;
-  const rescheduleAppointment = location.state?.rescheduleAppointment || null;
-  const isReschedule = !!rescheduleAppointment;
+  const isGroupBooking = true;
 
-  const isGroupBooking = location.state?.isGroupBooking || JSON.parse(localStorage.getItem("isGroupBooking")) || false;
-  const groupMembers = useMemo(() => {
-    return location.state?.groupMembers || JSON.parse(localStorage.getItem("groupMembers")) || [];
-  }, [location.state?.groupMembers]);
-
-  // Get existing booked appointments from previous bookings in this session
-  const initialBookedAppointments = useMemo(() => {
-    const fromState = location.state?.bookedAppointments;
-    if (fromState && Array.isArray(fromState) && fromState.length > 0) {
-      console.log(" Loaded appointments from location state:", fromState.length);
-      return fromState;
-    }
-
-    const fromStorage = localStorage.getItem('bookedAppointments');
-    if (fromStorage) {
-      try {
-        const parsed = JSON.parse(fromStorage);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          console.log(" Loaded appointments from localStorage:", parsed.length);
-          return parsed;
-        }
-      } catch (e) {
-        console.error("Failed to parse bookedAppointments from localStorage:", e);
-      }
-    }
-
-    console.log("ℹ️ No previous appointments found");
-    return [];
-  }, [location.state?.bookedAppointments]);
+  // membersWithServices: [{ id, name, category, selectedServices, professional }]
+  const membersWithServices = useMemo(() => {
+    return location.state?.membersWithServices
+      || JSON.parse(localStorage.getItem("groupMembersWithServices"))
+      || [];
+  }, [location.state?.membersWithServices]);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const [selectedServices] = useState(passedServices);
-  const [selectedProfessional] = useState(passedProfessional);
-  const currentServiceIndex = useRef(0);
-  const [renderKey, setRenderKey] = useState(0);
+  // Current member index
+  const [currentMemberIndex, setCurrentMemberIndex] = useState(0);
+
+  // selectedDates[memberId-serviceName] = fullDate
   const [selectedDates, setSelectedDates] = useState({});
+  // selectedTimes[memberId-serviceName] = slotId
   const [selectedTimes, setSelectedTimes] = useState({});
+  // availableSlots[proId-date-duration] = [slots]
   const [availableSlots, setAvailableSlots] = useState({});
+  // All confirmed appointments (members who already had time chosen)
+  const [bookedAppointments, setBookedAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [rescheduleError, setRescheduleError] = useState("");
   const [conflictModalData, setConflictModalData] = useState(null);
 
-  // Store all booked appointments (from current session + new ones)
-  const [bookedAppointments, setBookedAppointments] = useState(initialBookedAppointments);
+  const currentMember = membersWithServices[currentMemberIndex];
+  const isLastMember = currentMemberIndex === membersWithServices.length - 1;
 
+  // The current member's selected services (they may have multiple, we pick time for each)
+  const currentMemberServices = currentMember?.selectedServices || [];
+
+  // Grand total across all members' services
+  const grandTotal = membersWithServices.reduce((total, member) => {
+    return total + (member.selectedServices || []).reduce((sum, s) => sum + (s.price || 0), 0);
+  }, 0);
+
+  // Generate next 14 dates
   const dates = useMemo(() => {
     const days = [];
     for (let i = 0; i < 14; i++) {
@@ -79,129 +64,62 @@ const SelectTimePage = () => {
     return days;
   }, []);
 
-  // Check if appointment is within 24 hours
-  const isWithin24Hours = useCallback((appointmentDate, appointmentStartTime) => {
-    if (!appointmentDate || !appointmentStartTime) return false;
-
-    try {
-      const appointmentDateTime = new Date(`${appointmentDate}T${appointmentStartTime}:00`);
-      const now = new Date();
-
-      // Calculate difference in milliseconds
-      const timeDifference = appointmentDateTime.getTime() - now.getTime();
-      const hoursDifference = timeDifference / (1000 * 60 * 60);
-
-      console.log("⏰ Time check:", {
-        appointmentDateTime,
-        now,
-        hoursDifference,
-        isWithin24Hours: hoursDifference <= 24
-      });
-
-      return hoursDifference <= 24;
-    } catch (error) {
-      console.error("Error checking time:", error);
-      return false;
-    }
-  }, []);
-
-  // Check if time slot is in the past
-  const isPastTimeSlot = useCallback((date, startTime) => {
-    if (!date || !startTime) return true;
-
-    try {
-      const slotDateTime = new Date(`${date}T${startTime}:00`);
-      const now = new Date();
-
-      return slotDateTime < now;
-    } catch (error) {
-      console.error("Error checking if slot is past:", error);
-      return true;
-    }
-  }, []);
-
-  // Check if salon is closed (weekly or temporary range) on a date
+  // Check if salon is closed on a date
   const checkIsSalonClosed = useCallback((dateStr) => {
     if (!salon) return { closed: false };
-
-    // 1. Check temporary closures
     if (salon.temporaryClosures && salon.temporaryClosures.length > 0) {
-      const matchingClosure = salon.temporaryClosures.find(closure => {
-        return dateStr >= closure.startDate && dateStr <= closure.endDate;
-      });
+      const matchingClosure = salon.temporaryClosures.find(closure =>
+        dateStr >= closure.startDate && dateStr <= closure.endDate
+      );
       if (matchingClosure && matchingClosure.type === "full") {
-        return {
-          closed: true,
-          reason: matchingClosure.reason || "Holiday",
-          closure: matchingClosure
-        };
+        return { closed: true, reason: matchingClosure.reason || "Holiday", closure: matchingClosure };
       }
     }
-
-    // 2. Check weekly closed day
     if (salon.closedDay && salon.closedDay.toLowerCase() !== "none") {
       const [y, m, d] = dateStr.split("-").map(Number);
       const parsedDate = new Date(y, m - 1, d);
       const dayOfWeek = parsedDate.toLocaleDateString("en-US", { weekday: "long" });
       if (dayOfWeek.toLowerCase() === salon.closedDay.toLowerCase()) {
-        return {
-          closed: true,
-          reason: `Weekly Closed Day (${salon.closedDay}s)`
-        };
+        return { closed: true, reason: `Weekly Closed Day (${salon.closedDay}s)` };
       }
     }
-
     return { closed: false };
   }, [salon]);
 
-  // Get explanation message for salon closure
   const getSalonClosedReason = useCallback((dateStr) => {
     const result = checkIsSalonClosed(dateStr);
     if (!result.closed) return null;
-
     if (result.closure) {
       const c = result.closure;
-      const reasonStr = c.reason ? ` (Reason: ${c.reason})` : "";
-      const rangeStr = c.startDate === c.endDate
-        ? `on ${c.startDate}`
-        : `from ${c.startDate} to ${c.endDate}`;
-      return `Our salon is closed ${rangeStr}${reasonStr}. Please select another date.`;
+      const rangeStr = c.startDate === c.endDate ? `on ${c.startDate}` : `from ${c.startDate} to ${c.endDate}`;
+      return `Our salon is closed ${rangeStr}${c.reason ? ` (Reason: ${c.reason})` : ""}. Please select another date.`;
     }
-
     return `Our salon is closed on ${salon.closedDay}s. Please select another date.`;
   }, [salon, checkIsSalonClosed]);
 
-  const resolveProfessionalId = useCallback((prof, currentServiceName) => {
-    if (!prof) return null;
-    if (typeof prof === "string" && prof.trim()) return prof;
-    if (prof._id) return prof._id;
-    if (prof.professionalId && typeof prof.professionalId === "string") return prof.professionalId;
-    if (prof.professionalId && prof.professionalId._id) return prof.professionalId._id;
-    if (currentServiceName && prof[currentServiceName]) {
-      if (typeof prof[currentServiceName] === "string") return prof[currentServiceName];
-      if (prof[currentServiceName]._id) return prof[currentServiceName]._id;
-    }
-    return null;
+  // Check if a time slot is in the past
+  const isPastTimeSlot = useCallback((date, startTime) => {
+    if (!date || !startTime) return true;
+    try {
+      const slotDateTime = new Date(`${date}T${startTime}:00`);
+      return slotDateTime < new Date();
+    } catch { return true; }
   }, []);
 
-  const fetchTimeSlots = useCallback(async (professionalId, date, serviceDuration) => {
-    if (!date || !serviceDuration) {
-      console.warn("fetchTimeSlots: missing date or serviceDuration", { date, serviceDuration });
-      return;
-    }
+  // Build a unique key for date/time state: memberId + serviceName
+  const makeKey = (memberId, serviceName) => `${memberId}-${serviceName}`;
 
+  // Fetch time slots for a professional/date/duration
+  const fetchTimeSlots = useCallback(async (professionalId, date, serviceDuration) => {
+    if (!date || !serviceDuration) return;
     const durationMins = typeof serviceDuration === "number"
       ? serviceDuration
       : durationToMinutes(serviceDuration);
 
     let url;
     if (!professionalId || professionalId === "any") {
-      const sId = salon?._id;
-      if (!sId) {
-        console.warn("fetchTimeSlots: salonId needed for 'any' professional mode");
-        return;
-      }
-      url = `${API_BASE_URL}/api/timeslots?professionalId=any&salonId=${sId}&date=${date}&duration=${durationMins}`;
+      if (!salon?._id) return;
+      url = `${API_BASE_URL}/api/timeslots?professionalId=any&salonId=${salon._id}&date=${date}&duration=${durationMins}`;
     } else {
       url = `${API_BASE_URL}/api/timeslots?professionalId=${professionalId}&date=${date}&duration=${durationMins}`;
     }
@@ -210,15 +128,11 @@ const SelectTimePage = () => {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const key  = `${professionalId || "any"}-${date}-${durationMins}`;
-
-      const filteredData = Array.isArray(data) ? data.filter(slot => {
-        if (!slot.startTime) return false;
-        return !isPastTimeSlot(date, slot.startTime);
-      }) : [];
-
+      const key = `${professionalId || "any"}-${date}-${durationMins}`;
+      const filteredData = Array.isArray(data)
+        ? data.filter(slot => slot.startTime && !isPastTimeSlot(date, slot.startTime))
+        : [];
       setAvailableSlots(prev => ({ ...prev, [key]: filteredData }));
-      console.debug(`[timeslots] family key=${key} total=${data.length} visible=${filteredData.length}`);
     } catch (err) {
       console.error("Error fetching time slots:", err);
       const key = `${professionalId || "any"}-${date}-${durationMins}`;
@@ -226,639 +140,292 @@ const SelectTimePage = () => {
     }
   }, [isPastTimeSlot, salon]);
 
+  // When currentMember changes, pre-load slots for their first service
   useEffect(() => {
-    if (!selectedProfessional || selectedServices.length === 0) return;
-
-    const currentService = selectedServices[currentServiceIndex.current];
-    if (!currentService) return;
-
-    let professionalId = null;
-
-    if (selectedProfessional._id) {
-      professionalId = selectedProfessional._id;
-    } else if (selectedProfessional[currentService.name]?._id) {
-      professionalId = selectedProfessional[currentService.name]._id;
-    } else if (Array.isArray(selectedProfessional) && selectedProfessional.length > 0) {
-      professionalId = selectedProfessional[0]?._id;
-    } else if (selectedProfessional.professionalId) {
-      professionalId = selectedProfessional.professionalId;
-    } else if (typeof selectedProfessional === 'string') {
-      professionalId = selectedProfessional;
-    }
-
-    if (!professionalId) {
-      console.error("No professional ID found");
-      return;
-    }
-
+    if (!currentMember || currentMemberServices.length === 0) return;
+    const service = currentMemberServices[0];
+    const proId = currentMember.professional?._id || currentMember.professional || "any";
     const defaultDate = dates[0]?.fullDate;
-    const serviceDuration = currentService.duration;
-
     if (defaultDate) {
-      setSelectedDates((prev) => ({ ...prev, [currentService.name]: defaultDate }));
-      setSelectedTimes((prev) => ({ ...prev, [currentService.name]: null }));
-      fetchTimeSlots(professionalId, defaultDate, serviceDuration);
+      const key = makeKey(currentMember.id, service.name);
+      setSelectedDates(prev => ({ ...prev, [key]: defaultDate }));
+      setSelectedTimes(prev => ({ ...prev, [key]: null }));
+      fetchTimeSlots(proId, defaultDate, service.duration);
     }
-  }, [selectedProfessional, selectedServices, dates, fetchTimeSlots]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMemberIndex]);
 
-  const currentService = useMemo(() => {
-    return selectedServices[currentServiceIndex.current] || {};
-  }, [selectedServices, currentServiceIndex.current]);
-
-  const serviceKey = currentService.name || "service";
-  const professionalId = resolveProfessionalId(selectedProfessional, currentService.name);
-  const selectedDate = selectedDates[serviceKey] || dates[0]?.fullDate;
-
-  // Build cache key with duration so different services don't share cached slots
-  const durationMins = durationToMinutes(currentService.duration);
-  const slotKey = selectedDate ? `${professionalId || "any"}-${selectedDate}-${durationMins}` : null;
-  const rawSlots = slotKey ? (availableSlots[slotKey] || []) : [];
-  const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
-
-  // Backend returns correctly-sized slots; map conflicting -> isBooked for rendering
-  // Also check against local `bookedAppointments` to prevent conflicts within the same booking session.
-  const displaySlots = useMemo(() => {
-    return safeSlots
-      .filter(slot => slot.startTime && !isPastTimeSlot(selectedDate, slot.startTime))
-      .map(slot => {
-        const displayStartTime = slot.startTime;
-        const slotDurationMins = durationToMinutes(currentService.duration);
-        const resolvedProId = slot.assignedProfessionalId || professionalId;
-
-        // Check if there's an existing backend conflict
-        let isBooked = slot.conflicting;
-        let insufficientGap = slot.insufficientGap || false;
-        let availableGapMins = slot.availableGapMins || null;
-        let nextAppointmentTime = slot.nextAppointmentTime || null;
-        let isLeave = slot.isLeave || false;
-        let leaveReason = slot.leaveReason || null;
-
-        // If it is an insufficient gap conflict or a leave off-duty window, we don't treat it as hard-booked.
-        // We want the user to be able to click it and see the informative alert modal.
-        if (isBooked && (insufficientGap || isLeave)) {
-          isBooked = false;
-        }
-
-        let isSessionConflict = false;
-        let sessionConflictService = null;
-        let sessionConflictMember = null;
-
-        // Check if there's a local conflict with other selected services in this multi-service session
-        if (!isBooked && bookedAppointments.length > 0 && resolvedProId && resolvedProId !== "any") {
-          // Check if slot start time is covered by any session appointment
-          const localConflictingAppt = bookedAppointments.find((appt) => {
-            if (appt.date !== selectedDate) return false;
-            const apptProId = appt.professionalId;
-            if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
-
-            const startMins = timeStringToMinutes(displayStartTime);
-            const bStart = timeStringToMinutes(appt.startTime);
-            const bEnd = timeStringToMinutes(appt.endTime);
-
-            return startMins >= bStart && startMins < bEnd;
-          });
-
-          if (localConflictingAppt) {
-            isSessionConflict = true;
-            sessionConflictService = localConflictingAppt.serviceName;
-            sessionConflictMember = localConflictingAppt.memberName;
-          } else {
-            // Check if the full duration overlaps
-            const localOverlapAppt = bookedAppointments.find((appt) => {
-              if (appt.date !== selectedDate) return false;
-              const apptProId = appt.professionalId;
-              if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
-
-              const newStart = timeStringToMinutes(displayStartTime);
-              const newEnd = newStart + slotDurationMins;
-              const bStart = timeStringToMinutes(appt.startTime);
-              const bEnd = timeStringToMinutes(appt.endTime);
-
-              return newStart < bEnd && newEnd > bStart;
-            });
-
-            if (localOverlapAppt) {
-              insufficientGap = true;
-              
-              // Find the next session appointment that starts after this slot
-              const slotStartMins = timeStringToMinutes(displayStartTime);
-              const futureAppts = bookedAppointments.filter((appt) => {
-                if (appt.date !== selectedDate) return false;
-                const apptProId = appt.professionalId;
-                if (apptProId && String(apptProId) !== String(resolvedProId)) return false;
-                return timeStringToMinutes(appt.startTime) > slotStartMins;
-              });
-
-              futureAppts.sort((a, b) => timeStringToMinutes(a.startTime) - timeStringToMinutes(b.startTime));
-              const nextAppt = futureAppts[0];
-              if (nextAppt) {
-                nextAppointmentTime = nextAppt.startTime;
-                availableGapMins = timeStringToMinutes(nextAppt.startTime) - slotStartMins;
-              }
-            }
-          }
-        }
-
-        if (isSessionConflict) {
-          isBooked = false;
-          insufficientGap = false;
-        }
-
-        return { 
-          ...slot, 
-          isBooked, 
-          insufficientGap, 
-          availableGapMins, 
-          nextAppointmentTime,
-          isSessionConflict,
-          sessionConflictService,
-          sessionConflictMember,
-          isLeave,
-          leaveReason
-        };
-      });
-  }, [safeSlots, selectedDate, isPastTimeSlot, bookedAppointments, professionalId, currentService.duration]);
-
-  const handleDateClick = (serviceName, profId, fullDate) => {
-    setSelectedDates(prev => ({ ...prev, [serviceName]: fullDate }));
-    setSelectedTimes(prev => ({ ...prev, [serviceName]: null }));
-    const service = selectedServices.find(s => s.name === serviceName);
-    fetchTimeSlots(profId, fullDate, service?.duration);
+  const handleDateClick = (memberId, serviceName, serviceDuration, proId, fullDate) => {
+    const key = makeKey(memberId, serviceName);
+    setSelectedDates(prev => ({ ...prev, [key]: fullDate }));
+    setSelectedTimes(prev => ({ ...prev, [key]: null }));
+    fetchTimeSlots(proId, fullDate, serviceDuration);
   };
 
-  const handleTimeClick = (serviceName, slotId, isBooked, slot) => {
+  const handleTimeClick = (key, slotId, isBooked, slot) => {
     if (isBooked) return;
-
-    if (slot?.isLeave) {
-      const currentService = selectedServices[currentServiceIndex.current];
-      const getProName = () => {
-        if (!selectedProfessional) return "Any Professional";
-        if (selectedProfessional[serviceName]) return selectedProfessional[serviceName]?.name || "Professional";
-        return selectedProfessional?.name || "Professional";
-      };
+    if (slot?.isLeave || slot?.isSessionConflict || slot?.insufficientGap) {
       setConflictModalData({
-        isLeave: true,
-        serviceName: currentService?.name || "Service",
+        type: slot.isLeave ? "leave" : slot.isSessionConflict ? "session" : "gap",
         startTime: slot.startTime,
-        proName: getProName(),
-        leaveReason: slot.leaveReason || "Off-Duty"
-      });
-      return;
-    }
-
-    if (slot?.isSessionConflict) {
-      // Trigger the beautiful interactive session conflict modal
-      const currentService = selectedServices[currentServiceIndex.current];
-      
-      const getProName = () => {
-        if (!selectedProfessional) return "Any Professional";
-        if (selectedProfessional[serviceName]) {
-          return selectedProfessional[serviceName]?.name || "Professional";
-        }
-        return selectedProfessional?.name || "Professional";
-      };
-
-      setConflictModalData({
-        isSessionConflict: true,
-        serviceName: currentService?.name || "Service",
+        leaveReason: slot.leaveReason,
         conflictService: slot.sessionConflictService,
         conflictMember: slot.sessionConflictMember,
-        startTime: slot.startTime,
-        proName: getProName()
-      });
-      return;
-    }
-
-    if (slot?.insufficientGap) {
-      // Trigger the beautiful interactive warning modal
-      const currentService = selectedServices[currentServiceIndex.current];
-      
-      const getProName = () => {
-        if (!selectedProfessional) return "Any Professional";
-        if (selectedProfessional[serviceName]) {
-          return selectedProfessional[serviceName]?.name || "Professional";
-        }
-        return selectedProfessional?.name || "Professional";
-      };
-
-      setConflictModalData({
-        serviceName: currentService?.name || "Service",
-        requiredDuration: currentService?.duration || "30 minutes",
         availableGapMins: slot.availableGapMins,
         nextAppointmentTime: slot.nextAppointmentTime,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        proName: getProName()
       });
       return;
     }
-
-    setSelectedTimes(prev => ({ ...prev, [serviceName]: slotId }));
+    setSelectedTimes(prev => ({ ...prev, [key]: slotId }));
   };
 
-  const computeEndFromStartAndDuration = (startTime, durationStr) => {
+  const computeEndTime = (startTime, durationStr) => {
     if (!startTime) return "";
-    const parts = durationStr.split(" ");
+    const parts = String(durationStr).split(" ");
     let minutes = 0;
     for (let i = 0; i < parts.length; i += 2) {
       const val = parseInt(parts[i]);
-      const unit = parts[i + 1]?.toLowerCase() || "";
+      const unit = (parts[i + 1] || "").toLowerCase();
       if (unit.includes("hour")) minutes += (isNaN(val) ? 0 : val) * 60;
       else if (unit.includes("min")) minutes += isNaN(val) ? 0 : val;
     }
+    if (minutes === 0 && !isNaN(Number(durationStr))) minutes = Number(durationStr);
     const [h, m] = startTime.split(":").map(Number);
     const total = h * 60 + m + minutes;
-    const endH = String(Math.floor(total / 60)).padStart(2, "0");
-    const endM = String(total % 60).padStart(2, "0");
-    return `${endH}:${endM}`;
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   };
 
-  const getCurrentAppointmentData = useCallback(() => {
-    const slotId = selectedTimes[serviceKey];
-    const date = selectedDates[serviceKey];
-    const selectedSlot = displaySlots.find(s => (s._id && s._id === slotId) || (s.id && s.id === slotId) || (s.startTime && s.startTime === slotId));
-    const startTime = selectedSlot?.startTime || selectedSlot?.start;
-    // Use backend-provided endTime if available, otherwise compute it
-    const endTime = selectedSlot?.endTime
-      ? selectedSlot.endTime
-      : computeEndFromStartAndDuration(startTime, currentService.duration);
+  // Get slots for display for a given member+service
+  const getSlotsForService = useCallback((member, service) => {
+    const proId = member.professional?._id || member.professional || "any";
+    const key = makeKey(member.id, service.name);
+    const date = selectedDates[key] || dates[0]?.fullDate;
+    const durationMins = durationToMinutes(service.duration);
+    const slotKey = `${proId || "any"}-${date}-${durationMins}`;
+    const rawSlots = availableSlots[slotKey] || [];
+    return { slots: Array.isArray(rawSlots) ? rawSlots : [], date, proId };
+  }, [availableSlots, selectedDates, dates]);
 
-    // For "any professional", use the assignedProfessionalId from the slot
-    const resolvedProfessionalId = (
-      !professionalId || professionalId === "any"
-    ) ? selectedSlot?.assignedProfessionalId : professionalId;
+  // Check all services of current member have a time selected
+  const allCurrentMemberTimesSelected = currentMemberServices.every(service => {
+    const key = makeKey(currentMember?.id, service.name);
+    return !!selectedTimes[key];
+  });
 
-    let memberName = user?.name || "Guest";
-    let memberCategory = 'Primary';
-
-    if (isGroupBooking && groupMembers.length > 0) {
-      const currentMember = groupMembers[currentServiceIndex.current];
-      if (currentMember) {
-        memberName = currentMember.name || `Member ${currentServiceIndex.current + 1}`;
-        memberCategory = currentMember.category || 'Adult';
-      }
-    }
-
-    return {
-      serviceName: currentService.name,
-      price: currentService.price,
-      duration: currentService.duration,
-      date,
-      startTime,
-      endTime,
-      professionalId: resolvedProfessionalId || professionalId,
-      professionalName: selectedProfessional?.name || "Any Professional",
-      salonId: salon?._id,
-      slotIds: selectedSlot?.slotIds || [selectedSlot?._id].filter(Boolean),
-      memberName: memberName,
-      memberCategory: memberCategory
-    };
-  }, [selectedTimes, serviceKey, selectedDates, displaySlots, currentService, isGroupBooking, groupMembers, professionalId, selectedProfessional, salon, user]);
-
-  // 🔥 UPDATED: Handle reschedule for family booking with 24-hour check
-  const handleReschedule = async () => {
-    setRescheduleError("");
-
-    if (!selectedTimes[serviceKey]) {
-      alert("❌ Please select a time for rescheduling.");
+  // Move to next member or confirm booking
+  const handleNextOrConfirm = () => {
+    if (!allCurrentMemberTimesSelected) {
+      alert(`Please select a time for all services for ${currentMember?.name || 'this member'}.`);
       return;
     }
 
-    if (!rescheduleAppointment) {
-      alert("❌ No appointment found to reschedule.");
-      return;
-    }
+    // Build appointment objects for current member
+    const newAppointments = currentMemberServices.map(service => {
+      const key = makeKey(currentMember.id, service.name);
+      const slotId = selectedTimes[key];
+      const date = selectedDates[key];
+      const { slots } = getSlotsForService(currentMember, service);
+      const selectedSlot = slots.find(s => (s._id && s._id === slotId) || (s.id && s.id === slotId) || (s.startTime && s.startTime === slotId));
+      const startTime = selectedSlot?.startTime || selectedSlot?.start;
+      const endTime = selectedSlot?.endTime || computeEndTime(startTime, service.duration);
+      const proId = currentMember.professional?._id === "any" ? selectedSlot?.assignedProfessionalId : currentMember.professional?._id;
 
-    // Check if appointment is within 24 hours
-    if (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
-      setRescheduleError("❌ You cannot reschedule an appointment that is within 24 hours. Please contact customer support.");
-      return;
-    }
+      return {
+        memberName: currentMember.name,
+        memberCategory: currentMember.category,
+        serviceName: service.name,
+        price: service.price,
+        duration: service.duration,
+        date,
+        startTime,
+        endTime,
+        professionalId: proId || "any",
+        professionalName: currentMember.professional?.name || "Any Professional",
+        salonId: salon?._id,
+        slotIds: selectedSlot?.slotIds || [selectedSlot?._id].filter(Boolean),
+      };
+    });
 
-    setLoading(true);
-    try {
-      const currentAppointment = getCurrentAppointmentData();
+    const updatedBooked = [...bookedAppointments, ...newAppointments];
+    setBookedAppointments(updatedBooked);
 
-      const rescheduleData = {
-        date: currentAppointment.date,
-        startTime: currentAppointment.startTime,
-        endTime: currentAppointment.endTime,
-        professionalId: currentAppointment.professionalId
+    if (!isLastMember) {
+      setCurrentMemberIndex(prev => prev + 1);
+    } else {
+      // Navigate to checkout
+      const totalAmount = updatedBooked.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+      const confirmationData = {
+        salonName: salon?.name || "Our Salon",
+        appointmentDetails: updatedBooked,
+        totalAmount,
+        bookingId: `booking-${Date.now()}`,
+        customerName: user?.name || "Guest",
+        isGroupBooking: true,
+        salonLocation: salon?.location,
+        salon,
+        user,
       };
 
-      console.log(" Sending reschedule request:", {
-        appointmentId: rescheduleAppointment._id,
-        data: rescheduleData
-      });
+      localStorage.removeItem('bookedAppointments');
+      localStorage.removeItem('groupMembersWithServices');
+      localStorage.removeItem('selectedSalon');
+      localStorage.removeItem('isGroupBooking');
 
-      const response = await fetch(`${API_BASE_URL}/api/appointments/${rescheduleAppointment._id}/reschedule`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(rescheduleData),
-      });
-
-      const result = await response.json();
-      console.log(" Reschedule API response:", result);
-
-      if (result.success) {
-        alert("✅ Appointment rescheduled successfully!");
-        navigate("/appointments");
-      } else {
-        throw new Error(result.message || "Reschedule failed");
-      }
-    } catch (err) {
-      console.error(" Reschedule failed:", err);
-      alert(`❌ Reschedule failed: ${err.message}`);
-    } finally {
-      setLoading(false);
+      navigate("/checkoutpage", { state: confirmationData });
     }
   };
 
-  const handleContinue = () => {
-    if (!selectedTimes[serviceKey]) {
-      alert("❌ Please select a time for the current service.");
-      return;
-    }
-
-    // 🔥 FIXED: Handle reschedule for family booking
-    if (isReschedule) {
-      handleReschedule();
-      return;
-    }
-
-    // Check if there are more services to book
-    if (currentServiceIndex.current + 1 < selectedServices.length) {
-      // Add current appointment to booked list
-      const currentAppointment = getCurrentAppointmentData();
-      const updatedBookedAppointments = [...bookedAppointments, currentAppointment];
-
-      console.log(" Saving appointment:", currentAppointment);
-      console.log(" Total booked after save:", updatedBookedAppointments.length);
-
-      setBookedAppointments(updatedBookedAppointments);
-
-      // Also save to localStorage for persistence
-      localStorage.setItem('bookedAppointments', JSON.stringify(updatedBookedAppointments));
-
-      // Move to next service
-      currentServiceIndex.current += 1;
-      setRenderKey(k => k + 1);
-
-      const nextService = selectedServices[currentServiceIndex.current];
-      if (nextService) {
-        setSelectedTimes(prev => ({ ...prev, [nextService.name]: null }));
-      }
-    } else {
-      // All services booked, add final appointment and navigate to confirmation
-      const currentAppointment = getCurrentAppointmentData();
-      const finalBookedAppointments = [...bookedAppointments, currentAppointment];
-
-      console.log(" Adding final appointment:", currentAppointment);
-      console.log(" Final total appointments:", finalBookedAppointments.length);
-
-      setBookedAppointments(finalBookedAppointments);
-      localStorage.setItem('bookedAppointments', JSON.stringify(finalBookedAppointments));
-
-      // Navigate to confirmation page with all appointment data
-      navigateToConfirmation(finalBookedAppointments);
-    }
-  };
-
-  const handleAddAppointment = () => {
-    if (!selectedTimes[serviceKey]) {
-      alert("❌ Please select a time for the current service.");
-      return;
-    }
-
-    // Add ALL pending appointments (already booked + current one)
-    const allAppointmentsToSave = [...bookedAppointments];
-
-    // Add current appointment if time is selected
-    if (selectedTimes[serviceKey]) {
-      allAppointmentsToSave.push(getCurrentAppointmentData());
-    }
-
-    // Store in localStorage for persistence
-    localStorage.setItem('bookedAppointments', JSON.stringify(allAppointmentsToSave));
-    localStorage.setItem('isGroupBooking', JSON.stringify(true));
-    localStorage.setItem('selectedSalon', JSON.stringify(salon));
-
-    // Clear service selection for next round
-    localStorage.removeItem('selectedServices');
-    localStorage.removeItem('selectedProfessional');
-    localStorage.removeItem('groupMembers');
-
-    // Navigate back to family booking page to add more members
-    navigate('/familybooking', {
-      state: {
-        salon,
-        bookedAppointments: allAppointmentsToSave,
-        isGroupBooking: true
-      }
-    });
-  };
-
-  const navigateToConfirmation = (appointments) => {
-    const totalAmount = calculateTotalPrice(appointments);
-
-    const confirmationData = {
-      salonName: salon?.name || "Our Salon",
-      appointmentDetails: appointments,
-      totalAmount: totalAmount,
-      bookingId: `booking-${Date.now()}`,
-      customerName: user?.name || "Guest",
-      isGroupBooking: isGroupBooking,
-      salonLocation: salon?.location,
-      professionalName: selectedProfessional?.name || "Any Professional",
-      services: selectedServices,
-      groupMembers: groupMembers,
-      salon: salon,
-      user: user
-    };
-
-    console.log(" Navigating to confirmation with data:", {
-      totalAmount,
-      appointmentCount: appointments.length,
-      isGroupBooking
-    });
-
-    // Clear localStorage
-    localStorage.removeItem('bookedAppointments');
-    localStorage.removeItem('selectedServices');
-    localStorage.removeItem('selectedProfessional');
-    localStorage.removeItem('selectedSalon');
-    localStorage.removeItem('isGroupBooking');
-    localStorage.removeItem('groupMembers');
-
-    navigate("/checkoutpage", { state: confirmationData });
-  };
-
-  const getAllAppointmentsForDisplay = useCallback(() => {
-    const allAppointments = [...bookedAppointments];
-
-    // If there's a current appointment selected, include it
-    if (selectedTimes[serviceKey]) {
-      allAppointments.push(getCurrentAppointmentData());
-    }
-
-    return allAppointments;
-  }, [bookedAppointments, selectedTimes, serviceKey, getCurrentAppointmentData]);
-
-  const calculateTotalPrice = useCallback((appointments = null) => {
-    const allAppointments = appointments || getAllAppointmentsForDisplay();
-    return allAppointments.reduce((total, appointment) => {
-      return total + (Number(appointment.price) || 0);
-    }, 0);
-  }, [getAllAppointmentsForDisplay]);
-
-  const appointmentsToDisplay = getAllAppointmentsForDisplay();
-  const totalAmount = calculateTotalPrice();
-
-  if (selectedServices.length === 0) {
+  if (membersWithServices.length === 0) {
     return (
       <div className="select-services-container">
         <div className="left-column">
-          <h2>No services selected</h2>
-          <button onClick={() => navigate("/")}>Go back to services</button>
+          <h2>No members found</h2>
+          <button onClick={() => navigate(-1)}>Go back</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="SelectTimePage-container" key={renderKey}>
+    <div className="SelectTimePage-container">
       <div className="left-column">
         <p className="breadcrumb">Services &gt; Professional &gt; <b>Time</b> &gt; Confirmation</p>
-        <h2 className="heading-with-search">
-          {isReschedule ? "Reschedule Time for " : "Select Time for "}{currentService.name}
-          {isGroupBooking && ` - ${groupMembers[currentServiceIndex.current]?.name || `Member ${currentServiceIndex.current + 1}`}`}
-        </h2>
+        <h2 className="heading-with-search">Select Time</h2>
 
-        {isReschedule && (
-          <div className="reschedule-notice">
-            <p>🔁 You are rescheduling an existing appointment</p>
-            {rescheduleAppointment.date && rescheduleAppointment.startTime && (
-              <p>
-                Current appointment: {new Date(rescheduleAppointment.date).toLocaleDateString()} at {rescheduleAppointment.startTime}
-                {isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) &&
-                  <span style={{ color: 'red', fontWeight: 'bold' }}> (Within 24 hours - cannot reschedule)</span>
-                }
-              </p>
-            )}
-          </div>
-        )}
-
-        {rescheduleError && (
-          <div className="reschedule-error">
-            <p>{rescheduleError}</p>
-          </div>
-        )}
-
-        {selectedServices.length > 1 && !isReschedule && (
-          <div className="service-progress">
-            <p>Service {currentServiceIndex.current + 1} of {selectedServices.length}</p>
-            {bookedAppointments.length > 0 && (
-              <p>✅ {bookedAppointments.length} appointment(s) already added</p>
-            )}
-          </div>
-        )}
-
-        <div className="date-buttons">
-          {dates.map(day => {
-            const isSalonClosed = checkIsSalonClosed(day.fullDate).closed;
-
+        {/* ── Member Tabs ── */}
+        <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e5e7eb', marginTop: '16px', marginBottom: '20px' }}>
+          {membersWithServices.map((member, index) => {
+            const done = index < currentMemberIndex;
+            const isActive = index === currentMemberIndex;
             return (
               <button
-                key={day.fullDate}
-                className={`date-button ${selectedDates[serviceKey] === day.fullDate ? "selected" : ""} ${isSalonClosed ? "closed" : ""}`}
-                onClick={() => handleDateClick(serviceKey, professionalId, day.fullDate)}
-                disabled={isSalonClosed || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))}
+                key={member.id}
+                onClick={() => index <= currentMemberIndex && setCurrentMemberIndex(index)}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  borderBottom: isActive ? '2px solid #111827' : '2px solid transparent',
+                  background: 'none',
+                  cursor: index <= currentMemberIndex ? 'pointer' : 'default',
+                  color: isActive ? '#111827' : done ? '#059669' : '#9ca3af',
+                  marginBottom: '-2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
               >
-                <span>{day.date}</span>
-                <small>{isSalonClosed ? "Closed" : day.day}</small>
+                {member.name}
+                {done && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '18px', height: '18px', fontSize: '11px', fontWeight: '900',
+                    background: '#059669', color: '#fff', borderRadius: '50%'
+                  }}>✓</span>
+                )}
               </button>
             );
           })}
         </div>
 
-        <div className="SelectTimePage-list">
-          {!professionalId ? (
-            <p>No professional selected</p>
-          ) : !selectedDate ? (
-            <p>Please select a date</p>
-          ) : (() => {
-            const isSalonClosedOnSelectedDate = checkIsSalonClosed(selectedDate).closed;
+        {/* Current member info */}
+        {currentMember && (
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>
+            Selecting time for <strong style={{ color: '#111827' }}>{currentMember.name}</strong>
+            <span style={{ marginLeft: '8px', fontSize: '12px' }}>({currentMember.category})</span>
+            {currentMember.professional && currentMember.professional._id !== 'any' && (
+              <span style={{ marginLeft: '8px', fontSize: '12px' }}>
+                — Professional: <strong>{currentMember.professional.name}</strong>
+              </span>
+            )}
+          </p>
+        )}
 
-            if (isSalonClosedOnSelectedDate) {
-              return (
-                <div className="salon-closed-alert">
-                  <p className="alert-title">🔒 Salon is Closed</p>
-                  <p className="alert-desc">{getSalonClosedReason(selectedDate)}</p>
-                </div>
-              );
-            }
+        {/* ── Services for current member ── */}
+        {currentMemberServices.map((service, sIdx) => {
+          const key = makeKey(currentMember.id, service.name);
+          const proId = currentMember.professional?._id || "any";
+          const { slots, date: selectedDate } = getSlotsForService(currentMember, service);
+          const isSalonClosedOnSelected = selectedDate ? checkIsSalonClosed(selectedDate).closed : false;
 
-            if (displaySlots.length === 0) {
-              return (
-                <p>
-                  No available time slots for {new Date(selectedDate).toLocaleDateString()}
-                  {isPastTimeSlot(selectedDate, "23:59") && (
-                    <span style={{ display: 'block', color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
-                      ⏰ Today's available slots have passed. Please select a future date.
-                    </span>
-                  )}
-                </p>
-              );
-            }
+          return (
+            <div key={service._id || sIdx} style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontWeight: '800', fontSize: '16px', color: '#111827', marginBottom: '12px' }}>
+                {service.name}
+                <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px', marginLeft: '8px' }}>
+                  {service.duration} — LKR {service.price?.toLocaleString()}
+                </span>
+              </h3>
 
-            return displaySlots.map(slot => {
-              const slotId = slot._id || slot.id || slot.startTime;
-              const isSelected = selectedTimes[serviceKey] === slotId;
-              const isBooked = !!slot.isBooked;
-              const isLimited = !!slot.insufficientGap;
-              const isSessionConflict = !!slot.isSessionConflict;
-              const isLeave = !!slot.isLeave;
+              {/* Date picker */}
+              <div className="date-buttons">
+                {dates.map(day => {
+                  const isClosed = checkIsSalonClosed(day.fullDate).closed;
+                  return (
+                    <button
+                      key={day.fullDate}
+                      className={`date-button ${selectedDates[key] === day.fullDate ? "selected" : ""} ${isClosed ? "closed" : ""}`}
+                      onClick={() => !isClosed && handleDateClick(currentMember.id, service.name, service.duration, proId, day.fullDate)}
+                      disabled={isClosed}
+                    >
+                      <span>{day.date}</span>
+                      <small>{isClosed ? "Closed" : day.day}</small>
+                    </button>
+                  );
+                })}
+              </div>
 
-              return (
-                <div
-                  key={slotId}
-                  className={`SelectTimePage-card ${isBooked ? "disabled" : isLeave ? "off-duty" : isSessionConflict ? "session-conflict" : isLimited ? "limited" : isSelected ? "selected" : ""}`}
-                  onClick={() => {
-                    if (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) {
-                      setRescheduleError("❌ Cannot reschedule appointment within 24 hours.");
-                      return;
-                    }
-                    handleTimeClick(serviceKey, slotId, isBooked, slot);
-                  }}
-                  style={{
-                    pointerEvents: isBooked || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? "none" : "auto",
-                    opacity: isBooked || isLeave || (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime)) ? 0.6 : 1
-                  }}
-                >
-                  <p>{slot.startTime} - {slot.endTime}</p>
-                  {isBooked ? (
-                    <p>❌ Booked</p>
-                  ) : isLeave ? (
-                    <p className="off-duty-text">💤 Off-Duty</p>
-                  ) : isSessionConflict ? (
-                    <p className="session-conflict-text">📅 {isGroupBooking ? `${slot.sessionConflictMember}'s Slot` : "Your Slot"}</p>
-                  ) : isLimited ? (
-                    <p className="limited-text">⚠️ Limited</p>
-                  ) : (
-                    <p>{`LKR ${currentService.price}`}</p>
-                  )}
-                  {isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) && (
-                    <div className="time-warning">⏰ Cannot reschedule</div>
-                  )}
-                </div>
-              );
-            });
-          })()}
-        </div>
+              {/* Time slots */}
+              <div className="SelectTimePage-list">
+                {!selectedDate ? (
+                  <p>Please select a date</p>
+                ) : isSalonClosedOnSelected ? (
+                  <div className="salon-closed-alert">
+                    <p className="alert-title">🔒 Salon is Closed</p>
+                    <p className="alert-desc">{getSalonClosedReason(selectedDate)}</p>
+                  </div>
+                ) : slots.length === 0 ? (
+                  <p>No available time slots for {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}</p>
+                ) : (
+                  slots.map(slot => {
+                    const slotId = slot._id || slot.id || slot.startTime;
+                    const isSelected = selectedTimes[key] === slotId;
+                    const isBooked = !!slot.isBooked;
+                    const isLeave = !!slot.isLeave;
+                    const isLimited = !!slot.insufficientGap;
+                    const isSessionConflict = !!slot.isSessionConflict;
+
+                    return (
+                      <div
+                        key={slotId}
+                        className={`SelectTimePage-card ${isBooked ? "disabled" : isLeave ? "off-duty" : isSessionConflict ? "session-conflict" : isLimited ? "limited" : isSelected ? "selected" : ""}`}
+                        onClick={() => handleTimeClick(key, slotId, isBooked, slot)}
+                        style={{ pointerEvents: isBooked ? "none" : "auto", opacity: isBooked ? 0.5 : 1 }}
+                      >
+                        <p>{slot.startTime} - {slot.endTime}</p>
+                        {isBooked ? (
+                          <p>❌ Booked</p>
+                        ) : isLeave ? (
+                          <p className="off-duty-text">💤 Off-Duty</p>
+                        ) : isSessionConflict ? (
+                          <p className="session-conflict-text">📅 Taken</p>
+                        ) : isLimited ? (
+                          <p className="limited-text">⚠️ Limited</p>
+                        ) : (
+                          <p>LKR {service.price?.toLocaleString()}</p>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {/* ── Right Summary ── */}
       <div className="right-column">
         <div className="summary-box">
           <img
@@ -870,164 +437,97 @@ const SelectTimePage = () => {
             <h4>{salon?.name}</h4>
             <p>{salon?.location}</p>
 
-            {/* Show all booked appointments */}
-            {appointmentsToDisplay.length > 0 && (
+            {/* Already-booked members summary */}
+            {bookedAppointments.length > 0 && (
               <div className="booked-familyappointments-summary">
-                <h5>{isGroupBooking ? "Group Booking Summary:" : "Booking Summary:"}</h5>
-                {appointmentsToDisplay.map((appointment, index) => (
-                  <div key={index} className="familyappointment-item">
-                    <p><strong>👤 {appointment.memberName}</strong> {isGroupBooking && `(${appointment.memberCategory})`}</p>
-                    <p>💇 {appointment.serviceName}</p>
-                    <p>🧑‍💼 {appointment.professionalName}</p>
-                    <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" /> {new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
-                    <p><ClockIcon className="h-4 w-4 inline mr-1" /> {appointment.startTime} - {appointment.endTime}</p>
-                    <p className="price-tag">LKR {appointment.price.toLocaleString()}</p>
-                    {index < appointmentsToDisplay.length - 1 && <hr />}
+                <h5>Confirmed so far:</h5>
+                {bookedAppointments.map((appt, i) => (
+                  <div key={i} className="familyappointment-item">
+                    <p><strong>👤 {appt.memberName}</strong> ({appt.memberCategory})</p>
+                    <p>💇 {appt.serviceName}</p>
+                    <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" />
+                      {new Date(appt.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </p>
+                    <p><ClockIcon className="h-4 w-4 inline mr-1" />{appt.startTime} - {appt.endTime}</p>
+                    <p className="price-tag">LKR {appt.price?.toLocaleString()}</p>
+                    {i < bookedAppointments.length - 1 && <hr />}
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="total-section">
-              <p>Total Amount</p>
-              <p><strong>LKR {totalAmount.toLocaleString()}</strong></p>
-            </div>
+            {/* Current member's selected times (preview) */}
+            {currentMember && currentMemberServices.some(s => selectedTimes[makeKey(currentMember.id, s.name)]) && (
+              <div className="booked-familyappointments-summary" style={{ marginTop: '12px' }}>
+                <h5>{currentMember.name}'s selection:</h5>
+                {currentMemberServices.map((service, i) => {
+                  const key = makeKey(currentMember.id, service.name);
+                  const slotId = selectedTimes[key];
+                  const date = selectedDates[key];
+                  if (!slotId) return null;
+                  const { slots } = getSlotsForService(currentMember, service);
+                  const slot = slots.find(s => (s._id && s._id === slotId) || (s.startTime && s.startTime === slotId));
+                  return (
+                    <div key={i} className="familyappointment-item">
+                      <p>💇 {service.name}</p>
+                      {date && <p><CalendarDaysIcon className="h-4 w-4 inline mr-1" />
+                        {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>}
+                      {slot && <p><ClockIcon className="h-4 w-4 inline mr-1" />{slot.startTime} - {slot.endTime}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Grand Total */}
+          <div className="total-section">
+            <p>Total Amount</p>
+            <p><strong>LKR {grandTotal.toLocaleString()}</strong></p>
           </div>
 
           <div className="booking-buttons">
             <button
               className="continue-button"
-              onClick={handleContinue}
-              disabled={
-                !selectedTimes[serviceKey] ||
-                loading ||
-                (isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime))
-              }
-              title={isReschedule && isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
-                "Cannot reschedule within 24 hours of appointment" : ""}
+              onClick={handleNextOrConfirm}
+              disabled={!allCurrentMemberTimesSelected || loading}
             >
-              {loading ? "Processing..." :
-                isReschedule ?
-                  (isWithin24Hours(rescheduleAppointment.date, rescheduleAppointment.startTime) ?
-                    "Reschedule Not Allowed (Within 24h)" :
-                    "Reschedule Appointment") :
-                  currentServiceIndex.current + 1 < selectedServices.length
-                    ? "Continue to Next Member"
-                    : `Confirm the Booking (LKR ${totalAmount.toLocaleString()})`
-              }
+              {loading ? "Processing..." : isLastMember
+                ? `Confirm Booking (LKR ${grandTotal.toLocaleString()})`
+                : `Next Member →`}
             </button>
-
-            {isGroupBooking && !isReschedule && (
-              <button
-                className="add-appointment-button"
-                onClick={handleAddAppointment}
-                disabled={!selectedTimes[serviceKey] || loading}
-              >
-                Add Another Appointment
-              </button>
-            )}
           </div>
         </div>
       </div>
 
+      {/* Conflict Modal */}
       {conflictModalData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-dark-900/40 backdrop-blur-sm" onClick={() => setConflictModalData(null)}></div>
-          {conflictModalData.isLeave ? (
-            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-gray-100">
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <ClockIcon className="w-8 h-8 text-gray-500 animate-pulse" />
-              </div>
-              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Staff Off-Duty</h3>
-              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
-                <p className="mb-4">
-                  <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is not available at <span className="font-bold text-gray-800">{conflictModalData.startTime}</span> because they are off-duty or on leave.
-                </p>
-                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-left text-gray-700 mb-4">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span>Reason for Absence:</span>
-                    <span className="text-gray-950 font-bold">{conflictModalData.leaveReason}</span>
-                  </div>
-                </div>
-                <p>Please select another available time slot or pick a different professional.</p>
-              </div>
-              <div className="space-y-3">
-                <button
-                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
-                  onClick={() => setConflictModalData(null)}
-                >
-                  Got it, Choose Another Time
-                </button>
-              </div>
+          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-amber-100">
+            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <ClockIcon className="w-8 h-8 text-amber-500 animate-pulse" />
             </div>
-          ) : conflictModalData.isSessionConflict ? (
-            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-indigo-100">
-              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <CalendarDaysIcon className="w-8 h-8 text-indigo-500 animate-pulse" />
-              </div>
-              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Time Already Selected</h3>
-              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
-                {isGroupBooking ? (
-                  <p className="mb-4">
-                    This time slot (<span className="font-bold text-gray-800">{conflictModalData.startTime}</span>) is already selected for <span className="font-black text-indigo-600">{conflictModalData.conflictMember}</span> (<span className="font-bold text-gray-800">{conflictModalData.conflictService}</span>) with <span className="font-bold text-gray-800">{conflictModalData.proName}</span>.
-                  </p>
-                ) : (
-                  <p className="mb-4">
-                    You have already selected this time slot (<span className="font-bold text-gray-800">{conflictModalData.startTime}</span>) for <span className="font-bold text-indigo-600">{conflictModalData.conflictService}</span> in this session.
-                  </p>
-                )}
-                <p>
-                  Since <span className="font-bold text-gray-800">{conflictModalData.proName}</span> cannot be double-booked, please choose a different time slot for <span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>.
-                </p>
-              </div>
-              <div className="space-y-3">
-                <button
-                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
-                  onClick={() => setConflictModalData(null)}
-                >
-                  Got it, Choose Another Time
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 fade-in slide-up border border-amber-100">
-              <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <ClockIcon className="w-8 h-8 text-amber-500 animate-pulse" />
-              </div>
-              <h3 className="text-2xl font-black text-center text-gray-900 mb-2">Insufficient Time</h3>
-              <div className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
-                <p className="mb-4">
-                  Your selected service (<span className="font-bold text-gray-800">{conflictModalData.serviceName}</span>) requires <span className="font-bold text-gray-800">{conflictModalData.requiredDuration}</span>.
-                </p>
-                <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-left text-amber-900 space-y-2 mb-4">
-                  <div className="flex justify-between text-xs font-medium opacity-80">
-                    <span>Available Time Slot:</span>
-                    <span className="font-bold">{conflictModalData.startTime}</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-medium opacity-80">
-                    <span>Next Appointment Starts:</span>
-                    <span className="font-bold">{conflictModalData.nextAppointmentTime}</span>
-                  </div>
-                  <hr className="border-amber-100" />
-                  <div className="flex justify-between text-xs font-black">
-                    <span>Free Window Duration:</span>
-                    <span className="text-amber-700">{conflictModalData.availableGapMins} mins</span>
-                  </div>
-                </div>
-                <p>
-                  However, <span className="font-bold text-gray-800">{conflictModalData.proName}</span> is only free for <span className="font-black text-amber-700">{conflictModalData.availableGapMins} minutes</span> before their next booked appointment.
-                </p>
-              </div>
-              <div className="space-y-3">
-                <button
-                  className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
-                  onClick={() => setConflictModalData(null)}
-                >
-                  Got it, Choose Another Time
-                </button>
-              </div>
-            </div>
-          )}
+            <h3 className="text-2xl font-black text-center text-gray-900 mb-2">
+              {conflictModalData.type === "leave" ? "Staff Off-Duty"
+                : conflictModalData.type === "session" ? "Time Already Taken"
+                : "Insufficient Time"}
+            </h3>
+            <p className="text-center text-gray-500 text-sm mb-6">
+              {conflictModalData.type === "leave"
+                ? `This professional is off-duty at ${conflictModalData.startTime}. Reason: ${conflictModalData.leaveReason || "Off-Duty"}`
+                : conflictModalData.type === "session"
+                ? `This time slot (${conflictModalData.startTime}) is already selected for ${conflictModalData.conflictMember} (${conflictModalData.conflictService}).`
+                : `Only ${conflictModalData.availableGapMins} mins available before ${conflictModalData.nextAppointmentTime}.`}
+            </p>
+            <button
+              className="w-full py-3.5 bg-dark-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+              onClick={() => setConflictModalData(null)}
+            >
+              Got it, Choose Another Time
+            </button>
+          </div>
         </div>
       )}
 
@@ -1035,7 +535,7 @@ const SelectTimePage = () => {
         <div className="loading-overlay">
           <div className="loader">
             <div className="loader-dots"><div></div><div></div><div></div></div>
-            <p>Processing your {isReschedule ? 'reschedule' : isGroupBooking ? 'group booking' : 'appointment'}...</p>
+            <p>Processing your group booking...</p>
           </div>
         </div>
       )}
