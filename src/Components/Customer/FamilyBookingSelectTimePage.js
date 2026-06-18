@@ -117,7 +117,7 @@ const SelectTimePage = () => {
       : durationToMinutes(serviceDuration);
 
     let url;
-    if (!professionalId || professionalId === "any") {
+    if (!professionalId || professionalId === "any" || String(professionalId).startsWith("mock_")) {
       if (!salon?._id) return;
       url = `${API_BASE_URL}/api/timeslots?professionalId=any&salonId=${salon._id}&date=${date}&duration=${durationMins}`;
     } else {
@@ -203,8 +203,78 @@ const SelectTimePage = () => {
     const durationMins = durationToMinutes(service.duration);
     const slotKey = `${proId || "any"}-${date}-${durationMins}`;
     const rawSlots = availableSlots[slotKey] || [];
-    return { slots: Array.isArray(rawSlots) ? rawSlots : [], date, proId };
-  }, [availableSlots, selectedDates, dates]);
+    const safeSlots = Array.isArray(rawSlots) ? rawSlots : [];
+
+    const processedSlots = safeSlots.map(slot => {
+      let isBooked = slot.isBooked || slot.conflicting;
+      let insufficientGap = slot.insufficientGap || false;
+      let availableGapMins = slot.availableGapMins || null;
+      let nextAppointmentTime = slot.nextAppointmentTime || null;
+      let isLeave = slot.isLeave || false;
+      let leaveReason = slot.leaveReason || null;
+
+      if (isBooked && (insufficientGap || isLeave)) {
+        isBooked = false;
+      }
+
+      let isSessionConflict = false;
+      let sessionConflictService = null;
+      let sessionConflictMember = null;
+      let sessionConflictProId = null;
+      let sessionConflictProName = null;
+
+      const displayStartTime = slot.startTime || slot.start;
+      const slotDurationMins = durationMins;
+      const resolvedProId = slot.assignedProfessionalId || proId;
+
+      if (!isBooked && bookedAppointments.length > 0) {
+        const startMins = timeStringToMinutes(displayStartTime);
+        const endMins = startMins + slotDurationMins;
+
+        const conflictingAppt = bookedAppointments.find(appt => {
+          if (appt.date !== date) return false;
+          
+          const bStart = timeStringToMinutes(appt.startTime);
+          const bEnd = timeStringToMinutes(appt.endTime);
+          const overlaps = startMins < bEnd && endMins > bStart;
+          
+          const isSamePro = String(appt.professionalId) === String(resolvedProId);
+          
+          return overlaps && isSamePro;
+        });
+
+        if (conflictingAppt) {
+          isSessionConflict = true;
+          sessionConflictService = conflictingAppt.serviceName;
+          sessionConflictMember = conflictingAppt.memberName;
+          sessionConflictProId = conflictingAppt.professionalId;
+          sessionConflictProName = conflictingAppt.professionalName;
+        }
+      }
+
+      if (isSessionConflict) {
+        isBooked = false;
+        insufficientGap = false;
+      }
+
+      return {
+        ...slot,
+        isBooked,
+        insufficientGap,
+        availableGapMins,
+        nextAppointmentTime,
+        isSessionConflict,
+        sessionConflictService,
+        sessionConflictMember,
+        sessionConflictProId,
+        sessionConflictProName,
+        isLeave,
+        leaveReason
+      };
+    });
+
+    return { slots: processedSlots, date, proId };
+  }, [availableSlots, selectedDates, dates, bookedAppointments]);
 
   // Check all services of current member have a time selected
   const allCurrentMemberTimesSelected = currentMemberServices.every(service => {
@@ -223,12 +293,17 @@ const SelectTimePage = () => {
     const newAppointments = currentMemberServices.map(service => {
       const key = makeKey(currentMember.id, service.name);
       const slotId = selectedTimes[key];
-      const date = selectedDates[key];
+      const date = selectedDates[key] || dates[0]?.fullDate;
       const { slots } = getSlotsForService(currentMember, service);
       const selectedSlot = slots.find(s => (s._id && s._id === slotId) || (s.id && s.id === slotId) || (s.startTime && s.startTime === slotId));
       const startTime = selectedSlot?.startTime || selectedSlot?.start;
       const endTime = selectedSlot?.endTime || computeEndTime(startTime, service.duration);
-      const proId = currentMember.professional?._id === "any" ? selectedSlot?.assignedProfessionalId : currentMember.professional?._id;
+      
+      let proId = currentMember.professional?._id || currentMember.professional || "any";
+      if (typeof proId === 'object') proId = proId._id || "any";
+      if (proId === "any") {
+        proId = selectedSlot?.assignedProfessionalId || "any";
+      }
 
       return {
         memberName: currentMember.name,
@@ -239,7 +314,7 @@ const SelectTimePage = () => {
         date,
         startTime,
         endTime,
-        professionalId: proId || "any",
+        professionalId: proId,
         professionalName: currentMember.professional?.name || "Any Professional",
         salonId: salon?._id,
         slotIds: selectedSlot?.slotIds || [selectedSlot?._id].filter(Boolean),
@@ -359,65 +434,111 @@ const SelectTimePage = () => {
               </h3>
 
               {/* Date picker */}
-              <div className="date-buttons">
-                {dates.map(day => {
-                  const isClosed = checkIsSalonClosed(day.fullDate).closed;
-                  return (
-                    <button
-                      key={day.fullDate}
-                      className={`date-button ${selectedDates[key] === day.fullDate ? "selected" : ""} ${isClosed ? "closed" : ""}`}
-                      onClick={() => !isClosed && handleDateClick(currentMember.id, service.name, service.duration, proId, day.fullDate)}
-                      disabled={isClosed}
-                    >
-                      <span>{day.date}</span>
-                      <small>{isClosed ? "Closed" : day.day}</small>
-                    </button>
-                  );
-                })}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <CalendarDaysIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="font-bold text-gray-900">Select Date</h3>
+                </div>
+
+                <div className="flex overflow-x-auto gap-3 pb-4 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                  {dates.map(day => {
+                    const isClosed = checkIsSalonClosed(day.fullDate).closed;
+                    const isSelected = selectedDates[key] === day.fullDate;
+                    const isDisabled = isClosed;
+
+                    return (
+                      <button
+                        key={day.fullDate}
+                        onClick={() => !isClosed && handleDateClick(currentMember.id, service.name, service.duration, proId, day.fullDate)}
+                        disabled={isDisabled}
+                        className={`flex flex-col flex-none items-center justify-center p-3 rounded-2xl border-2 min-w-[4.5rem] sm:min-w-[5rem] transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-dark-900 border-dark-900 shadow-md shadow-dark-900/20 scale-105'
+                            : isClosed
+                            ? 'bg-red-50/40 border-red-200 text-red-600'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        } ${isClosed ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-gray-300' : isClosed ? 'text-red-500' : 'text-gray-400'}`}>
+                          {isClosed ? "Closed" : day.day}
+                        </span>
+                        <span className={`text-xl sm:text-2xl font-black ${isSelected ? 'text-white' : isClosed ? 'text-red-700' : 'text-gray-900'}`}>
+                          {day.date}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Time slots */}
-              <div className="SelectTimePage-list">
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <ClockIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="font-bold text-gray-900">Available Times</h3>
+                </div>
+
                 {!selectedDate ? (
-                  <p>Please select a date</p>
+                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-10 text-center">
+                    <p className="text-gray-500 font-medium">Please select a date</p>
+                  </div>
                 ) : isSalonClosedOnSelected ? (
-                  <div className="salon-closed-alert">
-                    <p className="alert-title">🔒 Salon is Closed</p>
-                    <p className="alert-desc">{getSalonClosedReason(selectedDate)}</p>
+                  <div className="bg-red-50/50 border border-red-200 rounded-2xl p-10 text-center">
+                    <p className="text-red-800 font-bold text-lg flex items-center justify-center gap-1.5">🔒 Salon is Closed</p>
+                    <p className="text-sm mt-2 text-red-600 font-medium">{getSalonClosedReason(selectedDate)}</p>
                   </div>
                 ) : slots.length === 0 ? (
-                  <p>No available time slots for {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}</p>
+                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-10 text-center">
+                    <p className="text-gray-500 font-medium">
+                      No available time slots on {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}.
+                    </p>
+                  </div>
                 ) : (
-                  slots.map(slot => {
-                    const slotId = slot._id || slot.id || slot.startTime;
-                    const isSelected = selectedTimes[key] === slotId;
-                    const isBooked = !!slot.isBooked;
-                    const isLeave = !!slot.isLeave;
-                    const isLimited = !!slot.insufficientGap;
-                    const isSessionConflict = !!slot.isSessionConflict;
+                  <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                    {slots.map(slot => {
+                      const slotId = slot._id || slot.id || slot.startTime;
+                      const isSelected = selectedTimes[key] === slotId;
+                      const isBooked = !!slot.isBooked || !!slot.isSessionConflict;
+                      const isLimited = !!slot.insufficientGap;
+                      const isLeave = !!slot.isLeave;
+                      const displayStartTime = slot.startTime || slot.start;
+                      const isDisabled = isBooked;
 
-                    return (
-                      <div
-                        key={slotId}
-                        className={`SelectTimePage-card ${isBooked ? "disabled" : isLeave ? "off-duty" : isSessionConflict ? "session-conflict" : isLimited ? "limited" : isSelected ? "selected" : ""}`}
-                        onClick={() => handleTimeClick(key, slotId, isBooked, slot)}
-                        style={{ pointerEvents: isBooked ? "none" : "auto", opacity: isBooked ? 0.5 : 1 }}
-                      >
-                        <p>{slot.startTime} - {slot.endTime}</p>
-                        {isBooked ? (
-                          <p>❌ Booked</p>
-                        ) : isLeave ? (
-                          <p className="off-duty-text">💤 Off-Duty</p>
-                        ) : isSessionConflict ? (
-                          <p className="session-conflict-text">📅 Taken</p>
-                        ) : isLimited ? (
-                          <p className="limited-text">⚠️ Limited</p>
-                        ) : (
-                          <p>LKR {service.price?.toLocaleString()}</p>
-                        )}
-                      </div>
-                    );
-                  })
+                      return (
+                        <div
+                          key={slotId}
+                          onClick={() => handleTimeClick(key, slotId, isBooked, slot)}
+                          className={`relative flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 transition-all duration-200 ${
+                            isBooked ? "bg-gray-100 border-gray-200 text-gray-400 border-dashed" :
+                            isLeave ? "bg-gray-50 border-gray-200 text-gray-400 border-dashed hover:border-gray-300" :
+                            isLimited ? "bg-amber-50/50 border-amber-200 hover:border-amber-400 text-amber-900 shadow-sm" :
+                            isSelected ? "bg-dark-900 border-dark-900 shadow-lg shadow-dark-900/20" :
+                            "bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:shadow-sm"
+                          } ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                        >
+                          <span className={`text-[15px] font-bold ${isSelected ? 'text-white' : (isBooked || isLeave) ? 'text-gray-400' : isLimited ? 'text-amber-800' : 'text-gray-900'}`}>
+                            {displayStartTime}
+                          </span>
+
+                          {isBooked ? (
+                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1">Booked</span>
+                          ) : isLeave ? (
+                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-gray-500 flex items-center gap-0.5 animate-pulse">
+                              <span>💤</span> Off-Duty
+                            </span>
+                          ) : isLimited ? (
+                            <span className="text-[10px] uppercase font-bold tracking-widest mt-1 text-amber-600 flex items-center gap-0.5 animate-pulse">
+                              <span>⚠️</span> Limited
+                            </span>
+                          ) : (
+                            <span className={`text-[10px] font-medium mt-1 ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                              LKR {service.price?.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>

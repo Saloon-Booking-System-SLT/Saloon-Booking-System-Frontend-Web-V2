@@ -1176,9 +1176,12 @@
 
 /* Premium Limited Amber Slot Styles Fallback */
 .SelectTimePage-card.limited {
-  background-color: #fffbeb !important; /* amber-50 */
-  border-color: #fde68a !important; /* amber-200 */
-  color: #78350f !important; /* amber-900 */
+  background-color: #fffbeb !important;
+  /* amber-50 */
+  border-color: #fde68a !important;
+  /* amber-200 */
+  color: #78350f !important;
+  /* amber-900 */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   cursor: pointer !important;
   opacity: 1 !important;
@@ -1186,7 +1189,8 @@
 }
 
 .SelectTimePage-card.limited:hover {
-  border-color: #f59e0b !important; /* amber-500 */
+  border-color: #f59e0b !important;
+  /* amber-500 */
   box-shadow: 0 4px 6px rgba(245, 158, 11, 0.1);
   transform: translateY(-2px);
 }
@@ -1196,7 +1200,8 @@
 }
 
 .SelectTimePage-card.limited .limited-text {
-  color: #d97706 !important; /* amber-600 */
+  color: #d97706 !important;
+  /* amber-600 */
   font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;
@@ -1210,9 +1215,12 @@
 
 /* Premium Session Conflict Indigo Slot Styles Fallback */
 .SelectTimePage-card.session-conflict {
-  background-color: #f5f3ff !important; /* indigo-50 */
-  border-color: #c7d2fe !important; /* indigo-200 */
-  color: #312e81 !important; /* indigo-900 */
+  background-color: #f5f3ff !important;
+  /* indigo-50 */
+  border-color: #c7d2fe !important;
+  /* indigo-200 */
+  color: #312e81 !important;
+  /* indigo-900 */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   cursor: pointer !important;
   opacity: 1 !important;
@@ -1220,7 +1228,8 @@
 }
 
 .SelectTimePage-card.session-conflict:hover {
-  border-color: #6366f1 !important; /* indigo-500 */
+  border-color: #6366f1 !important;
+  /* indigo-500 */
   box-shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
   transform: translateY(-2px);
 }
@@ -1230,7 +1239,8 @@
 }
 
 .SelectTimePage-card.session-conflict .session-conflict-text {
-  color: #4f46e5 !important; /* indigo-600 */
+  color: #4f46e5 !important;
+  /* indigo-600 */
   font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;

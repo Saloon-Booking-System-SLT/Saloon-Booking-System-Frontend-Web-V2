@@ -77,7 +77,7 @@ const CheckoutForm = () => {
       const amountInLKR = totalAmount;
       const amountInUSDCents = Math.max(50, Math.round((amountInLKR * 100) / 200));
       
- console.log(' Payment Details:', {
+      console.log(' Payment Details:', {
         originalAmountLKR: amountInLKR,
         amountUSDCents: amountInUSDCents,
         isGroupBooking: isGroupBooking,
@@ -94,7 +94,7 @@ const CheckoutForm = () => {
           appointmentCount: (appointments?.length || 1).toString()
         }
       });
-      });
+     
 
  console.log(' Payment intent response:', response.data);
 
